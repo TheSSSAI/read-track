@@ -1,0 +1,54 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadTrack.Api", "src\ReadTrack.Api\ReadTrack.Api.csproj", "{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadTrack.Shared.Contracts", "src\ReadTrack.Shared.Contracts\ReadTrack.Shared.Contracts.csproj", "{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50002}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadTrack.Monetization.Domain", "src\ReadTrack.Monetization.Domain\ReadTrack.Monetization.Domain.csproj", "{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50003}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadTrack.Monetization.Application", "src\ReadTrack.Monetization.Application\ReadTrack.Monetization.Application.csproj", "{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50004}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadTrack.Monetization.Infrastructure", "src\ReadTrack.Monetization.Infrastructure\ReadTrack.Monetization.Infrastructure.csproj", "{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50005}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadTrack.Monetization.Presentation", "src\ReadTrack.Monetization.Presentation\ReadTrack.Monetization.Presentation.csproj", "{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50006}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50002}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50002}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50002}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50002}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50003}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50003}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50003}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50003}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50004}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50004}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50004}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50004}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50005}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50005}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50005}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50005}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50006}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50006}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50006}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-E5F6-4789-A0B1-C2D3E4F50006}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B1B2C3D4-E5F6-4789-A0B1-C2D3E4F50000}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  readtrack-db:
+    image: postgres:15-alpine
+    container_name: readtrack-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_password
+      POSTGRES_DB: readtrack
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - readtrack-network
+    restart: unless-stopped
+
+  readtrack-cache:
+    image: redis:7-alpine
+    container_name: readtrack-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - readtrack-network
+    restart: unless-stopped
+
+  readtrack-api:
+    build:
+      context: ./backend
+      dockerfile: src/ReadTrack.Api/Dockerfile
+    container_name: readtrack-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=readtrack-db;Port=5432;Database=readtrack;Username=postgres;Password=postgres_password;
+      - ConnectionStrings__Redis=readtrack-cache:6379
+    ports:
+      - "5000:8080"
+    depends_on:
+      - readtrack-db
+      - readtrack-cache
+    networks:
+      - readtrack-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  readtrack-network:
+    driver: bridge
