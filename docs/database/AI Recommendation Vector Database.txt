@@ -1,0 +1,46 @@
+PUT /usercontextembedding
+{
+  "settings": {
+    "index": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0,
+      "knn": true,
+      "knn.algo_param.ef_search": 100
+    }
+  },
+  "mappings": {
+    "properties": {
+      "embeddingId": {
+        "type": "keyword"
+      },
+      "UserId": {
+        "type": "keyword"
+      },
+      "embeddingVector": {
+        "type": "knn_vector",
+        "dimension": 1536,
+        "method": {
+          "name": "hnsw",
+          "space_type": "cosinesimil",
+          "engine": "nmslib",
+          "parameters": {
+            "ef_construction": 256,
+            "m": 48
+          }
+        }
+      },
+      "sourceText": {
+        "type": "text"
+      },
+      "sourceType": {
+        "type": "keyword"
+      },
+      "sourceId": {
+        "type": "keyword"
+      },
+      "createdAt": {
+        "type": "date"
+      }
+    }
+  }
+}

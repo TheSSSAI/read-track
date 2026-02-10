@@ -1,0 +1,201 @@
+-- PostgreSQL Database Schema for Reading Tracker
+-- Generated from data model
+
+-- =================================================================
+--                            EXTENSIONS
+-- =================================================================
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- =================================================================
+--                              TABLES
+-- =================================================================
+
+-- Represents system users, their authentication details, and current status.
+CREATE TABLE "User" (
+    "userId" UUID PRIMARY KEY,
+    "email" VARCHAR(255) NOT NULL CHECK ("email" ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
+    "passwordHash" VARCHAR(255) NOT NULL,
+    "subscriptionTier" VARCHAR(20) NOT NULL DEFAULT 'Free' CHECK ("subscriptionTier" IN ('Free', 'Premium')),
+    "onboardingCompleted" BOOLEAN NOT NULL DEFAULT false,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UC_User_Email" UNIQUE ("email")
+);
+
+-- Stores the history and status of user subscriptions.
+CREATE TABLE "Subscription" (
+    "subscriptionId" UUID PRIMARY KEY,
+    "UserId" UUID NOT NULL,
+    "status" VARCHAR(20) NOT NULL CHECK ("status" IN ('Active', 'Canceled', 'Expired')),
+    "startDate" TIMESTAMPTZ NOT NULL,
+    "endDate" TIMESTAMPTZ NOT NULL,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- A master table of all books known to the system.
+CREATE TABLE "Book" (
+    "bookId" UUID PRIMARY KEY,
+    "googleBooksId" VARCHAR(50),
+    "title" VARCHAR(255) NOT NULL,
+    "author" VARCHAR(255) NOT NULL,
+    "pageCount" INT CHECK ("pageCount" >= 0),
+    "coverImageUrl" VARCHAR(512),
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UC_Book_GoogleBooksId" UNIQUE ("googleBooksId")
+);
+
+-- A join table representing a book in a user's personal library.
+CREATE TABLE "UserBook" (
+    "userBookId" UUID PRIMARY KEY,
+    "UserId" UUID NOT NULL,
+    "BookId" UUID NOT NULL,
+    "bookTitle" VARCHAR(255) NOT NULL,
+    "bookAuthor" VARCHAR(255) NOT NULL,
+    "bookCoverImageUrl" VARCHAR(512),
+    "shelf" VARCHAR(30) NOT NULL DEFAULT 'WantToRead' CHECK ("shelf" IN ('WantToRead', 'CurrentlyReading', 'Read')),
+    "isReadOnly" BOOLEAN NOT NULL DEFAULT false,
+    "addedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UC_UserBook_User_Book" UNIQUE ("UserId", "BookId")
+);
+
+-- Logs individual reading sessions for a book in a user's library.
+CREATE TABLE "ReadingSession" (
+    "readingSessionId" UUID PRIMARY KEY,
+    "UserBookId" UUID NOT NULL,
+    "UserId" UUID NOT NULL,
+    "startTime" TIMESTAMPTZ NOT NULL,
+    "endTime" TIMESTAMPTZ NOT NULL,
+    "pagesRead" INT CHECK ("pagesRead" >= 0),
+    "notes" TEXT,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+) PARTITION BY RANGE ("startTime");
+
+-- COMMENT: Partitions for ReadingSession must be created manually or by a scheduled job.
+-- EXAMPLE: CREATE TABLE "ReadingSession_y2024m01" PARTITION OF "ReadingSession" FOR VALUES FROM ('2024-01-01') TO ('2024-02-01');
+
+-- Stores user-defined reading goals and tracks their progress.
+CREATE TABLE "Goal" (
+    "goalId" UUID PRIMARY KEY,
+    "UserId" UUID NOT NULL,
+    "goalType" VARCHAR(20) NOT NULL CHECK ("goalType" IN ('Books', 'Pages', 'Time')),
+    "period" VARCHAR(20) NOT NULL CHECK ("period" IN ('Day', 'Week', 'Month', 'Year')),
+    "targetValue" INT NOT NULL CHECK ("targetValue" > 0),
+    "currentValue" INT NOT NULL DEFAULT 0 CHECK ("currentValue" >= 0),
+    "startDate" TIMESTAMPTZ NOT NULL,
+    "endDate" TIMESTAMPTZ NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UC_Goal_User_Active_Type_Period_Start" UNIQUE ("UserId", "goalType", "period", "startDate", "isActive")
+);
+
+-- Stores AI-generated book recommendations and user feedback on them.
+CREATE TABLE "Recommendation" (
+    "recommendationId" UUID PRIMARY KEY,
+    "UserId" UUID NOT NULL,
+    "recommendedBookTitle" VARCHAR(255) NOT NULL,
+    "recommendedBookAuthor" VARCHAR(255) NOT NULL,
+    "reasoning" TEXT NOT NULL,
+    "feedback" VARCHAR(20) CHECK ("feedback" IN ('Like', 'Dislike')),
+    "generatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Stores words and definitions saved by the user.
+CREATE TABLE "VocabularyItem" (
+    "vocabularyItemId" UUID PRIMARY KEY,
+    "UserId" UUID NOT NULL,
+    "word" VARCHAR(100) NOT NULL,
+    "definition" TEXT,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UC_VocabularyItem_User_Word" UNIQUE ("UserId", "word")
+);
+
+-- Tracks the status of user-initiated data export requests.
+CREATE TABLE "DataExportJob" (
+    "dataExportJobId" UUID PRIMARY KEY,
+    "UserId" UUID NOT NULL,
+    "status" VARCHAR(20) NOT NULL DEFAULT 'Queued' CHECK ("status" IN ('Queued', 'Processing', 'Completed', 'Failed')),
+    "fileUrl" VARCHAR(512),
+    "expiresAt" TIMESTAMPTZ,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- A key-value store for user-specific application settings like theme.
+CREATE TABLE "UserSetting" (
+    "userSettingId" UUID PRIMARY KEY,
+    "UserId" UUID NOT NULL,
+    "settingKey" VARCHAR(50) NOT NULL,
+    "settingValue" VARCHAR(255) NOT NULL,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UC_UserSetting_User_Key" UNIQUE ("UserId", "settingKey")
+);
+
+-- A summary table for daily user reading statistics.
+CREATE TABLE "UserReadingStats" (
+    "UserId" UUID NOT NULL,
+    "statDate" DATE NOT NULL,
+    "totalMinutesRead" INT NOT NULL DEFAULT 0 CHECK ("totalMinutesRead" >= 0),
+    "totalPagesRead" INT NOT NULL DEFAULT 0 CHECK ("totalPagesRead" >= 0),
+    "lastUpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY ("UserId", "statDate")
+);
+
+-- =================================================================
+--                          FOREIGN KEYS
+-- =================================================================
+
+ALTER TABLE "Subscription" ADD CONSTRAINT "FK_Subscription_User" FOREIGN KEY ("UserId") REFERENCES "User"("userId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "UserBook" ADD CONSTRAINT "FK_UserBook_User" FOREIGN KEY ("UserId") REFERENCES "User"("userId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "UserBook" ADD CONSTRAINT "FK_UserBook_Book" FOREIGN KEY ("BookId") REFERENCES "Book"("bookId") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ReadingSession" ADD CONSTRAINT "FK_ReadingSession_UserBook" FOREIGN KEY ("UserBookId") REFERENCES "UserBook"("userBookId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ReadingSession" ADD CONSTRAINT "FK_ReadingSession_User" FOREIGN KEY ("UserId") REFERENCES "User"("userId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Goal" ADD CONSTRAINT "FK_Goal_User" FOREIGN KEY ("UserId") REFERENCES "User"("userId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Recommendation" ADD CONSTRAINT "FK_Recommendation_User" FOREIGN KEY ("UserId") REFERENCES "User"("userId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "VocabularyItem" ADD CONSTRAINT "FK_VocabularyItem_User" FOREIGN KEY ("UserId") REFERENCES "User"("userId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "DataExportJob" ADD CONSTRAINT "FK_DataExportJob_User" FOREIGN KEY ("UserId") REFERENCES "User"("userId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "UserSetting" ADD CONSTRAINT "FK_UserSetting_User" FOREIGN KEY ("UserId") REFERENCES "User"("userId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "UserReadingStats" ADD CONSTRAINT "FK_UserReadingStats_User" FOREIGN KEY ("UserId") REFERENCES "User"("userId") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- =================================================================
+--                              INDEXES
+-- =================================================================
+
+CREATE INDEX "IX_User_Email" ON "User" USING BTREE ("email");
+CREATE INDEX "IX_User_IsDeleted_SubscriptionTier" ON "User" USING BTREE ("isDeleted", "subscriptionTier");
+
+CREATE INDEX "IX_Subscription_UserId_Status" ON "Subscription" USING BTREE ("UserId", "status");
+CREATE INDEX "IX_Subscription_EndDate" ON "Subscription" USING BTREE ("endDate");
+CREATE INDEX "IX_Subscription_Status_EndDate" ON "Subscription" USING BTREE ("status", "endDate");
+
+CREATE INDEX "IX_Book_GoogleBooksId" ON "Book" USING BTREE ("googleBooksId");
+CREATE INDEX "IX_Book_Title_Author" ON "Book" USING BTREE ("title", "author");
+
+CREATE INDEX "IX_UserBook_UserId_Shelf" ON "UserBook" USING BTREE ("UserId", "shelf");
+CREATE INDEX "IX_UserBook_BookId" ON "UserBook" USING BTREE ("BookId");
+CREATE INDEX "IX_UserBook_UserId_IsReadOnly" ON "UserBook" USING BTREE ("UserId", "isReadOnly");
+
+CREATE INDEX "IX_ReadingSession_UserBookId" ON "ReadingSession" USING BTREE ("UserBookId");
+CREATE INDEX "IX_ReadingSession_StartTime" ON "ReadingSession" USING BTREE ("startTime");
+CREATE INDEX "IX_ReadingSession_UserId_StartTime" ON "ReadingSession" USING BTREE ("UserId", "startTime");
+
+CREATE INDEX "IX_Goal_UserId_IsActive" ON "Goal" USING BTREE ("UserId", "isActive");
+
+CREATE INDEX "IX_Recommendation_UserId_GeneratedAt" ON "Recommendation" USING BTREE ("UserId", "generatedAt");
+CREATE INDEX "IX_Recommendation_UserId_Feedback" ON "Recommendation" USING BTREE ("UserId", "feedback");
+
+CREATE INDEX "IX_VocabularyItem_UserId_Word" ON "VocabularyItem" USING BTREE ("UserId", "word");
+
+CREATE INDEX "IX_DataExportJob_UserId" ON "DataExportJob" USING BTREE ("UserId");
+CREATE INDEX "IX_DataExportJob_Status" ON "DataExportJob" USING BTREE ("status");
+CREATE INDEX "IX_DataExportJob_ExpiresAt" ON "DataExportJob" USING BTREE ("expiresAt");
+
+CREATE INDEX "IX_UserSetting_UserId_Key" ON "UserSetting" USING BTREE ("UserId", "settingKey");

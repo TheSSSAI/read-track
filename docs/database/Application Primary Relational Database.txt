@@ -1,0 +1,247 @@
+-- PostgreSQL Schema for Reading Tracker Application
+-- Generated from JSON schema definition
+
+-- Enable UUID generation extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- =============================================
+-- Table: User
+-- =============================================
+CREATE TABLE "User" (
+    "userId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "auth0UserId" VARCHAR(128) UNIQUE NOT NULL,
+    "email" VARCHAR(255) UNIQUE NOT NULL CHECK (email ~* '^[A-Za-z0-9._+%-]+@[A-Za-z0-9.-]+[.][A-Za-z]+$'),
+    "displayName" VARCHAR(100),
+    "profilePictureUrl" VARCHAR(512),
+    "subscriptionTier" VARCHAR(20) NOT NULL DEFAULT 'Free User' CHECK ("subscriptionTier" IN ('Free User', 'Premium User')),
+    "onboardingCompleted" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX "IX_User_Email" ON "User" ("email");
+CREATE INDEX "IX_User_SubscriptionTier" ON "User" ("subscriptionTier");
+
+-- =============================================
+-- Table: Subscription
+-- =============================================
+CREATE TABLE "Subscription" (
+    "subscriptionId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "UserId" UUID NOT NULL REFERENCES "User"("userId") ON DELETE CASCADE,
+    "status" VARCHAR(20) NOT NULL CHECK ("status" IN ('Active', 'Canceled', 'Expired')),
+    "provider" VARCHAR(20) NOT NULL CHECK ("provider" IN ('AppleAppStore', 'GooglePlayStore')),
+    "providerTransactionId" VARCHAR(255) UNIQUE NOT NULL,
+    "startDate" TIMESTAMPTZ NOT NULL,
+    "endDate" TIMESTAMPTZ NOT NULL,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX "IX_Subscription_UserId_Status" ON "Subscription" ("UserId", "status");
+CREATE INDEX "IX_Subscription_EndDate" ON "Subscription" ("endDate");
+CREATE INDEX "IX_Subscription_Status_EndDate" ON "Subscription" ("status", "endDate");
+
+-- =============================================
+-- Table: Book
+-- =============================================
+CREATE TABLE "Book" (
+    "bookId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "googleBooksId" VARCHAR(50) UNIQUE,
+    "title" VARCHAR(255) NOT NULL,
+    "author" VARCHAR(255) NOT NULL,
+    "pageCount" INT CHECK ("pageCount" IS NULL OR "pageCount" >= 0),
+    "coverImageUrl" VARCHAR(512),
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX "IX_Book_GoogleBooksId" ON "Book" ("googleBooksId");
+CREATE INDEX "IX_Book_Title_Author" ON "Book" ("title", "author");
+
+-- =============================================
+-- Table: LibraryItem
+-- =============================================
+CREATE TABLE "LibraryItem" (
+    "libraryItemId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "UserId" UUID NOT NULL REFERENCES "User"("userId") ON DELETE CASCADE,
+    "BookId" UUID REFERENCES "Book"("bookId") ON DELETE SET NULL,
+    "itemType" VARCHAR(20) NOT NULL CHECK ("itemType" IN ('Book', 'Article')),
+    "title" VARCHAR(255) NOT NULL,
+    "author" VARCHAR(255),
+    "coverImageUrl" VARCHAR(512),
+    "url" VARCHAR(512),
+    "shelf" VARCHAR(30) NOT NULL DEFAULT 'WantToRead' CHECK ("shelf" IN ('WantToRead', 'CurrentlyReading', 'Read', 'DidNotFinish')),
+    "addedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX "IX_LibraryItem_UserId_Shelf" ON "LibraryItem" ("UserId", "shelf");
+CREATE INDEX "IX_LibraryItem_BookId" ON "LibraryItem" ("BookId");
+CREATE UNIQUE INDEX "UC_LibraryItem_User_Book" ON "LibraryItem" ("UserId", "BookId") WHERE "BookId" IS NOT NULL;
+
+-- =============================================
+-- Table: ReadingSession (Partitioned)
+-- =============================================
+CREATE TABLE "ReadingSession" (
+    "readingSessionId" UUID DEFAULT uuid_generate_v4(),
+    "LibraryItemId" UUID NOT NULL REFERENCES "LibraryItem"("libraryItemId") ON DELETE CASCADE,
+    "UserId" UUID NOT NULL REFERENCES "User"("userId") ON DELETE CASCADE,
+    "startTime" TIMESTAMPTZ NOT NULL,
+    "endTime" TIMESTAMPTZ NOT NULL,
+    "pagesRead" INT CHECK ("pagesRead" IS NULL OR "pagesRead" >= 0),
+    "notes" TEXT,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY ("readingSessionId", "startTime")
+) PARTITION BY RANGE ("startTime");
+
+CREATE INDEX "IX_ReadingSession_LibraryItemId" ON "ReadingSession" ("LibraryItemId");
+CREATE INDEX "IX_ReadingSession_UserId_StartTime" ON "ReadingSession" ("UserId", "startTime" DESC);
+-- Note: Partitions for ReadingSession must be created manually, e.g.,
+-- CREATE TABLE "ReadingSession_2024" PARTITION OF "ReadingSession" FOR VALUES FROM ('2024-01-01') TO ('2025-01-01');
+
+-- =============================================
+-- Table: Goal
+-- =============================================
+CREATE TABLE "Goal" (
+    "goalId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "UserId" UUID NOT NULL REFERENCES "User"("userId") ON DELETE CASCADE,
+    "goalType" VARCHAR(20) NOT NULL CHECK ("goalType" IN ('Books', 'Pages', 'Time')),
+    "period" VARCHAR(20) NOT NULL CHECK ("period" IN ('Day', 'Week', 'Month', 'Year')),
+    "targetValue" INT NOT NULL CHECK ("targetValue" > 0),
+    "currentValue" INT NOT NULL DEFAULT 0 CHECK ("currentValue" >= 0),
+    "startDate" TIMESTAMPTZ NOT NULL,
+    "endDate" TIMESTAMPTZ NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UC_Goal_User_Active_Type_Period_Start" UNIQUE ("UserId", "goalType", "period", "startDate", "isActive")
+);
+
+CREATE INDEX "IX_Goal_UserId_IsActive" ON "Goal" ("UserId", "isActive");
+
+-- =============================================
+-- Table: DailyTask
+-- =============================================
+CREATE TABLE "DailyTask" (
+    "dailyTaskId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "UserId" UUID NOT NULL REFERENCES "User"("userId") ON DELETE CASCADE,
+    "description" VARCHAR(255) NOT NULL,
+    "recurrenceRule" VARCHAR(255),
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX "IX_DailyTask_UserId_IsActive" ON "DailyTask" ("UserId", "isActive");
+
+-- =============================================
+-- Table: TaskCompletion
+-- =============================================
+CREATE TABLE "TaskCompletion" (
+    "taskCompletionId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "DailyTaskId" UUID NOT NULL REFERENCES "DailyTask"("dailyTaskId") ON DELETE CASCADE,
+    "UserId" UUID NOT NULL REFERENCES "User"("userId") ON DELETE CASCADE,
+    "completedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UC_TaskCompletion_Task_Date" UNIQUE ("DailyTaskId", "completedAt")
+);
+
+CREATE INDEX "IX_TaskCompletion_UserId_CompletedAt" ON "TaskCompletion" ("UserId", "completedAt");
+
+-- =============================================
+-- Table: Recommendation
+-- =============================================
+CREATE TABLE "Recommendation" (
+    "recommendationId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "UserId" UUID NOT NULL REFERENCES "User"("userId") ON DELETE CASCADE,
+    "recommendedBookTitle" VARCHAR(255) NOT NULL,
+    "recommendedBookAuthor" VARCHAR(255) NOT NULL,
+    "reasoning" TEXT NOT NULL,
+    "feedback" VARCHAR(20) CHECK ("feedback" IN ('Like', 'Dislike', 'Irrelevant')),
+    "generatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX "IX_Recommendation_UserId_GeneratedAt" ON "Recommendation" ("UserId", "generatedAt");
+CREATE INDEX "IX_Recommendation_UserId_Feedback" ON "Recommendation" ("UserId", "feedback");
+
+-- =============================================
+-- Table: VocabularyItem
+-- =============================================
+CREATE TABLE "VocabularyItem" (
+    "vocabularyItemId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "UserId" UUID NOT NULL REFERENCES "User"("userId") ON DELETE CASCADE,
+    "word" VARCHAR(100) NOT NULL,
+    "definition" TEXT,
+    "exampleSentence" TEXT,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UC_VocabularyItem_User_Word" UNIQUE ("UserId", "word")
+);
+
+CREATE INDEX "IX_VocabularyItem_UserId_Word" ON "VocabularyItem" ("UserId", "word");
+
+-- =============================================
+-- Table: DataExportJob
+-- =============================================
+CREATE TABLE "DataExportJob" (
+    "dataExportJobId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "UserId" UUID NOT NULL REFERENCES "User"("userId") ON DELETE CASCADE,
+    "status" VARCHAR(20) NOT NULL DEFAULT 'Queued' CHECK ("status" IN ('Queued', 'Processing', 'Completed', 'Failed')),
+    "fileUrl" VARCHAR(512),
+    "expiresAt" TIMESTAMPTZ,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX "IX_DataExportJob_UserId" ON "DataExportJob" ("UserId");
+CREATE INDEX "IX_DataExportJob_Status" ON "DataExportJob" ("status");
+CREATE INDEX "IX_DataExportJob_ExpiresAt" ON "DataExportJob" ("expiresAt");
+
+-- =============================================
+-- Table: UserSetting
+-- =============================================
+CREATE TABLE "UserSetting" (
+    "userSettingId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "UserId" UUID NOT NULL REFERENCES "User"("userId") ON DELETE CASCADE,
+    "settingKey" VARCHAR(50) NOT NULL,
+    "settingValue" VARCHAR(255) NOT NULL,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UC_UserSetting_User_Key" UNIQUE ("UserId", "settingKey")
+);
+
+CREATE INDEX "IX_UserSetting_UserId_Key" ON "UserSetting" ("UserId", "settingKey");
+
+-- =============================================
+-- Table: UserReadingStats
+-- =============================================
+CREATE TABLE "UserReadingStats" (
+    "UserId" UUID NOT NULL REFERENCES "User"("userId") ON DELETE CASCADE,
+    "statDate" DATE NOT NULL,
+    "totalMinutesRead" INT NOT NULL DEFAULT 0 CHECK ("totalMinutesRead" >= 0),
+    "totalPagesRead" INT NOT NULL DEFAULT 0 CHECK ("totalPagesRead" >= 0),
+    "lastUpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY ("UserId", "statDate")
+);
+
+-- =============================================
+-- Function and Triggers for automatic 'updatedAt' timestamp
+-- =============================================
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW."updatedAt" = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_user_updated_at BEFORE UPDATE ON "User" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+CREATE TRIGGER update_subscription_updated_at BEFORE UPDATE ON "Subscription" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+CREATE TRIGGER update_book_updated_at BEFORE UPDATE ON "Book" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+CREATE TRIGGER update_libraryitem_updated_at BEFORE UPDATE ON "LibraryItem" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+CREATE TRIGGER update_readingsession_updated_at BEFORE UPDATE ON "ReadingSession" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+CREATE TRIGGER update_goal_updated_at BEFORE UPDATE ON "Goal" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+CREATE TRIGGER update_dailytask_updated_at BEFORE UPDATE ON "DailyTask" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+CREATE TRIGGER update_vocabularyitem_updated_at BEFORE UPDATE ON "VocabularyItem" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+CREATE TRIGGER update_dataexportjob_updated_at BEFORE UPDATE ON "DataExportJob" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+CREATE TRIGGER update_usersetting_updated_at BEFORE UPDATE ON "UserSetting" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
