@@ -1,0 +1,31 @@
+name: readtrack_uikit
+description: A reusable Flutter package containing the application's design system and shared UI components for ReadTrack.
+version: 0.0.1
+publish_to: 'none' # This is an internal enterprise library
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+  flutter: '>=3.22.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Design & UI Dependencies
+  google_fonts: ^6.2.1
+  cached_network_image: ^3.3.1
+  flutter_svg: ^2.0.10
+  shimmer: ^3.0.0 # For loading states
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  # For golden tests or visual regression if needed later
+  # golden_toolkit: ^0.15.0 
+
+flutter:
+  uses-material-design: true
+  # Assets will be defined here as they are added to the library
+  # assets:
+  #   - assets/icons/

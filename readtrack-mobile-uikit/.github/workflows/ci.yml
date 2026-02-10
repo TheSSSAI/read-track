@@ -1,0 +1,46 @@
+name: ReadTrack UI Kit CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'readtrack_uikit/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'readtrack_uikit/**'
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./readtrack_uikit
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Verify Formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+
+      - name: Run Tests
+        run: flutter test --coverage
+
+      - name: Check Code Coverage
+        uses: very-good-ventures/very-good-coverage@v2
+        with:
+          path: './readtrack_uikit/coverage/lcov.info'
+          min_coverage: 80
