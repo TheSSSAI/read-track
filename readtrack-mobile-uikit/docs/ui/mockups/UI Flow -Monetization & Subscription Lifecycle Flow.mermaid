@@ -1,0 +1,82 @@
+stateDiagram-v2
+    classDef free fill:#e3f2fd,stroke:#1e88e5,color:#0d47a1
+    classDef premium fill:#fff8e1,stroke:#ffb300,color:#bf360c
+    classDef ui fill:#f3e5f5,stroke:#8e24aa,color:#4a148c
+    classDef logic fill:#e0f2f1,stroke:#00897b,color:#004d40
+
+    [*] --> FreeUser_State
+
+    state "Free User Tier" as FreeUser_State {
+        direction LR
+        [*] --> Browsing
+        
+        state "Visual State" as VisualFree {
+            note right of VisualFree
+                - Banner Ads: Visible
+                - Premium Features: Locked Icon
+                - Settings: 'Upgrade to Premium' Button
+            end note
+        }
+
+        state "Limit Enforcement Logic" as Limits {
+            direction TB
+            state "Action: Add 21st Book" as LimitBook
+            state "Action: Add 2nd Goal" as LimitGoal
+            state "Action: 6th AI Request" as LimitAI
+            
+            LimitBook --> TriggerPaywall
+            LimitGoal --> TriggerPaywall
+            LimitAI --> TriggerPaywall
+        }
+    }
+
+    state "Paywall / Upsell UI" as PaywallUI {
+        state "PaywallModal (Variant: Limit Reached)" as Modal
+        state "SubscriptionScreen (Variant: Sales Page)" as SalesPage
+        
+        TriggerPaywall --> Modal: Show Limit Message
+        Modal --> SalesPage: User Taps 'Upgrade'
+        FreeUser_State --> SalesPage: User Taps 'Upgrade' in Settings
+    }
+
+    state "Purchase Transaction" as Transaction {
+        SalesPage --> StoreKit: Initiate Purchase
+        StoreKit --> Backend: Validate Receipt/Webhook
+    }
+
+    Transaction --> PremiumUser_State: Success
+    Transaction --> PaywallUI: Failure/Cancel (Return to Sales)
+
+    state "Premium User Tier" as PremiumUser_State {
+        direction TB
+        
+        state "Active Subscription" as Active {
+            note right of Active
+                - Ads: Hidden
+                - Features: Unlocked
+                - Settings: 'Manage Subscription' Button
+            end note
+        }
+
+        state "Cancelled (Grace Period)" as Cancelled {
+            note right of Cancelled
+                - Status: Active until Period End
+                - Settings: 'Resubscribe' Button & End Date displayed
+                - Access: Full Premium Access
+            end note
+        }
+
+        Active --> Cancelled: User cancels in App Store
+        Cancelled --> Active: User Resubscribes
+    }
+
+    state "Subscription Lifecycle" as Lifecycle {
+        Cancelled --> ExpirationEvent: Period End Date Reached
+        ExpirationEvent --> FreeUser_State: Downgrade Account Role
+    }
+
+    class FreeUser_State free
+    class PremiumUser_State premium
+    class PaywallUI ui
+    class Transaction logic
+    class Lifecycle logic

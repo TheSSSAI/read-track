@@ -1,0 +1,99 @@
+flowchart TB
+    %% Definitions and Styling
+    classDef client fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
+    classDef backend fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
+    classDef database fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#e65100
+    classDef external fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,stroke-dasharray: 5 5,color:#4a148c
+    classDef user fill:#fafafa,stroke:#212121,stroke-width:2px,color:#212121
+
+    User((User)) 
+    
+    subgraph Client_Device [📱 Mobile Client Device]
+        direction TB
+        UI[Flutter UI Layer]:::client
+        State[State Mgmt <br/>Riverpod]:::client
+        LocalDB[(Isar Local DB)]:::client
+        Ads[AdMob SDK]:::client
+        Auth_Client[Auth0 SDK]:::client
+        
+        UI <--> State
+        State <--> LocalDB
+        UI -.-> Ads
+        UI -.-> Auth_Client
+    end
+
+    User --> UI
+
+    subgraph Cloud_Infrastructure [☁️ Backend Infrastructure]
+        direction TB
+        
+        Gateway[API Gateway / Load Balancer]:::backend
+        
+        subgraph Backend_Services [.NET 8 Modular Monolith]
+            direction TB
+            Auth_Svc[Identity & Auth Service]:::backend
+            Library_Svc[Reading & Library Service]:::backend
+            Rec_Svc[AI Recommendation Service]:::backend
+            Sync_Svc[Data Sync Worker]:::backend
+            CMS_Svc[Content Service]:::backend
+        end
+
+        subgraph Data_Persistence [Data Layer]
+            Postgres[(PostgreSQL<br/>Aurora)]:::database
+            VectorDB[(Amazon<br/>OpenSearch)]:::database
+            Cache[(Redis Cache)]:::database
+            ObjStore[(S3 Bucket<br/>Exports/Images)]:::database
+        end
+    end
+
+    subgraph External_Services [🌐 External Ecosystem]
+        OpenAI[OpenAI GPT-4 API]:::external
+        GBooks[Google Books API]:::external
+        Contentful[Contentful CMS]:::external
+        Auth0_Prov[Auth0 Provider]:::external
+        AdNet[Google Ad Network]:::external
+    end
+
+    %% Client to Backend Connections
+    State -- "HTTPS / Sync Request" --> Gateway
+    Auth_Client -- "Token Exchange" --> Auth0_Prov
+    Ads -- "Ad Request" --> AdNet
+
+    %% Backend Routing
+    Gateway --> Auth_Svc
+    Gateway --> Library_Svc
+    Gateway --> Rec_Svc
+    Gateway --> CMS_Svc
+
+    %% Service Logic & Integrations
+    Auth_Svc -- "Validate JWT" --> Auth0_Prov
+    Auth_Svc --> Postgres
+    
+    Library_Svc -- "Fetch Metadata (Resilient)" --> GBooks
+    Library_Svc --> Postgres
+    
+    Rec_Svc -- "RAG Query (Context)" --> VectorDB
+    Rec_Svc -- "LLM Prompt" --> OpenAI
+    Rec_Svc -- "Store Recs" --> Postgres
+    
+    CMS_Svc -- "Fetch Tips (Cache-Aside)" --> Cache
+    CMS_Svc -- "Source Content" --> Contentful
+    
+    Sync_Svc -- "Batch Processing" --> Postgres
+    
+    %% Background Jobs
+    Library_Svc -.-> Sync_Svc
+    Library_Svc -- "Embed User Data" --> VectorDB
+    
+    %% Offline Note
+    LocalDB -. "Offline Mode" .-x Gateway
+    
+    %% Export Flow
+    Library_Svc -- "Generate Export" --> ObjStore
+
+    %% Legend / Notes
+    note1[<b>Offline First Strategy</b><br/>User acts on Local DB.<br/>Sync Svc handles conflict resolution<br/>via 'Last Write Wins'.]:::client
+    note2[<b>Freemium Logic</b><br/>Auth Svc injects roles.<br/>UI toggles Ads/Features<br/>based on Claims.]:::backend
+
+    LocalDB -.- note1
+    Auth_Svc -.- note2

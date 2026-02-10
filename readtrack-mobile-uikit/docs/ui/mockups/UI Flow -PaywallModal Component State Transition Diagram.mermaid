@@ -1,0 +1,85 @@
+stateDiagram-v2
+    direction LR
+
+    %% Initial State
+    [*] --> FetchingProducts: Open Modal
+
+    %% State Definitions
+    state FetchingProducts {
+        [*] --> QueryingStore
+        QueryingStore --> StoreAvailable: Connect OK
+        StoreAvailable --> StoreError: Products Empty/Error
+        StoreAvailable --> ProductsLoaded: Valid Products
+    }
+
+    state DisplayingContent {
+        %% This is the main interactive state
+        [*] --> ReadyToBuy
+        ReadyToBuy --> UserSelectedPlan: Tap Option
+        UserSelectedPlan --> ReadyToBuy: Change Option
+    }
+
+    state TransactionProcessing {
+        [*] --> InitiatingPurchase
+        InitiatingPurchase --> NativeSheetActive: Invoking OS Sheet
+        NativeSheetActive --> PurchaseCancelled: User Cancels
+        NativeSheetActive --> PaymentFailed: Store Error
+        NativeSheetActive --> ValidatingReceipt: Payment OK
+        
+        state ValidatingReceipt {
+            [*] --> BackendCheck
+            BackendCheck --> ValidationSuccess: 200 OK
+            BackendCheck --> ValidationFail: 4xx/5xx Error
+        }
+    }
+
+    state FinalStates {
+        SuccessState
+        ErrorDisplay
+    }
+
+    %% Transitions
+    FetchingProducts --> DisplayingContent: Products Ready
+    FetchingProducts --> ErrorDisplay: Store Init Failed
+
+    DisplayingContent --> TransactionProcessing: Tap 'Upgrade'
+    DisplayingContent --> TransactionProcessing: Tap 'Restore'
+    DisplayingContent --> [*]: Tap Close/Dismiss
+
+    TransactionProcessing --> DisplayingContent: Cancelled
+    TransactionProcessing --> ErrorDisplay: Payment/Validation Failed
+    TransactionProcessing --> SuccessState: Verification Passed
+
+    ErrorDisplay --> DisplayingContent: Tap Retry
+    ErrorDisplay --> [*]: Tap Dismiss
+
+    SuccessState --> [*]: Auto-Close (after delay)
+
+    %% Notes
+    note right of FetchingProducts
+        Connects to StoreKit/
+        Google Play Billing
+    end note
+
+    note right of NativeSheetActive
+        OS controls UI here.
+        App in background state.
+    end note
+
+    note right of ValidatingReceipt
+        Secure Backend API Call
+        to verify signature
+    end note
+
+    %% Styling
+    classDef loading fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
+    classDef interactive fill:#fff,stroke:#333,stroke-width:2px,color:#000
+    classDef processing fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000
+    classDef success fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
+    classDef error fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#b71c1c
+
+    class FetchingProducts loading
+    class DisplayingContent interactive
+    class TransactionProcessing processing
+    class SuccessState success
+    class ErrorDisplay error

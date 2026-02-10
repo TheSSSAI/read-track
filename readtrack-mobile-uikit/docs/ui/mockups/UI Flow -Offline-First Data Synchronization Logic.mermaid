@@ -1,0 +1,85 @@
+flowchart TD
+    %% Nodes
+    Start([User Initiates Action\ne.g., Log Session, Move Shelf])
+    CheckNet{Is Device\nOnline?}
+    
+    subgraph Client_Side [Mobile Client & Isar DB]
+        OptimisticUI[Update UI Optimistically]
+        
+        %% Online Path
+        CallAPI[Attempt API Request]
+        CheckAPISuccess{API Success\n200 OK?}
+        
+        %% Offline Path
+        SaveLocalPending[Save to Isar DB\nStatus: 'pending_sync'\nTimestamp: Client Now]
+        
+        %% Post-API
+        UpdateLocalSynced[Update Isar DB\nStatus: 'synced'\nStore Server Data]
+        
+        %% Background Sync
+        NetRestore((Network\nRestored))
+        FetchPending[Query Isar:\nStatus == 'pending_sync']
+        LoopPending[Loop: For Each Pending Item]
+        SyncCallAPI[POST /api/sync]
+        MarkSynced[Update Isar:\nStatus = 'synced']
+    end
+
+    subgraph Server_Side [Backend API & PostgreSQL]
+        ReceiveSync[Receive Data & Client Timestamp]
+        FetchExisting[Fetch Current Record from DB]
+        CheckConflict{Record Exists?}
+        CheckTimestamp{Client TS >\nServer TS?}
+        
+        UpdateServer[Update Server DB]
+        IgnoreUpdate[Ignore Update\n(Keep Server Version)]
+        ReturnSuccess[Return Success\n& Current Server State]
+    end
+
+    %% Flows
+    Start --> OptimisticUI
+    OptimisticUI --> CheckNet
+    
+    %% Online Flow
+    CheckNet -- Yes --> CallAPI
+    CallAPI --> CheckAPISuccess
+    CheckAPISuccess -- Yes --> UpdateLocalSynced
+    CheckAPISuccess -- No (5xx/Timeout) --> SaveLocalPending
+    CheckAPISuccess -- 4xx Error --> ShowError[Display Validation Error]
+    
+    %% Offline Flow
+    CheckNet -- No --> SaveLocalPending
+    
+    %% Sync Process
+    NetRestore --> FetchPending
+    FetchPending --> LoopPending
+    LoopPending --> SyncCallAPI
+    
+    %% Server Logic
+    SyncCallAPI --> ReceiveSync
+    ReceiveSync --> FetchExisting
+    FetchExisting --> CheckConflict
+    
+    CheckConflict -- No (New) --> UpdateServer
+    CheckConflict -- Yes --> CheckTimestamp
+    
+    CheckTimestamp -- Yes (Newer) --> UpdateServer
+    CheckTimestamp -- No (Older) --> IgnoreUpdate
+    
+    UpdateServer --> ReturnSuccess
+    IgnoreUpdate --> ReturnSuccess
+    
+    ReturnSuccess --> MarkSynced
+    MarkSynced --> LoopPending
+
+    %% Styling
+    classDef logic fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    classDef success fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
+    classDef warning fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000
+    classDef error fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
+    classDef storage fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+
+    class Start,NetRestore logic
+    class CheckNet,CheckAPISuccess,CheckConflict,CheckTimestamp warning
+    class UpdateLocalSynced,UpdateServer,MarkSynced,ReturnSuccess success
+    class ShowError,IgnoreUpdate error
+    class SaveLocalPending,FetchExisting storage

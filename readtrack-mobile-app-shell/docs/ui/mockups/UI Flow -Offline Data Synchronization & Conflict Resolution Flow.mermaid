@@ -1,0 +1,61 @@
+sequenceDiagram
+    actor User
+    participant App as Mobile App (Flutter)
+    participant LocalDB as Isar (Local DB)
+    participant SyncService as Sync Manager
+    participant API as Backend API
+    participant RemoteDB as Aurora (Remote DB)
+
+    box "Phase 1: Offline Operation" #f9f9f9
+        User->>App: Action: Log Reading Session
+        activate App
+        App->>App: Check Connectivity
+        Note right of App: Status: Offline
+        App->>App: Generate UTC Timestamp (T_Client)
+        App->>LocalDB: WRITE {id: UUID, status: 'pending_sync', timestamp: T_Client}
+        activate LocalDB
+        LocalDB-->>App: Acknowledge Write
+        deactivate LocalDB
+        App-->>User: Update UI (Optimistic)
+        deactivate App
+    end
+
+    box "Phase 2: Synchronization" #e6f3ff
+        Note over SyncService: Connectivity Restored
+        SyncService->>SyncService: Trigger Sync Job
+        activate SyncService
+        SyncService->>LocalDB: READ WHERE status = 'pending_sync'
+        activate LocalDB
+        LocalDB-->>SyncService: Return List[Sessions]
+        deactivate LocalDB
+
+        loop For Each Session
+            SyncService->>API: POST /sync {id: UUID, timestamp: T_Client, data: ...}
+            activate API
+            
+            API->>RemoteDB: SELECT timestamp FROM Sessions WHERE id = UUID
+            activate RemoteDB
+            RemoteDB-->>API: Return T_Server OR Null
+            deactivate RemoteDB
+
+            alt Record is New (Null)
+                API->>RemoteDB: INSERT New Record
+                API-->>SyncService: 201 Created
+            else Conflict: T_Server < T_Client
+                Note over API: Client data is newer
+                API->>RemoteDB: UPDATE Record (Last Write Wins)
+                API-->>SyncService: 200 OK
+            else Conflict: T_Server >= T_Client
+                Note over API: Server data is newer/same
+                API->>API: Ignore Update (Preserve Server Data)
+                API-->>SyncService: 200 OK (Acknowledged)
+            end
+            deactivate API
+
+            SyncService->>LocalDB: UPDATE {id: UUID, status: 'synced'}
+            activate LocalDB
+            LocalDB-->>SyncService: Success
+            deactivate LocalDB
+        end
+        deactivate SyncService
+    end

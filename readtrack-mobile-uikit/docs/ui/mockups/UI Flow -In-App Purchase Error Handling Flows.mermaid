@@ -1,0 +1,48 @@
+sequenceDiagram
+    actor User
+    participant App as Flutter Mobile App
+    participant Store as StoreKit / Play Billing
+    participant API as Backend API
+
+    %% Scenario 1: Payment Failed Flow
+    rect rgb(255, 245, 245)
+        note right of User: Scenario 1: Payment Failed
+        User->>App: Taps 'Upgrade to Premium'
+        App->>Store: Initiate Purchase Flow (Product ID)
+        Store-->>User: Presents Native Payment Sheet
+        User->>Store: Confirms Payment
+        Store-->>User: Payment Declined / Insufficient Funds
+        Store-->>App: Callback: Error (Payment Failed/Cancelled)
+        App->>App: Log Failure Analytics
+        App-->>User: Display 'Payment Failed UI'<br/>(Dialog: 'Payment could not be processed')
+    end
+
+    %% Scenario 2: Network Error Flow
+    rect rgb(255, 250, 240)
+        note right of User: Scenario 2: Verification Network Error
+        User->>App: Taps 'Upgrade to Premium'
+        App->>Store: Initiate Purchase Flow
+        Store-->>User: Presents Native Payment Sheet
+        User->>Store: Confirms Payment
+        Store-->>App: Callback: Success (Purchase Token/Receipt)
+        App->>App: Persist Token Locally (Resilience)
+        App->>API: POST /api/v1/subscriptions/verify
+        API--xApp: Network Timeout / 500 Error / No Connection
+        App->>App: Schedule Retry / Background Sync
+        App-->>User: Display 'Network Error UI'<br/>(Snackbar: 'Purchase successful. Verifying connection...')
+    end
+
+    %% Scenario 3: Restore Purchase Failed Flow
+    rect rgb(245, 245, 255)
+        note right of User: Scenario 3: Restore Purchase Failed
+        User->>App: Taps 'Restore Purchases'
+        App->>Store: Request Past Purchases / Active Entitlements
+        
+        alt Store Connection Error
+            Store-->>App: Error: Service Unavailable / Timeout
+            App-->>User: Display 'Restore Failed UI'<br/>(Dialog: 'Could not connect to Store. Try again.')
+        else No Active Subscriptions
+            Store-->>App: Success: Empty List []
+            App-->>User: Display 'No Subscriptions UI'<br/>(Dialog: 'No active Premium subscription found.')
+        end
+    end

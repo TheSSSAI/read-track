@@ -1,0 +1,57 @@
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as PaywallModal (UI)
+    participant Logic as PurchaseController (State)
+    participant SDK as InAppPurchase SDK
+    participant BE as Backend API
+
+    Note over User, UI: Phase 1: Initialization
+    User->>UI: Navigates to Premium Screen
+    activate UI
+    UI->>Logic: init()
+    activate Logic
+    Logic->>SDK: queryProductDetails(ids)
+    activate SDK
+    SDK-->>Logic: ProductDetails (Price, Currency)
+    deactivate SDK
+    Logic-->>UI: Update State: Loaded
+    UI-->>User: Displays localized Price & Terms
+    deactivate Logic
+
+    Note over User, UI: Phase 2: Purchase Intent
+    User->>UI: Taps 'Upgrade to Premium' Button
+    UI->>UI: Set State: Purchasing (Show Spinner, Disable Inputs)
+    UI->>Logic: buyProduct(product)
+    activate Logic
+    Logic->>SDK: buyNonConsumable(productParam)
+    activate SDK
+    
+    Note over User, SDK: Native OS Payment Sheet Interaction (System Controlled)
+
+    alt Purchase Successful
+        SDK-->>Logic: PurchaseDetails (Status: Purchased, Receipt)
+        deactivate SDK
+        Logic->>BE: verifyReceipt(ReceiptData)
+        activate BE
+        BE-->>Logic: HTTP 200 OK (Status: Valid)
+        deactivate BE
+        Logic-->>UI: Emit State: Success
+        UI->>UI: Show Success Animation ("Welcome to Premium!")
+        UI-->>User: Visual Confirmation
+        UI->>UI: Close Modal (after delay)
+        
+    else Purchase Failed / Declined
+        SDK-->>Logic: PurchaseDetails (Status: Error)
+        Logic-->>UI: Emit State: Error(message)
+        UI->>UI: Set State: Idle (Hide Spinner)
+        UI->>UI: Show Error Toast ("Payment Declined")
+        
+    else User Cancelled
+        SDK-->>Logic: PurchaseDetails (Status: Canceled)
+        deactivate Logic
+        Logic-->>UI: Emit State: Canceled
+        UI->>UI: Set State: Idle (Hide Spinner)
+        UI-->>User: Return to Paywall View
+    end
+    deactivate UI

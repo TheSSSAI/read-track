@@ -1,0 +1,82 @@
+stateDiagram-v2
+    direction TB
+
+    %% Definition of states
+    classDef default fill:#f9f9f9,stroke:#333,stroke-width:1px,color:#000
+    classDef success fill:#d1fae5,stroke:#059669,stroke-width:2px,color:#000
+    classDef error fill:#fee2e2,stroke:#b91c1c,stroke-width:2px,color:#000
+    classDef system fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#000
+    classDef interactive fill:#fffbeb,stroke:#d97706,stroke-width:2px,color:#000
+
+    [*] --> FetchingProducts: User Taps "Upgrade" or Limit Reached
+
+    state FetchingProducts {
+        [*] --> QueryStore
+        QueryStore --> StoreResponse: Native Platform API Call
+    }
+
+    state StoreResponse <<choice>>
+    
+    FetchingProducts --> BenefitsView: Success (Products Loaded)
+    FetchingProducts --> LoadErrorView: Failure (Network/Store Error)
+
+    state BenefitsView {
+        %% UI Display
+        [*] --> Idle
+        Idle --> ContentRender: Show Price & Features
+        note right of ContentRender
+            Display localized price
+            List Premium features
+            Show "Upgrade Now" CTA
+        end note
+    }
+
+    LoadErrorView --> FetchingProducts: User Taps "Retry"
+    LoadErrorView --> [*]: User Taps "Close"
+
+    BenefitsView --> NativePurchaseFlow: User Taps "Upgrade Now"
+    BenefitsView --> NativePurchaseFlow: User Taps "Restore Purchases"
+    BenefitsView --> [*]: User Taps "Close"
+
+    state NativePurchaseFlow {
+        %% System Overlay
+        [*] --> OS_Overlay: App Store / Google Play Sheet
+        note right of OS_Overlay
+            App moves to background/inactive
+            Waiting for OS callback
+        end note
+    }
+
+    state PurchaseResult <<choice>>
+    NativePurchaseFlow --> PurchaseResult: Callback Received
+
+    PurchaseResult --> VerifyingReceipt: Purchase/Restore Successful
+    PurchaseResult --> BenefitsView: User Cancelled
+    PurchaseResult --> PurchaseErrorView: Payment Failed/Declined
+
+    state VerifyingReceipt {
+        [*] --> SendToBackend
+        SendToBackend --> UpdateUserRole: Valid Receipt (Webhook/API)
+    }
+
+    state ValidationResult <<choice>>
+    VerifyingReceipt --> ValidationResult
+
+    ValidationResult --> SuccessView: Valid Signature
+    ValidationResult --> PurchaseErrorView: Invalid Signature/Server Error
+
+    state SuccessView {
+        [*] --> Animation
+        Animation --> UnlockFeatures
+        UnlockFeatures --> [*]: Auto-dismiss / User Taps "Continue"
+    }
+
+    PurchaseErrorView --> BenefitsView: User Taps "Try Again"
+    PurchaseErrorView --> [*]: User Taps "Cancel"
+
+    %% Styling Application
+    class FetchingProducts, VerifyingReceipt system
+    class BenefitsView interactive
+    class SuccessView success
+    class LoadErrorView, PurchaseErrorView error
+    class NativePurchaseFlow system
