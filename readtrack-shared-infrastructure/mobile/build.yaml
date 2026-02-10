@@ -1,0 +1,23 @@
+targets:
+  $default:
+    builders:
+      json_serializable:
+        options:
+          # Keep field names as-is by default; explicit @JsonKey overrides allowed
+          explicit_to_json: true
+          check_for_new_factory: false
+      
+      source_gen|combining_builder:
+        options:
+          build_extensions:
+            '^lib/{{}}.dart': 'lib/{{}}.g.dart'
+
+      riverpod_generator:
+        options:
+          # Keep providers generated in same file part
+          provider_name_suffix: "Provider"
+          
+      freezed:
+        options:
+          # Disable formatting of generated files for speed
+          format: false

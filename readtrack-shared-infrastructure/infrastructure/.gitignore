@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# CDK Build Artifacts
+cdk.out/
+.cdk.staging/
+dist/
+
+# TypeScript
+*.js
+!jest.config.js
+*.d.ts
+tsconfig.tsbuildinfo
+
+# OS Metadata
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log
+yarn-error.log
+
+# IDE
+.vscode/
+.idea/
+
+# Context
+cdk.context.json
