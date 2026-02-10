@@ -1,0 +1,6 @@
+"team_member","role","sprint_1_hours","sprint_2_hours","sprint_3_hours","total_allocated_hours","focus_areas"
+"devops.engineer@company.com","DevOps Engineer","11.2","","4","15.2","CDK Infrastructure, Secrets Management, SQS/DLQ"
+"backend.lead@company.com","Lead Backend Engineer","3.2","19.5","10","32.7","API Design, Domain Logic, Sync Algorithms, Integration Testing"
+"backend.dev@company.com","Backend Engineer","10.3","8","6.3","24.6","Apple/Google Webhook Handlers, Subscription State Logic"
+"mobile.dev@company.com","Mobile Engineer","3.2","15.2","6","24.4","Connectivity Service, Isar Queue, Sync Orchestrator"
+"qa.engineer@company.com","QA Engineer","","","12","12","Webhook E2E Testing, Regression Testing"

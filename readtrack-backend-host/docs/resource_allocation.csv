@@ -1,0 +1,4 @@
+"team_member","role","skills","sprint_1_hours","sprint_1_utilization","sprint_1_tasks","sprint_2_hours","sprint_2_utilization","sprint_2_tasks","total_allocated_hours","capacity_buffer","collaboration_time","learning_objectives","risk_factors","backup_resources","cross_training_opportunities"
+"devops.lead@company.com","DevOps Engineer","AWS CDK,Infrastructure,Security","15","94%","TASK-INF-001,TASK-INF-002","8.3","52%","TASK-INF-004","38.5","20%","10%","OpenSearch Serverless","High load in Sprint 1","Backend Lead","Teach backend team CDK"
+"backend.lead@company.com","Backend Lead",".NET,Architecture,Auth0","14.3","89%","TASK-BE-001,TASK-BE-002","22.6","141%","TASK-BE-007,TASK-BE-008","42.2","10%","15%","None","Overloaded in Sprint 2","Backend Dev","Mentor Backend Dev"
+"mobile.lead@company.com","Mobile Lead","Flutter,Architecture","6","38%","TASK-MOB-001","12","75%","TASK-MOB-002","29","20%","10%","None","None","Mobile Dev","None"
