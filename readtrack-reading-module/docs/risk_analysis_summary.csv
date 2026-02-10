@@ -1,0 +1,2 @@
+"total_risks_identified","critical_risks","high_priority_risks","average_risk_score","key_risk_themes","immediate_actions_required"
+"6","0","3","15.1","[""Offline Data Consistency"",""App Store Compliance"",""Cloud Cost Management""]","[""Finalize offline sync architecture design document before coding WI-MOB-002"",""Set up AWS Budgets and Alerts immediately upon AWS account provisioning"",""Verify App Store/Play Store accounts and tax agreements are active to prevent release delays""]"

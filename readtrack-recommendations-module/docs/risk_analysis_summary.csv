@@ -1,0 +1,2 @@
+"total_risks_identified","critical_risks","high_priority_risks","average_risk_score","key_risk_themes","immediate_actions_required"
+"6","0","3","14.1","[""Data Synchronization Integrity"",""Third-Party Dependency Reliability"",""Native Feature Testing Complexity""]","[""Finalize conflict resolution strategy for offline sync (WI-LIB-002)"",""Establish caching strategy for Google Books API (WI-LIB-001)"",""Secure physical devices for IAP and Auth testing (WI-SUB-003)""]"

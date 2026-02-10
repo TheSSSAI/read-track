@@ -1,0 +1,2 @@
+"total_risks_identified","critical_risks","high_priority_risks","average_risk_score","key_risk_themes","immediate_actions_required"
+"6","1","4","16.3","[""Offline Data Synchronization Integrity"",""Third-Party Dependency Reliability (IAP, Google Books, OpenAI)"",""Mobile Performance & Local Persistence Stability""]","[""Finalize conflict resolution strategy for offline sync beyond 'Last Write Wins'"",""Implement idempotent queues for IAP webhooks"",""Mandate Isolates for all heavy Flutter operations""]"

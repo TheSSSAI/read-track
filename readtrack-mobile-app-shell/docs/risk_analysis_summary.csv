@@ -1,0 +1,2 @@
+"total_risks_identified","critical_risks","high_priority_risks","average_risk_score","key_risk_themes","immediate_actions_required"
+"6","1","2","14","[""Offline Data Consistency"",""Latency vs. AI Capability"",""Cross-Platform Schema Management""]","[""Redesign sync conflict resolution strategy beyond 'Last-Write-Wins'"",""Implement asynchronous pattern for AI recommendations to meet latency NFRs"",""Establish strict Isar database migration testing protocol""]"

@@ -1,0 +1,2 @@
+"total_risks_identified","critical_risks","high_priority_risks","average_risk_score","key_risk_themes","immediate_actions_required"
+"6","1","2","13.3","[""Offline Data Integrity"",""Cloud Infrastructure Costs"",""Third-Party Dependency Reliability""]","[""Finalize Isar-to-PostgreSQL schema mapping and conflict resolution strategy"",""Configure AWS Budgets for OpenSearch Serverless immediately upon provisioning"",""Implement idempotent webhook handling for IAP before release to QA""]"

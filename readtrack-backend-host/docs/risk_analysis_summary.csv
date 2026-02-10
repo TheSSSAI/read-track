@@ -1,0 +1,2 @@
+"total_risks_identified","critical_risks","high_priority_risks","average_risk_score","key_risk_themes","immediate_actions_required"
+"6","1","2","14.16","[""Offline Data Integrity"",""Platform Compliance (App Store/GDPR)"",""Performance vs. Architecture (Serverless Latency)""]","[""Review App Store & AdMob guidelines for ATT compliance before starting WI-MOB-006"",""Design conflict resolution flow beyond 'Last Write Wins' for WI-BE-002"",""Configure AWS Budgets for OpenSearch/OpenAI immediately upon provisioning""]"

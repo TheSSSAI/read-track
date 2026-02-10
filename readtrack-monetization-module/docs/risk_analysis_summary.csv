@@ -1,0 +1,2 @@
+"total_risks_identified","critical_risks","high_priority_risks","average_risk_score","key_risk_themes","immediate_actions_required"
+"6","0","2","14.6","[""Offline Data Consistency"",""External API Dependencies"",""AI Cost Management""]","[""Implement Redis caching and Rate Limiting for Google Books API proxy (RISK-EXT-002)"",""Design version-based conflict resolution for offline sync (RISK-TEC-001)"",""Set Production Aurora Min ACU to 0.5 to prevent cold starts (RISK-PER-004)""]"

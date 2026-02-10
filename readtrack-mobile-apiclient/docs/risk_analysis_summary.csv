@@ -1,0 +1,2 @@
+"total_risks_identified","critical_risks","high_priority_risks","average_risk_score","key_risk_themes","immediate_actions_required"
+"6","2","1","15.8","[""Data Integrity in Offline Scenarios"",""Dependency on External API Performance"",""Cloud Cost Management""]","[""Design server-authoritative conflict resolution strategy for Mobile Sync (WI-MOB-003)"",""Implement Redis caching layer for Google Books/AI API calls (WI-READ-003)"",""Configure AWS Budgets and Alerts for Serverless infrastructure (WI-INFRA-002)""]"
