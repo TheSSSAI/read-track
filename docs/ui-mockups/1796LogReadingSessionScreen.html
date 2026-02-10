@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log Reading Session - ReadTrack</title>
+  <style>
+    /* 
+      DESIGN SYSTEM TOKENS 
+      Based on provided Design System
+    */
+    :root {
+      /* Colors - Primary */
+      --color-primary-50: #EEF2FF;
+      --color-primary-100: #E0E7FF;
+      --color-primary-200: #C7D2FE;
+      --color-primary-300: #A5B4FC;
+      --color-primary-400: #818CF8;
+      --color-primary-500: #6366F1;
+      --color-primary-600: #4F46E5;
+      --color-primary-700: #4338CA;
+      --color-primary-900: #312E81;
+
+      /* Colors - Neutrals */
+      --color-white: #FFFFFF;
+      --color-gray-50: #F8FAFC;
+      --color-gray-100: #F1F5F9;
+      --color-gray-200: #E2E8F0;
+      --color-gray-300: #CBD5E1;
+      --color-gray-400: #94A3B8;
+      --color-gray-500: #64748B;
+      --color-gray-700: #334155;
+      --color-gray-800: #1E293B;
+      --color-gray-900: #0F172A;
+
+      /* Colors - Semantic */
+      --color-success: #10B981;
+      --color-success-bg: #D1FAE5;
+      --color-error: #EF4444;
+      --color-error-bg: #FEE2E2;
+
+      /* Typography */
+      --font-family-primary: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-family-mono: 'JetBrains Mono', monospace;
+      
+      /* Spacing */
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      --spacing-2xl: 48px;
+
+      /* UI Elements */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-full: 9999px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      
+      /* Transitions */
+      --transition-base: 200ms ease-in-out;
+    }
+
+    /* RESET & BASE STYLES */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family-primary);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* LAYOUT UTILITIES */
+    .screen-container {
+      width: 100%;
+      max-width: 1140px; /* Desktop constraint */
+      margin: 0 auto;
+      padding: var(--spacing-md);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* TYPOGRAPHY COMPONENTS */
+    h1 {
+      font-size: 24px; /* Mobile h1 */
+      font-weight: 700;
+      color: var(--color-gray-900);
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--color-gray-700);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .caption {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--color-gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* COMPONENT: APP BAR */
+    .app-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+      padding: var(--spacing-sm) 0 var(--spacing-lg);
+    }
+
+    .btn-icon {
+      background: none;
+      border: none;
+      padding: var(--spacing-xs);
+      cursor: pointer;
+      color: var(--color-gray-900);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-icon:hover {
+      background-color: var(--color-gray-200);
+    }
+
+    /* COMPONENT: GRID LAYOUT (Responsive) */
+    .log-session-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--spacing-lg);
+    }
+
+    @media (min-width: 768px) {
+      .log-session-grid {
+        grid-template-columns: 320px 1fr; /* Sidebar for book info, Main area for form */
+        align-items: start;
+      }
+      
+      h1 { font-size: 32px; } /* Desktop h1 */
+    }
+
+    /* COMPONENT: BOOK CONTEXT CARD */
+    .book-card {
+      background: var(--color-white);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-md);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: row;
+      gap: var(--spacing-md);
+      align-items: center;
+    }
+
+    @media (min-width: 768px) {
+      .book-card {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: var(--spacing-lg);
+      }
+    }
+
+    .book-cover {
+      width: 60px;
+      height: 90px;
+      background-color: var(--color-gray-200);
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      box-shadow: var(--shadow-sm);
+      flex-shrink: 0;
+    }
+
+    @media (min-width: 768px) {
+      .book-cover {
+        width: 120px;
+        height: 180px;
+        margin-bottom: var(--spacing-md);
+      }
+    }
+
+    .book-info {
+      flex: 1;
+    }
+
+    .book-title {
+      font-weight: 600;
+      color: var(--color-gray-900);
+      font-size: 16px;
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .book-author {
+      color: var(--color-gray-500);
+      font-size: 14px;
+    }
+
+    .progress-pill {
+      display: inline-block;
+      margin-top: var(--spacing-sm);
+      padding: 4px 12px;
+      background-color: var(--color-primary-50);
+      color: var(--color-primary-700);
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* COMPONENT: TABS */
+    .tabs {
+      background: var(--color-gray-100);
+      padding: 4px;
+      border-radius: var(--radius-md);
+      display: flex;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .tab-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: 600;
+      color: var(--color-gray-500);
+      cursor: pointer;
+      transition: all var(--transition-base);
+      font-size: 14px;
+    }
+
+    .tab-btn.active {
+      background: var(--color-white);
+      color: var(--color-primary-600);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tab-btn:focus-visible {
+      outline: 2px solid var(--color-primary-300);
+      z-index: 1;
+    }
+
+    /* FORM & INPUTS */
+    .form-container {
+      background: var(--color-white);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .form-group {
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-gray-700);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--color-gray-300);
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      color: var(--color-gray-900);
+      transition: var(--transition-base);
+      font-family: var(--font-family-primary);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 4px var(--color-primary-100);
+    }
+
+    .form-helper {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--color-gray-500);
+    }
+
+    .input-row {
+      display: flex;
+      gap: var(--spacing-md);
+    }
+    
+    .input-row > * {
+      flex: 1;
+    }
+
+    /* COMPONENT: TIMER WIDGET */
+    .timer-widget {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: var(--spacing-xl) 0;
+      text-align: center;
+    }
+
+    .timer-display {
+      font-family: var(--font-family-mono);
+      font-size: 48px; /* Mobile */
+      font-weight: 700;
+      color: var(--color-gray-900);
+      margin-bottom: var(--spacing-xl);
+      letter-spacing: -2px;
+      font-feature-settings: "tnum";
+      font-variant-numeric: tabular-nums;
+    }
+
+    @media (min-width: 768px) {
+      .timer-display { font-size: 64px; }
+    }
+
+    .timer-controls {
+      display: flex;
+      gap: var(--spacing-lg);
+      align-items: center;
+    }
+
+    .btn-control {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition-base);
+    }
+
+    .btn-control svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .btn-play {
+      background-color: var(--color-primary-600);
+      color: var(--color-white);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+    }
+
+    .btn-play:hover {
+      background-color: var(--color-primary-700);
+      transform: scale(1.05);
+    }
+
+    .btn-pause {
+      background-color: var(--color-primary-100);
+      color: var(--color-primary-700);
+    }
+
+    .btn-stop {
+      background-color: var(--color-error-bg);
+      color: var(--color-error);
+    }
+
+    .screen-awake-toggle {
+      margin-top: var(--spacing-xl);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      font-size: 14px;
+      color: var(--color-gray-600);
+    }
+
+    /* COMPONENT: ACTION FOOTER */
+    .sticky-footer {
+      position: sticky;
+      bottom: 0;
+      background: var(--color-white);
+      border-top: 1px solid var(--color-gray-200);
+      padding: var(--spacing-md);
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--spacing-md);
+      margin-top: auto; /* Push to bottom if content is short */
+    }
+
+    @media (max-width: 767px) {
+      .sticky-footer {
+        flex-direction: column-reverse;
+      }
+      .sticky-footer button {
+        width: 100%;
+      }
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: var(--transition-base);
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      background-color: var(--color-primary-600);
+      color: var(--color-white);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--color-primary-700);
+      box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      color: var(--color-gray-700);
+      border-color: var(--color-gray-300);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--color-gray-50);
+      border-color: var(--color-gray-400);
+    }
+
+    /* UTILITIES */
+    .hidden {
+      display: none !important;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* ANIMATIONS */
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+    }
+
+    .timer-running .btn-play {
+      animation: pulse 2s infinite;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="screen-container">
+    
+    <!-- Header -->
+    <header class="app-bar">
+      <button class="btn-icon" aria-label="Back">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <h1>Log Reading Session</h1>
+    </header>
+
+    <div class="log-session-grid">
+      
+      <!-- Context Sidebar (Book Info) -->
+      <aside>
+        <div class="book-card">
+          <img src="https://placehold.co/120x180/e2e8f0/64748b?text=Cover" alt="Cover of The Great Gatsby" class="book-cover">
+          <div class="book-info">
+            <div class="caption">Currently Reading</div>
+            <h4 class="book-title">The Great Gatsby</h4>
+            <div class="book-author">F. Scott Fitzgerald</div>
+            <div class="progress-pill">Page 42 of 180 (23%)</div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main>
+        
+        <!-- Mode Toggle -->
+        <div class="tabs" role="tablist" aria-label="Logging Mode">
+          <button id="tab-manual" class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-manual">Manual Entry</button>
+          <button id="tab-timer" class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-timer">Timer</button>
+        </div>
+
+        <!-- Manual Entry Panel -->
+        <section id="panel-manual" role="tabpanel" aria-labelledby="tab-manual" class="form-container">
+          <h2 class="sr-only">Manual Entry Details</h2>
+          
+          <div class="form-group">
+            <label for="date" class="form-label">Date</label>
+            <input type="date" id="date" class="form-input" value="2023-10-27">
+          </div>
+
+          <div class="input-row">
+            <div class="form-group">
+              <label for="start-page" class="form-label">Start Page</label>
+              <input type="number" id="start-page" class="form-input" value="42" readonly disabled style="background-color: var(--color-gray-50); cursor: not-allowed;">
+            </div>
+            <div class="form-group">
+              <label for="end-page" class="form-label">End Page</label>
+              <input type="number" id="end-page" class="form-input" placeholder="e.g. 60">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="duration" class="form-label">Duration (minutes)</label>
+            <input type="number" id="duration" class="form-input" placeholder="e.g. 30">
+            <div class="form-helper">Optional, but good for stats!</div>
+          </div>
+
+          <div class="form-group">
+            <label for="notes" class="form-label">Notes</label>
+            <textarea id="notes" class="form-input" rows="3" placeholder="Any thoughts on what you read?"></textarea>
+          </div>
+        </section>
+
+        <!-- Timer Panel (Hidden by default) -->
+        <section id="panel-timer" role="tabpanel" aria-labelledby="tab-timer" class="form-container hidden">
+          <h2 class="sr-only">Live Timer</h2>
+          
+          <div class="timer-widget">
+            <div class="caption" style="margin-bottom: 8px;">Time Elapsed</div>
+            <div class="timer-display" id="timer-val" role="timer" aria-live="polite">00:00:00</div>
+            
+            <div class="timer-controls">
+              <!-- Initial State: Just Play -->
+              <button id="btn-start" class="btn-control btn-play" aria-label="Start Timer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+
+              <!-- Running State (Hidden initially) -->
+              <button id="btn-pause" class="btn-control btn-pause hidden" aria-label="Pause Timer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+              </button>
+              
+              <button id="btn-stop" class="btn-control btn-stop hidden" aria-label="Stop and Save Timer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
+              </button>
+            </div>
+
+            <div class="screen-awake-toggle">
+              <input type="checkbox" id="keep-awake" checked>
+              <label for="keep-awake">Keep screen awake while reading</label>
+            </div>
+          </div>
+
+          <!-- Timer Finished State (Hidden) -->
+          <div id="timer-finished-inputs" class="hidden" style="margin-top: var(--spacing-xl); border-top: 1px solid var(--color-gray-200); padding-top: var(--spacing-lg);">
+            <div class="form-group">
+              <label class="form-label">Duration Recorded</label>
+              <div style="font-size: 18px; font-weight: 600; color: var(--color-primary-700);">45 minutes</div>
+            </div>
+            <div class="form-group">
+              <label for="timer-end-page" class="form-label">Where did you stop?</label>
+              <input type="number" id="timer-end-page" class="form-input" placeholder="End Page">
+            </div>
+          </div>
+
+        </section>
+
+      </main>
+    </div>
+
+  </div>
+
+  <!-- Sticky Footer -->
+  <footer class="sticky-footer">
+    <button class="btn btn-secondary">Cancel</button>
+    <button class="btn btn-primary" id="btn-save">Save Session</button>
+  </footer>
+
+  <script>
+    // --- Interaction Logic for Demonstration ---
+
+    // 1. Tab Switching
+    const tabManual = document.getElementById('tab-manual');
+    const tabTimer = document.getElementById('tab-timer');
+    const panelManual = document.getElementById('panel-manual');
+    const panelTimer = document.getElementById('panel-timer');
+    const saveButton = document.getElementById('btn-save');
+
+    function switchTab(mode) {
+      if (mode === 'manual') {
+        tabManual.classList.add('active');
+        tabManual.setAttribute('aria-selected', 'true');
+        tabTimer.classList.remove('active');
+        tabTimer.setAttribute('aria-selected', 'false');
+        panelManual.classList.remove('hidden');
+        panelTimer.classList.add('hidden');
+        saveButton.textContent = "Save Session";
+      } else {
+        tabTimer.classList.add('active');
+        tabTimer.setAttribute('aria-selected', 'true');
+        tabManual.classList.remove('active');
+        tabManual.setAttribute('aria-selected', 'false');
+        panelTimer.classList.remove('hidden');
+        panelManual.classList.add('hidden');
+        // If timer is running, save button might change or be disabled depending on logic
+        // For simple UX, we keep it as Save Session but it might act differently
+      }
+    }
+
+    tabManual.addEventListener('click', () => switchTab('manual'));
+    tabTimer.addEventListener('click', () => switchTab('timer'));
+
+    // 2. Timer Simulation
+    const btnStart = document.getElementById('btn-start');
+    const btnPause = document.getElementById('btn-pause');
+    const btnStop = document.getElementById('btn-stop');
+    const timerDisplay = document.getElementById('timer-val');
+    const timerInputs = document.getElementById('timer-finished-inputs');
+    let timerInterval;
+    let seconds = 0;
+
+    function formatTime(totalSeconds) {
+      const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+      const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+      const s = (totalSeconds % 60).toString().padStart(2, '0');
+      return `${h}:${m}:${s}`;
+    }
+
+    btnStart.addEventListener('click', () => {
+      // UI State: Running
+      btnStart.classList.add('hidden');
+      btnPause.classList.remove('hidden');
+      btnStop.classList.remove('hidden');
+      document.querySelector('.timer-widget').classList.add('timer-running');
+      saveButton.disabled = true; // Cannot save while timer running
+      saveButton.textContent = "Reading in Progress...";
+
+      // Logic
+      timerInterval = setInterval(() => {
+        seconds++;
+        timerDisplay.textContent = formatTime(seconds);
+      }, 1000);
+    });
+
+    btnPause.addEventListener('click', () => {
+      // Toggle Pause/Resume (Simplified for demo)
+      clearInterval(timerInterval);
+      btnStart.classList.remove('hidden'); // Show play button again to resume
+      btnPause.classList.add('hidden');
+      document.querySelector('.timer-widget').classList.remove('timer-running');
+      saveButton.textContent = "Resume or Stop to Save";
+    });
+
+    btnStop.addEventListener('click', () => {
+      clearInterval(timerInterval);
+      // UI State: Stopped/Finished
+      btnStart.classList.add('hidden');
+      btnPause.classList.add('hidden');
+      btnStop.classList.add('hidden');
+      document.querySelector('.timer-widget').classList.remove('timer-running');
+      
+      // Reveal input fields for finishing
+      timerInputs.classList.remove('hidden');
+      saveButton.disabled = false;
+      saveButton.textContent = "Save Session";
+      
+      // Focus on the end page input
+      document.getElementById('timer-end-page').focus();
+    });
+
+  </script>
+</body>
+</html>

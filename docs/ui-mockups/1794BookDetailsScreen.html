@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Details - ReadTrack</title>
+  <style>
+    /* 
+      DESIGN SYSTEM TOKENS 
+      --------------------
+      Based on provided Design System JSON
+    */
+    :root {
+      /* Typography */
+      --font-primary: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-secondary: 'Merriweather', Georgia, serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Color Palette: Primary (Indigo) */
+      --primary-50: #EEF2FF;
+      --primary-100: #E0E7FF;
+      --primary-200: #C7D2FE;
+      --primary-500: #6366F1;
+      --primary-600: #4F46E5;
+      --primary-700: #4338CA;
+      --primary-900: #312E81;
+
+      /* Color Palette: Neutrals */
+      --white: #FFFFFF;
+      --gray-50: #F8FAFC;
+      --gray-100: #F1F5F9;
+      --gray-200: #E2E8F0;
+      --gray-300: #CBD5E1;
+      --gray-400: #94A3B8;
+      --gray-500: #64748B;
+      --gray-600: #475569;
+      --gray-800: #1E293B;
+      --gray-900: #0F172A;
+
+      /* Color Palette: Semantic */
+      --semantic-success: #10B981;
+      --semantic-success-bg: #D1FAE5;
+      --semantic-warning: #F59E0B;
+      --semantic-error: #EF4444;
+      --semantic-error-bg: #FEE2E2;
+
+      /* Spacing */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --space-2xl: 48px;
+
+      /* UI Elements */
+      --radius-sm: 8px;
+      --radius-lg: 12px;
+      --shadow-sm: 0px 1px 3px rgba(0,0,0,0.1);
+      --shadow-md: 0px 4px 6px -1px rgba(0,0,0,0.1);
+      --shadow-lg: 0px 10px 15px -3px rgba(0,0,0,0.1);
+      --focus-ring: 0 0 0 3px var(--primary-200);
+    }
+
+    /* CSS Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--gray-50);
+      color: var(--gray-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button {
+      font-family: inherit;
+      border: none;
+      cursor: pointer;
+      background: none;
+    }
+
+    /* 
+      LAYOUT ARCHITECTURE 
+      -------------------
+    */
+    .screen-wrapper {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      background: var(--white);
+      height: 64px;
+      padding: 0 var(--space-md);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--gray-200);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray-600);
+      transition: background 0.2s;
+    }
+
+    .nav-icon-btn:hover {
+      background: var(--gray-100);
+      color: var(--gray-900);
+    }
+
+    .main-content {
+      flex: 1;
+      max-width: 1140px;
+      width: 100%;
+      margin: 0 auto;
+      padding: var(--space-lg) var(--space-md) 80px; /* Bottom padding for sticky mobile nav */
+    }
+
+    /* 
+      BOOK DETAILS GRID 
+      -----------------
+      Responsive strategy: 
+      Mobile: Stacked
+      Desktop: Sidebar (Left) + Content (Right)
+    */
+    .details-grid {
+      display: grid;
+      gap: var(--space-xl);
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 768px) {
+      .details-grid {
+        grid-template-columns: 300px 1fr;
+        align-items: start;
+        padding-top: var(--space-xl);
+      }
+      
+      .main-content {
+        padding-bottom: var(--space-xl); /* Reset bottom padding */
+      }
+    }
+
+    /* 
+      SIDEBAR / HERO COMPONENT 
+    */
+    .book-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    @media (min-width: 768px) {
+      .book-hero {
+        position: sticky;
+        top: 88px; /* Header + Spacing */
+      }
+    }
+
+    .book-cover-container {
+      width: 180px;
+      aspect-ratio: 2/3;
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      margin-bottom: var(--space-lg);
+      background: var(--gray-200);
+      position: relative;
+    }
+
+    .book-cover-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    /* Desktop Actions */
+    .desktop-actions {
+      display: none;
+      width: 100%;
+      gap: var(--space-sm);
+      flex-direction: column;
+    }
+
+    @media (min-width: 768px) {
+      .desktop-actions {
+        display: flex;
+      }
+      .book-cover-container {
+        width: 100%; /* Full width of sidebar column */
+        max-width: 300px;
+      }
+    }
+
+    /* 
+      CONTENT AREA COMPONENTS 
+    */
+    .content-area {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xl);
+    }
+
+    .book-header {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .book-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--gray-900);
+      line-height: 1.3;
+    }
+
+    @media (min-width: 768px) {
+      .book-title {
+        font-size: 32px;
+        line-height: 1.2;
+      }
+    }
+
+    .book-author {
+      font-size: 18px;
+      color: var(--primary-600);
+      font-weight: 500;
+    }
+
+    .meta-row {
+      display: flex;
+      gap: var(--space-md);
+      font-size: 14px;
+      color: var(--gray-500);
+      margin-top: var(--space-sm);
+      flex-wrap: wrap;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Progress Widget */
+    .progress-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: var(--space-sm);
+      font-weight: 600;
+      color: var(--gray-800);
+      font-size: 14px;
+    }
+
+    .progress-bar-track {
+      width: 100%;
+      height: 8px;
+      background: var(--gray-200);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--semantic-success);
+      border-radius: 4px;
+      width: 0%; /* Set via inline style */
+      transition: width 0.5s ease-out;
+    }
+
+    /* Description */
+    .section-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin-bottom: var(--space-md);
+    }
+
+    .description-text {
+      color: var(--gray-600);
+      font-size: 16px;
+      line-height: 1.6;
+      display: -webkit-box;
+      -webkit-line-clamp: 4; /* Truncate initially */
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    .description-text.expanded {
+      -webkit-line-clamp: unset;
+    }
+
+    .read-more-btn {
+      color: var(--primary-600);
+      font-weight: 600;
+      font-size: 14px;
+      margin-top: var(--space-sm);
+      padding: 0;
+    }
+
+    /* Session History */
+    .session-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .session-item {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .session-item:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-200);
+    }
+
+    .session-date {
+      font-weight: 600;
+      color: var(--gray-900);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .session-details {
+      font-size: 14px;
+      color: var(--gray-500);
+    }
+
+    .session-badge {
+      background: var(--primary-50);
+      color: var(--primary-700);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* Mobile Sticky Action Bar */
+    .mobile-action-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      padding: var(--space-md);
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      gap: var(--space-md);
+      z-index: 90;
+      box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+    }
+
+    @media (min-width: 768px) {
+      .mobile-action-bar {
+        display: none;
+      }
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      border-radius: var(--radius-lg);
+      transition: all 0.2s;
+      font-size: 16px;
+      height: 56px;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: var(--primary-600);
+      color: var(--white);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-700);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+
+    .btn-secondary {
+      border: 2px solid var(--primary-600);
+      color: var(--primary-600);
+      background: transparent;
+    }
+
+    .btn-secondary:hover {
+      background: var(--primary-50);
+    }
+
+    .btn-icon-only {
+      width: 56px;
+      flex-shrink: 0;
+    }
+
+    /* 
+      STATES & SKELETONS 
+    */
+    .state-layer {
+      display: none;
+    }
+    .state-layer.active {
+      display: block;
+    }
+
+    .skeleton {
+      background: var(--gray-200);
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .skeleton::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.5) 50%,
+        rgba(255, 255, 255, 0) 100%
+      );
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* Skeleton Layout Matches */
+    .sk-title { height: 32px; width: 70%; margin-bottom: 8px; }
+    .sk-text { height: 16px; width: 100%; margin-bottom: 8px; }
+    .sk-cover { width: 100%; height: 100%; }
+    .sk-card { height: 80px; width: 100%; margin-bottom: 16px; border-radius: var(--radius-lg); }
+
+    /* Error State */
+    .error-container {
+      text-align: center;
+      padding: var(--space-2xl) var(--space-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 60vh;
+    }
+    .error-icon {
+      width: 64px;
+      height: 64px;
+      color: var(--semantic-error);
+      margin-bottom: var(--space-md);
+    }
+
+    /* Control Panel for Demo */
+    .demo-controls {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      background: var(--gray-900);
+      color: var(--white);
+      padding: 12px;
+      border-radius: 8px;
+      z-index: 1000;
+      font-size: 12px;
+      display: flex;
+      gap: 8px;
+      box-shadow: var(--shadow-lg);
+    }
+    .demo-btn {
+      background: var(--gray-700);
+      border: 1px solid var(--gray-600);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .demo-btn.active {
+      background: var(--primary-600);
+      border-color: var(--primary-500);
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Demo State Switcher -->
+  <div class="demo-controls">
+    <button class="demo-btn active" onclick="switchState('library')">In Library</button>
+    <button class="demo-btn" onclick="switchState('search')">Search Result</button>
+    <button class="demo-btn" onclick="switchState('loading')">Loading</button>
+    <button class="demo-btn" onclick="switchState('error')">Error</button>
+  </div>
+
+  <div class="screen-wrapper">
+    <!-- Header -->
+    <header class="app-header">
+      <button class="nav-icon-btn" aria-label="Go back">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div style="flex: 1"></div>
+      <button class="nav-icon-btn" aria-label="Share book">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </button>
+      <button class="nav-icon-btn" aria-label="More options">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+      </button>
+    </header>
+
+    <main class="main-content">
+      
+      <!-- STATE: LOADING -->
+      <div id="state-loading" class="state-layer">
+        <div class="details-grid">
+          <!-- Loading Sidebar -->
+          <div class="book-hero">
+            <div class="book-cover-container skeleton">
+              <div class="sk-cover"></div>
+            </div>
+            <div class="desktop-actions">
+              <div class="skeleton" style="height: 56px; width: 100%; border-radius: 12px;"></div>
+              <div class="skeleton" style="height: 56px; width: 100%; border-radius: 12px;"></div>
+            </div>
+          </div>
+          <!-- Loading Content -->
+          <div class="content-area">
+            <div>
+              <div class="skeleton sk-title"></div>
+              <div class="skeleton sk-text" style="width: 40%"></div>
+              <div style="display: flex; gap: 16px; margin-top: 16px;">
+                <div class="skeleton" style="height: 20px; width: 80px;"></div>
+                <div class="skeleton" style="height: 20px; width: 80px;"></div>
+              </div>
+            </div>
+            <div class="skeleton" style="height: 100px; border-radius: 12px;"></div>
+            <div>
+              <div class="skeleton sk-text"></div>
+              <div class="skeleton sk-text"></div>
+              <div class="skeleton sk-text" style="width: 80%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATE: ERROR -->
+      <div id="state-error" class="state-layer">
+        <div class="error-container">
+          <svg class="error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          <h2 style="margin-bottom: 8px;">Failed to load book</h2>
+          <p style="color: var(--gray-600); margin-bottom: 24px;">We encountered an issue fetching the book details. Please check your connection.</p>
+          <button class="btn btn-secondary" style="width: auto; padding: 0 32px;">Retry</button>
+        </div>
+      </div>
+
+      <!-- STATE: CONTENT (In Library & Search Result) -->
+      <div id="state-content" class="state-layer active">
+        <div class="details-grid">
+          
+          <!-- Sidebar: Cover & Desktop Actions -->
+          <aside class="book-hero">
+            <div class="book-cover-container">
+              <!-- Placeholder image for demo -->
+              <img src="https://placehold.co/400x600/4F46E5/FFFFFF?text=The+Martian" alt="Book Cover" class="book-cover-img">
+            </div>
+            
+            <!-- Desktop Buttons (Hidden on Mobile) -->
+            <div class="desktop-actions">
+              <!-- Variant: In Library -->
+              <div class="variant-library">
+                <button class="btn btn-primary" aria-label="Log new reading session">Log Session</button>
+                <button class="btn btn-secondary" style="margin-top: 8px;" aria-label="Change shelf">
+                  <span style="margin-right: 8px;">Currently Reading</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+              </div>
+              <!-- Variant: Search Result -->
+              <div class="variant-search" style="display: none;">
+                <button class="btn btn-primary" aria-label="Add book to library">Add to Library</button>
+                <button class="btn btn-secondary" style="margin-top: 8px;" aria-label="Preview book">Preview</button>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Main Content Column -->
+          <article class="content-area">
+            
+            <!-- Header Info -->
+            <header class="book-header">
+              <h1 class="book-title">The Martian</h1>
+              <div class="book-author">By Andy Weir</div>
+              
+              <div class="meta-row">
+                <div class="meta-item">
+                  <svg width="16" height="16" fill="var(--semantic-warning)" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  <span style="color: var(--gray-900); font-weight: 600; margin-left: 4px;">4.8</span>
+                  <span style="margin-left: 4px;">(24k reviews)</span>
+                </div>
+                <div class="meta-item">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                  <span>369 Pages</span>
+                </div>
+                <div class="meta-item">
+                  <span>Sci-Fi</span>
+                </div>
+              </div>
+            </header>
+
+            <!-- Progress Widget (Only in Library) -->
+            <section class="progress-card variant-library">
+              <div class="progress-header">
+                <span>Reading Progress</span>
+                <span>45%</span>
+              </div>
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill" style="width: 45%;"></div>
+              </div>
+              <div style="margin-top: 8px; font-size: 14px; color: var(--gray-500); display: flex; justify-content: space-between;">
+                <span>Page 166 of 369</span>
+                <span>2 hrs left</span>
+              </div>
+            </section>
+
+            <!-- Synopsis -->
+            <section>
+              <h2 class="section-title">Synopsis</h2>
+              <div class="description-text" id="synopsis">
+                Six days ago, astronaut Mark Watney became one of the first people to walk on Mars. Now, he's sure he'll be the first person to die there. After a dust storm nearly kills him and forces his crew to evacuate while thinking him dead, Mark finds himself stranded and completely alone with no way to even signal Earth that he’s alive—and even if he could get word out, his supplies would be gone long before a rescue could arrive. But Mark isn't ready to give up yet. Drawing on his ingenuity, his engineering skills—and a relentless, dogged refusal to quit—he steadfastly confronts one seemingly insurmountable obstacle after the next. Will his resourcefulness be enough to overcome the impossible odds against him?
+              </div>
+              <button class="read-more-btn" onclick="toggleDescription()">Read more</button>
+            </section>
+
+            <!-- Session History (Only in Library) -->
+            <section class="variant-library">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 class="section-title" style="margin: 0;">Recent Sessions</h2>
+                <button style="color: var(--primary-600); font-weight: 500; font-size: 14px;">View All</button>
+              </div>
+              
+              <ul class="session-list">
+                <li class="session-item">
+                  <div>
+                    <span class="session-date">Today, 10:30 AM</span>
+                    <span class="session-details">Pages 142 - 166 (24 pages)</span>
+                  </div>
+                  <span class="session-badge">45 min</span>
+                </li>
+                <li class="session-item">
+                  <div>
+                    <span class="session-date">Yesterday, 8:15 PM</span>
+                    <span class="session-details">Pages 110 - 142 (32 pages)</span>
+                  </div>
+                  <span class="session-badge">55 min</span>
+                </li>
+              </ul>
+            </section>
+
+          </article>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Mobile Sticky Action Bar -->
+    <div class="mobile-action-bar" id="mobile-actions">
+      <!-- Variant: In Library -->
+      <div class="variant-library" style="display: flex; gap: 12px; width: 100%;">
+        <button class="btn btn-secondary btn-icon-only" aria-label="Shelf options">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button class="btn btn-primary" style="flex: 1;">Log Session</button>
+      </div>
+      <!-- Variant: Search Result -->
+      <div class="variant-search" style="display: none; width: 100%;">
+        <button class="btn btn-primary" style="width: 100%;">Add to Library</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Simple state management for demo purposes
+    function switchState(state) {
+      // Hide all layers
+      document.querySelectorAll('.state-layer').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.demo-btn').forEach(el => el.classList.remove('active'));
+      
+      // Update Active Button
+      const btn = Array.from(document.querySelectorAll('.demo-btn')).find(b => b.textContent.toLowerCase().includes(state.replace('_', ' ')));
+      if(btn) btn.classList.add('active');
+
+      if (state === 'loading') {
+        document.getElementById('state-loading').classList.add('active');
+        document.getElementById('mobile-actions').style.display = 'none';
+      } else if (state === 'error') {
+        document.getElementById('state-error').classList.add('active');
+        document.getElementById('mobile-actions').style.display = 'none';
+      } else {
+        // Content State
+        document.getElementById('state-content').classList.add('active');
+        document.getElementById('mobile-actions').style.display = 'flex';
+        
+        // Handle Variants (Library vs Search)
+        const isLibrary = state === 'library';
+        
+        document.querySelectorAll('.variant-library').forEach(el => {
+          el.style.display = isLibrary ? (el.tagName === 'DIV' || el.tagName === 'SECTION' ? 'block' : 'flex') : 'none';
+          if(el.classList.contains('progress-card') || el.tagName === 'SECTION') el.style.display = isLibrary ? 'block' : 'none';
+          if(el.classList.contains('variant-library') && el.parentElement.classList.contains('mobile-action-bar')) el.style.display = isLibrary ? 'flex' : 'none';
+        });
+
+        document.querySelectorAll('.variant-search').forEach(el => {
+          el.style.display = !isLibrary ? 'flex' : 'none';
+        });
+      }
+    }
+
+    function toggleDescription() {
+      const text = document.getElementById('synopsis');
+      const btn = document.querySelector('.read-more-btn');
+      text.classList.toggle('expanded');
+      btn.textContent = text.classList.contains('expanded') ? 'Show less' : 'Read more';
+    }
+
+    // Initialize in Library state
+    switchState('library');
+  </script>
+</body>
+</html>

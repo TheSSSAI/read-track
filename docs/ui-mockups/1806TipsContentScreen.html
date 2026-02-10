@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reading Tips Library | ReadTrack</title>
+  <meta name="description" content="Browse curated tips and strategies to improve your reading habits.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <style>
+    /* 
+      DESIGN SYSTEM TOKENS & RESET 
+    */
+    :root {
+      /* Colors: Primary (Indigo) */
+      --primary-50: #EEF2FF;
+      --primary-100: #E0E7FF;
+      --primary-200: #C7D2FE;
+      --primary-300: #A5B4FC;
+      --primary-400: #818CF8;
+      --primary-500: #6366F1;
+      --primary-600: #4F46E5;
+      --primary-700: #4338CA;
+      --primary-800: #3730A3;
+      --primary-900: #312E81;
+
+      /* Colors: Semantic */
+      --secondary-500: #F43F5E; /* Rose */
+      --success: #10B981;
+      --warning: #F59E0B;
+      --error: #EF4444;
+      --error-bg: #FEE2E2;
+
+      /* Colors: Neutrals (Light Mode Default) */
+      --bg-app: #F8FAFC;
+      --bg-surface: #FFFFFF;
+      --text-primary: #0F172A;
+      --text-secondary: #64748B;
+      --text-tertiary: #94A3B8;
+      --border-light: #E2E8F0;
+      --border-medium: #CBD5E1;
+
+      /* Typography */
+      --font-primary: 'Inter', system-ui, sans-serif;
+      --font-reader: 'Merriweather', Georgia, serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Spacing Scale */
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-6: 24px;
+      --space-8: 32px;
+      --space-12: 48px;
+      --space-16: 64px;
+
+      /* Layout */
+      --container-max: 1140px;
+      --header-height: 72px;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+
+      /* Shadows */
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-active: 0 0 0 3px var(--primary-200);
+
+      /* Transitions */
+      --transition-base: all 0.2s ease-in-out;
+    }
+
+    /* Dark Mode Overrides (Simulated via class for demo) */
+    .dark-mode {
+      --bg-app: #0F172A;
+      --bg-surface: #1E293B;
+      --text-primary: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --text-tertiary: #64748B;
+      --border-light: #334155;
+      --border-medium: #475569;
+    }
+
+    /* Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button {
+      font-family: inherit;
+      border: none;
+      background: none;
+      cursor: pointer;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* 
+      LAYOUT ARCHITECTURE 
+    */
+    .screen-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+
+    .main-content {
+      flex: 1;
+      width: 100%;
+      max-width: var(--container-max);
+      margin: 0 auto;
+      padding: var(--space-4);
+    }
+
+    @media (min-width: 600px) {
+      .main-content { padding: var(--space-8); }
+    }
+
+    /* 
+      COMPONENT: HEADER 
+    */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background-color: var(--bg-surface);
+      border-bottom: 1px solid var(--border-light);
+      padding: var(--space-3) var(--space-4);
+    }
+
+    .header__inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .header__top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header__title {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    /* Search Bar */
+    .search-bar {
+      position: relative;
+      width: 100%;
+    }
+
+    .search-bar__input {
+      width: 100%;
+      padding: 12px 16px 12px 44px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-medium);
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+      font-size: 16px;
+      transition: var(--transition-base);
+    }
+
+    .search-bar__input:focus {
+      outline: none;
+      border-color: var(--primary-500);
+      box-shadow: var(--shadow-active);
+    }
+
+    .search-bar__icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-tertiary);
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      gap: var(--space-2);
+      overflow-x: auto;
+      padding-bottom: var(--space-2);
+      scrollbar-width: none; /* Hide scrollbar Firefox */
+      -ms-overflow-style: none; /* Hide scrollbar IE */
+    }
+    
+    .filter-bar::-webkit-scrollbar {
+      display: none; /* Hide scrollbar Chrome/Safari */
+    }
+
+    .chip {
+      padding: 8px 16px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border-medium);
+      background-color: var(--bg-surface);
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: var(--transition-base);
+    }
+
+    .chip:hover, .chip:focus-visible {
+      background-color: var(--primary-50);
+      border-color: var(--primary-300);
+      color: var(--primary-700);
+      outline: none;
+    }
+
+    .chip[aria-pressed="true"] {
+      background-color: var(--primary-600);
+      border-color: var(--primary-600);
+      color: var(--neutrals-white);
+    }
+
+    /* 
+      COMPONENT: ARTICLE LIST GRID 
+    */
+    .article-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-4);
+      margin-top: var(--space-4);
+    }
+
+    @media (min-width: 600px) {
+      .article-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-6);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .article-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-8);
+      }
+    }
+
+    /* 
+      COMPONENT: ARTICLE CARD 
+    */
+    .article-card {
+      background-color: var(--bg-surface);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      border: 1px solid var(--border-light);
+      transition: var(--transition-base);
+      cursor: pointer;
+    }
+
+    .article-card:hover, .article-card:focus-visible {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-300);
+    }
+
+    .article-card:focus-visible {
+      outline: 2px solid var(--primary-500);
+      outline-offset: 2px;
+    }
+
+    .article-card__image-container {
+      position: relative;
+      padding-top: 56.25%; /* 16:9 Aspect Ratio */
+      background-color: var(--primary-100);
+    }
+
+    .article-card__image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .article-card__content {
+      padding: var(--space-4);
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+    }
+
+    .article-card__meta {
+      display: flex;
+      gap: var(--space-2);
+      font-size: 12px;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      margin-bottom: var(--space-2);
+      font-weight: 600;
+    }
+
+    .article-card__category {
+      color: var(--primary-600);
+    }
+
+    .article-card__title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-2);
+      line-height: 1.4;
+    }
+
+    .article-card__excerpt {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: var(--space-4);
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .article-card__footer {
+      margin-top: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: var(--space-3);
+      border-top: 1px solid var(--border-light);
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .article-card__read-time {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* 
+      COMPONENT: ARTICLE DETAIL (READER MODE) 
+    */
+    .article-detail {
+      background-color: var(--bg-surface);
+      min-height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 100;
+      overflow-y: auto;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
+
+    .article-detail[aria-hidden="false"] {
+      transform: translateX(0);
+    }
+
+    .detail-nav {
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      color: var(--text-primary);
+      font-weight: 500;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+    }
+
+    .back-btn:hover {
+      background-color: var(--primary-50);
+      color: var(--primary-700);
+    }
+
+    .detail-content {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: var(--space-8) var(--space-4) var(--space-16);
+    }
+
+    .detail-hero-image {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-8);
+    }
+
+    .detail-header {
+      margin-bottom: var(--space-8);
+      text-align: center;
+    }
+
+    .detail-title {
+      font-family: var(--font-primary);
+      font-size: 32px; /* H1 */
+      font-weight: 700;
+      line-height: 1.25;
+      color: var(--text-primary);
+      margin-bottom: var(--space-3);
+    }
+
+    .detail-meta {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* Reader Typography - Merriweather */
+    .detail-body {
+      font-family: var(--font-reader);
+      font-size: 18px;
+      line-height: 1.8;
+      color: var(--text-primary);
+    }
+
+    .detail-body p {
+      margin-bottom: var(--space-6);
+    }
+
+    .detail-body h2 {
+      font-family: var(--font-primary);
+      font-size: 24px;
+      font-weight: 600;
+      margin-top: var(--space-8);
+      margin-bottom: var(--space-4);
+      color: var(--text-primary);
+    }
+
+    /* 
+      STATE: LOADING SHIMMER 
+    */
+    .shimmer-card {
+      background: var(--bg-surface);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-light);
+      height: 400px;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .shimmer-img {
+      height: 56.25%;
+      background: var(--primary-50);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .shimmer-content {
+      padding: var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .shimmer-line {
+      height: 16px;
+      background: var(--primary-50);
+      border-radius: 4px;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .shimmer-line.short { width: 60%; }
+    .shimmer-line.title { height: 24px; width: 80%; }
+
+    /* Shimmer Animation */
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .shimmer-img::after, .shimmer-line::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+      animation: shimmer 1.5s infinite;
+    }
+
+    /* 
+      STATE: ERROR 
+    */
+    .error-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-12);
+      text-align: center;
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--error-bg);
+      margin-top: var(--space-8);
+    }
+
+    .error-icon {
+      width: 48px;
+      height: 48px;
+      color: var(--error);
+      margin-bottom: var(--space-4);
+    }
+
+    .error-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-2);
+    }
+
+    .error-message {
+      color: var(--text-secondary);
+      margin-bottom: var(--space-6);
+      max-width: 400px;
+    }
+
+    /* 
+      UTILITIES 
+    */
+    .hidden { display: none !important; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    /* Controls for Demo */
+    .demo-controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #000;
+      padding: 10px;
+      border-radius: 8px;
+      z-index: 1000;
+      display: flex;
+      gap: 10px;
+      opacity: 0.3;
+      transition: opacity 0.3s;
+    }
+    .demo-controls:hover { opacity: 1; }
+    .demo-btn { color: #fff; border: 1px solid #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+
+  </style>
+</head>
+<body>
+
+  <!-- Screen Container -->
+  <div class="screen-container">
+    
+    <!-- Header Area -->
+    <header class="header">
+      <div class="header__inner">
+        <div class="header__top">
+          <h1 class="header__title">Reading Tips</h1>
+          <!-- User Profile Icon could go here -->
+        </div>
+        
+        <!-- Search Bar -->
+        <div class="search-bar">
+          <svg class="search-bar__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" class="search-bar__input" placeholder="Search for tips, techniques, or ideas..." aria-label="Search tips">
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar" role="tablist" aria-label="Tip Categories">
+          <button class="chip" role="tab" aria-selected="true" aria-pressed="true">All Tips</button>
+          <button class="chip" role="tab" aria-selected="false" aria-pressed="false">Comprehension</button>
+          <button class="chip" role="tab" aria-selected="false" aria-pressed="false">Speed Reading</button>
+          <button class="chip" role="tab" aria-selected="false" aria-pressed="false">Habit Formation</button>
+          <button class="chip" role="tab" aria-selected="false" aria-pressed="false">Note Taking</button>
+          <button class="chip" role="tab" aria-selected="false" aria-pressed="false">Memory</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="mainRegion" aria-live="polite">
+      
+      <!-- STATE: LOADING -->
+      <div id="state-loading" class="article-grid hidden">
+        <div class="shimmer-card">
+          <div class="shimmer-img"></div>
+          <div class="shimmer-content">
+            <div class="shimmer-line title"></div>
+            <div class="shimmer-line"></div>
+            <div class="shimmer-line short"></div>
+          </div>
+        </div>
+        <div class="shimmer-card">
+          <div class="shimmer-img"></div>
+          <div class="shimmer-content">
+            <div class="shimmer-line title"></div>
+            <div class="shimmer-line"></div>
+            <div class="shimmer-line short"></div>
+          </div>
+        </div>
+        <div class="shimmer-card">
+          <div class="shimmer-img"></div>
+          <div class="shimmer-content">
+            <div class="shimmer-line title"></div>
+            <div class="shimmer-line"></div>
+            <div class="shimmer-line short"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATE: ERROR -->
+      <div id="state-error" class="error-state hidden">
+        <svg class="error-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <h3 class="error-title">Unable to load tips</h3>
+        <p class="error-message">We encountered an issue fetching the latest articles. Please check your connection and try again.</p>
+        <button class="chip" style="background: var(--primary-600); color: white; border: none;">Try Again</button>
+      </div>
+
+      <!-- STATE: CONTENT (LIST) -->
+      <div id="state-content" class="article-grid">
+        
+        <!-- Article Card 1 -->
+        <article class="article-card" tabindex="0" onclick="openDetail(1)">
+          <div class="article-card__image-container">
+            <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Books stacked on table" class="article-card__image">
+          </div>
+          <div class="article-card__content">
+            <div class="article-card__meta">
+              <span class="article-card__category">Habit Formation</span>
+              <span>•</span>
+              <span>3 min read</span>
+            </div>
+            <h2 class="article-card__title">How to Build a Consistent Reading Habit in 20 Days</h2>
+            <p class="article-card__excerpt">Starting is easy, but consistency is key. Learn the science of habit stacking to make reading an automatic part of your daily routine.</p>
+            <div class="article-card__footer">
+              <div class="article-card__read-time">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>Jan 12, 2025</span>
+              </div>
+              <span style="color: var(--primary-600); font-weight: 500;">Read more</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Article Card 2 -->
+        <article class="article-card" tabindex="0" onclick="openDetail(2)">
+          <div class="article-card__image-container">
+            <img src="https://images.unsplash.com/photo-1506784983877-45594efa4cbe?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Person writing notes" class="article-card__image">
+          </div>
+          <div class="article-card__content">
+            <div class="article-card__meta">
+              <span class="article-card__category">Comprehension</span>
+              <span>•</span>
+              <span>5 min read</span>
+            </div>
+            <h2 class="article-card__title">The Feynman Technique: Understand What You Read</h2>
+            <p class="article-card__excerpt">Stop passively consuming text. Use this simple mental model to ensure you actually understand and retain complex information.</p>
+            <div class="article-card__footer">
+              <div class="article-card__read-time">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>Jan 10, 2025</span>
+              </div>
+              <span style="color: var(--primary-600); font-weight: 500;">Read more</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Article Card 3 -->
+        <article class="article-card" tabindex="0" onclick="openDetail(3)">
+          <div class="article-card__image-container">
+            <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Open book" class="article-card__image">
+          </div>
+          <div class="article-card__content">
+            <div class="article-card__meta">
+              <span class="article-card__category">Speed Reading</span>
+              <span>•</span>
+              <span>4 min read</span>
+            </div>
+            <h2 class="article-card__title">3 Myths About Speed Reading You Should Ignore</h2>
+            <p class="article-card__excerpt">Reading faster doesn't mean skipping pages. We debunk common myths and show you how to increase your WPM without losing context.</p>
+            <div class="article-card__footer">
+              <div class="article-card__read-time">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>Jan 08, 2025</span>
+              </div>
+              <span style="color: var(--primary-600); font-weight: 500;">Read more</span>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </main>
+
+    <!-- STATE: DETAIL VIEW (Overlay) -->
+    <section id="article-detail-view" class="article-detail" aria-hidden="true">
+      <nav class="detail-nav">
+        <button class="back-btn" onclick="closeDetail()" aria-label="Back to tips list">
+          <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+          Back
+        </button>
+        <div style="display: flex; gap: 8px;">
+          <button class="back-btn" aria-label="Share article">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+          </button>
+          <button class="back-btn" aria-label="Bookmark article">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
+          </button>
+        </div>
+      </nav>
+
+      <div class="detail-content">
+        <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" alt="Books" class="detail-hero-image">
+        
+        <header class="detail-header">
+          <div class="article-card__meta" style="justify-content: center;">
+            <span class="article-card__category">Habit Formation</span>
+            <span>•</span>
+            <span>3 min read</span>
+          </div>
+          <h1 class="detail-title">How to Build a Consistent Reading Habit in 20 Days</h1>
+          <div class="detail-meta">By Sarah Jenkins • Jan 12, 2025</div>
+        </header>
+
+        <article class="detail-body">
+          <p>We all have that stack of books on the nightstand waiting to be read. We tell ourselves we'll get to them "when we have time," but that time rarely comes unless we make it. Building a reading habit isn't about finding extra hours in the day; it's about reclaiming small pockets of time and being intentional.</p>
+          
+          <h2>The Power of Habit Stacking</h2>
+          <p>One of the most effective ways to build a new habit is to stack it onto an existing one. This concept, popularized by James Clear in <em>Atomic Habits</em>, leverages your existing neural pathways.</p>
+          <p>Try this formula: <strong>"After [CURRENT HABIT], I will [NEW HABIT]."</strong></p>
+          <ul>
+            <li>"After I pour my morning coffee, I will read two pages."</li>
+            <li>"After I brush my teeth at night, I will read for five minutes."</li>
+          </ul>
+
+          <h2>Start Small (Ridiculously Small)</h2>
+          <p>The biggest mistake new readers make is setting ambitious goals like "read one hour a day." When life gets busy, this goal is the first to go. Instead, set a goal so small you can't say no.</p>
+          <p>Read one page. Just one. On days you're tired, one page keeps the streak alive. On days you have energy, that one page often turns into ten or twenty.</p>
+
+          <h2>Environment Design</h2>
+          <p>Design your environment to make reading the path of least resistance. If your book is hidden in a drawer and your phone is on the table, you'll grab the phone. Put a book on your pillow every morning. Keep a book in your bag. Delete social media apps from your home screen.</p>
+          <p>By reducing the friction to read and increasing the friction to scroll, you naturally shift your behavior.</p>
+        </article>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Demo Controls (Development Only) -->
+  <div class="demo-controls">
+    <button class="demo-btn" onclick="toggleState('loading')">Toggle Loading</button>
+    <button class="demo-btn" onclick="toggleState('error')">Toggle Error</button>
+    <button class="demo-btn" onclick="toggleState('content')">Toggle Content</button>
+  </div>
+
+  <script>
+    // Simple state management for demonstration
+    function toggleState(state) {
+      const loading = document.getElementById('state-loading');
+      const error = document.getElementById('state-error');
+      const content = document.getElementById('state-content');
+
+      loading.classList.add('hidden');
+      error.classList.add('hidden');
+      content.classList.add('hidden');
+
+      if (state === 'loading') loading.classList.remove('hidden');
+      if (state === 'error') error.classList.remove('hidden');
+      if (state === 'content') content.classList.remove('hidden');
+    }
+
+    // Detail View Logic
+    function openDetail(id) {
+      const detail = document.getElementById('article-detail-view');
+      detail.setAttribute('aria-hidden', 'false');
+      // In a real app, we'd fetch data for ID here
+      document.body.style.overflow = 'hidden'; // Prevent background scroll
+    }
+
+    function closeDetail() {
+      const detail = document.getElementById('article-detail-view');
+      detail.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    // Filter Logic (Visual Only)
+    const chips = document.querySelectorAll('.chip[role="tab"]');
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        // Deselect all
+        chips.forEach(c => {
+          c.setAttribute('aria-pressed', 'false');
+          c.setAttribute('aria-selected', 'false');
+        });
+        // Select clicked
+        chip.setAttribute('aria-pressed', 'true');
+        chip.setAttribute('aria-selected', 'true');
+      });
+    });
+
+    // Handle Escape key to close detail
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const detail = document.getElementById('article-detail-view');
+        if (detail.getAttribute('aria-hidden') === 'false') {
+          closeDetail();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

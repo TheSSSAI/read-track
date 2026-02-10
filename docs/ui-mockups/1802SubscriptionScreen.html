@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ReadTrack Premium - Subscription</title>
+<style>
+  /* 
+   * DESIGN SYSTEM & RESET 
+   */
+  :root {
+    /* Color Palette - Extended from Design System */
+    --color-primary-50: #EEF2FF;
+    --color-primary-100: #E0E7FF;
+    --color-primary-600: #4F46E5;
+    --color-primary-700: #4338CA;
+    
+    --color-premium-100: #FEF3C7;
+    --color-premium-500: #F59E0B;
+    --color-premium-600: #D97706;
+    --color-premium-900: #78350F;
+    --gradient-premium: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    
+    --color-surface: #FFFFFF;
+    --color-background: #F8FAFC;
+    
+    --color-text-primary: #0F172A;
+    --color-text-secondary: #64748B;
+    --color-text-inverse: #FFFFFF;
+    
+    --color-success: #10B981;
+    --color-error: #EF4444;
+    
+    --color-border: #E2E8F0;
+
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-2xl: 48px;
+
+    /* Typography */
+    --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    --h1-size: 28px; /* Mobile */
+    --h2-size: 20px;
+    --body-size: 16px;
+    --small-size: 14px;
+    
+    /* Radius */
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-full: 9999px;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --shadow-premium: 0 10px 25px -5px rgba(245, 158, 11, 0.4);
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --h1-size: 36px;
+      --h2-size: 24px;
+      --body-size: 18px;
+    }
+  }
+
+  /* Reset */
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: var(--font-family);
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 
+   * LAYOUT UTILITIES 
+   */
+  .screen-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: 1140px;
+    margin: 0 auto;
+    width: 100%;
+    background-color: var(--color-background);
+  }
+
+  @media (min-width: 768px) {
+    .screen-container {
+      padding: var(--spacing-xl);
+      background-color: var(--color-surface); /* Card look on desktop */
+      min-height: auto;
+      margin-top: var(--spacing-xl);
+      margin-bottom: var(--spacing-xl);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      max-width: 900px;
+    }
+  }
+
+  /* 
+   * HEADER 
+   */
+  .screen-header {
+    padding: var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background: var(--color-background);
+    z-index: 10;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    padding: var(--spacing-sm);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    border-radius: var(--radius-full);
+  }
+  .close-btn:hover {
+    background-color: var(--color-border);
+  }
+
+  /* 
+   * CONTENT STATES 
+   */
+  .state-view {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+  }
+  
+  .state-view.active {
+    display: flex;
+  }
+
+  /* 
+   * HERO SECTION 
+   */
+  .hero-section {
+    padding: var(--spacing-lg) var(--spacing-md);
+    text-align: center;
+  }
+
+  .premium-badge {
+    display: inline-block;
+    background: var(--color-premium-100);
+    color: var(--color-premium-900);
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-full);
+    font-size: var(--small-size);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .hero-title {
+    font-size: var(--h1-size);
+    margin-bottom: var(--spacing-sm);
+    background: linear-gradient(135deg, #0F172A 0%, #4338CA 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero-subtitle {
+    color: var(--color-text-secondary);
+    font-size: var(--body-size);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* 
+   * LAYOUT GRID (Desktop) 
+   */
+  .content-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+    padding: 0 var(--spacing-md);
+  }
+
+  @media (min-width: 768px) {
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--spacing-2xl);
+      align-items: start;
+    }
+  }
+
+  /* 
+   * BENEFITS LIST 
+   */
+  .benefit-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .benefit-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+
+  .benefit-icon {
+    width: 24px;
+    height: 24px;
+    background: var(--color-premium-100);
+    color: var(--color-premium-600);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .benefit-text h4 {
+    font-size: var(--body-size);
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .benefit-text p {
+    font-size: var(--small-size);
+    color: var(--color-text-secondary);
+  }
+
+  /* 
+   * PRICING CARDS 
+   */
+  .pricing-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .pricing-option {
+    position: relative;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--color-surface);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .pricing-option:hover {
+    border-color: var(--color-premium-300); /* Lighter border on hover */
+  }
+
+  /* Radio Input Hidden but Accessible */
+  .pricing-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    cursor: pointer;
+  }
+
+  .pricing-option.selected {
+    border-color: var(--color-premium-500);
+    background-color: var(--color-premium-100);
+    box-shadow: 0 0 0 1px var(--color-premium-500);
+  }
+
+  .pricing-details {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .plan-name {
+    font-weight: 600;
+    font-size: var(--body-size);
+    color: var(--color-text-primary);
+  }
+
+  .plan-price {
+    font-size: var(--small-size);
+    color: var(--color-text-secondary);
+  }
+
+  .plan-badge {
+    background: var(--color-premium-500);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    position: absolute;
+    top: -10px;
+    right: 16px;
+  }
+
+  .radio-visual {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--color-text-secondary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pricing-option.selected .radio-visual {
+    border-color: var(--color-premium-500);
+    background: var(--color-premium-500);
+  }
+
+  .radio-visual::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+    display: block;
+  }
+
+  /* 
+   * FOOTER & CTA 
+   */
+  .screen-footer {
+    padding: var(--spacing-lg) var(--spacing-md);
+    background: var(--color-background);
+    margin-top: auto;
+    border-top: 1px solid var(--color-border);
+    position: sticky;
+    bottom: 0;
+  }
+
+  @media (min-width: 768px) {
+    .screen-footer {
+      background: transparent;
+      border: none;
+      position: static;
+    }
+  }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--gradient-premium);
+    color: var(--color-text-inverse);
+    border: none;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    font-size: var(--body-size);
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow-premium);
+    transition: transform 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+  }
+
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.7;
+    cursor: wait;
+  }
+
+  .secondary-actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+  }
+
+  .text-link {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  .text-link:hover {
+    text-decoration: underline;
+  }
+
+  .terms-text {
+    text-align: center;
+    font-size: 10px;
+    color: var(--color-text-secondary);
+    margin-top: var(--spacing-md);
+    line-height: 1.4;
+  }
+
+  /* 
+   * LOADING OVERLAY 
+   */
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    border-radius: var(--radius-lg);
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--color-primary-100);
+    border-top: 4px solid var(--color-premium-500);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: var(--spacing-md);
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* 
+   * MANAGEMENT VIEW 
+   */
+  .management-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    text-align: center;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--color-success);
+    color: white;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: var(--small-size);
+    font-weight: 600;
+    margin-bottom: var(--spacing-md);
+  }
+
+  /* 
+   * DEV CONTROLS (For Demo) 
+   */
+  .dev-controls {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    background: #333;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    opacity: 0.7;
+    z-index: 100;
+  }
+  .dev-controls:hover { opacity: 1; }
+  .dev-controls button {
+    display: block;
+    margin: 4px 0;
+    background: #555;
+    border: none;
+    color: white;
+    padding: 4px 8px;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  /* Accessibility Focus Styles */
+  button:focus-visible, 
+  input:focus-visible, 
+  a:focus-visible {
+    outline: 3px solid var(--color-primary-300);
+    outline-offset: 2px;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="screen-container">
+  <!-- Header -->
+  <header class="screen-header">
+    <!-- Close button for modal presentation -->
+    <button class="close-btn" aria-label="Close subscription screen">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+    <!-- Restore Purchases (Top Right for visibility) -->
+    <button class="text-link" id="restore-btn-top">Restore Purchases</button>
+  </header>
+
+  <!-- Sales Content (Free User View) -->
+  <div id="sales-view" class="state-view active">
+    
+    <div class="hero-section">
+      <span class="premium-badge">ReadTrack Premium</span>
+      <h1 class="hero-title">Unlock Your Reading Potential</h1>
+      <p class="hero-subtitle">Get unlimited access to advanced tracking, insights, and personalization features.</p>
+    </div>
+
+    <div class="content-grid">
+      <!-- Left Column: Benefits -->
+      <section aria-labelledby="benefits-heading">
+        <h2 id="benefits-heading" class="visually-hidden">Premium Benefits</h2>
+        <ul class="benefit-list">
+          <li class="benefit-item">
+            <div class="benefit-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <div class="benefit-text">
+              <h4>Unlimited Tracking</h4>
+              <p>Track as many books as you want. No limits.</p>
+            </div>
+          </li>
+          <li class="benefit-item">
+            <div class="benefit-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <div class="benefit-text">
+              <h4>Advanced Insights</h4>
+              <p>Deep dive into reading speeds, habits, and trends.</p>
+            </div>
+          </li>
+          <li class="benefit-item">
+            <div class="benefit-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <div class="benefit-text">
+              <h4>Ad-Free Experience</h4>
+              <p>Focus on your reading with zero interruptions.</p>
+            </div>
+          </li>
+          <li class="benefit-item">
+            <div class="benefit-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <div class="benefit-text">
+              <h4>AI Recommendations</h4>
+              <p>Get personalized book suggestions powered by AI.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Right Column: Pricing & Action -->
+      <section class="pricing-section" aria-label="Subscription Plans">
+        
+        <!-- Yearly Option -->
+        <label class="pricing-option selected" id="yearly-option">
+          <input type="radio" name="plan" value="yearly" checked aria-labelledby="yearly-label yearly-price">
+          <div class="pricing-details">
+            <span class="plan-badge">Best Value</span>
+            <span class="plan-name" id="yearly-label">Yearly</span>
+            <span class="plan-price" id="yearly-price">$29.99 / year</span>
+            <span style="font-size: 12px; color: var(--color-success); font-weight: 500;">Just $2.50/mo</span>
+          </div>
+          <div class="radio-visual"></div>
+        </label>
+
+        <!-- Monthly Option -->
+        <label class="pricing-option" id="monthly-option">
+          <input type="radio" name="plan" value="monthly" aria-labelledby="monthly-label monthly-price">
+          <div class="pricing-details">
+            <span class="plan-name" id="monthly-label">Monthly</span>
+            <span class="plan-price" id="monthly-price">$4.99 / month</span>
+          </div>
+          <div class="radio-visual"></div>
+        </label>
+
+      </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="screen-footer">
+      <button class="btn-primary" id="purchase-btn">
+        <span>Upgrade Now</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </button>
+      
+      <p class="terms-text">
+        Recurring billing. Cancel anytime.<br>
+        By continuing, you agree to our <a href="#" class="text-link">Terms of Service</a> and <a href="#" class="text-link">Privacy Policy</a>.
+      </p>
+    </footer>
+  </div>
+
+  <!-- Management Content (Premium User View) -->
+  <div id="management-view" class="state-view">
+    <div class="hero-section">
+      <div class="status-badge">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span>Active Subscription</span>
+      </div>
+      <h1 class="hero-title">You are a Premium Member</h1>
+      <p class="hero-subtitle">Thank you for supporting ReadTrack! You have full access to all features.</p>
+    </div>
+
+    <div class="content-grid" style="align-items: center; justify-content: center;">
+      <div class="management-card" style="width: 100%;">
+        <h3>Current Plan</h3>
+        <p style="font-size: 24px; font-weight: 700; margin: 16px 0;">Yearly Premium</p>
+        <p style="color: var(--color-text-secondary); margin-bottom: 24px;">Renews on January 24, 2026</p>
+        
+        <button class="btn-primary" style="background: var(--color-surface); color: var(--color-primary-600); border: 2px solid var(--color-border); box-shadow: none;" onclick="alert('Opens native OS subscription settings')">
+          Manage Subscription
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay (Hidden by default) -->
+  <div id="loading-overlay" class="loading-overlay" style="display: none;" aria-hidden="true">
+    <div class="spinner"></div>
+    <p style="font-weight: 600; color: var(--color-text-secondary);">Processing Purchase...</p>
+  </div>
+
+</div>
+
+<!-- Dev Controls for Demo -->
+<div class="dev-controls">
+  <strong>Dev States:</strong>
+  <button onclick="switchState('sales')">Sales View (Free)</button>
+  <button onclick="switchState('management')">Management View (Premium)</button>
+  <button onclick="toggleLoading()">Toggle Loading</button>
+</div>
+
+<script>
+  /*
+   * Interaction Logic
+   */
+  
+  // Elements
+  const yearlyOption = document.getElementById('yearly-option');
+  const monthlyOption = document.getElementById('monthly-option');
+  const purchaseBtn = document.getElementById('purchase-btn');
+  const loadingOverlay = document.getElementById('loading-overlay');
+  
+  // State Simulation
+  let currentPlan = 'yearly';
+
+  // Plan Selection Logic
+  function selectPlan(plan) {
+    currentPlan = plan;
+    
+    // Update Visuals
+    if (plan === 'yearly') {
+      yearlyOption.classList.add('selected');
+      monthlyOption.classList.remove('selected');
+      yearlyOption.querySelector('input').checked = true;
+      purchaseBtn.querySelector('span').textContent = 'Upgrade for $29.99/yr';
+    } else {
+      monthlyOption.classList.add('selected');
+      yearlyOption.classList.remove('selected');
+      monthlyOption.querySelector('input').checked = true;
+      purchaseBtn.querySelector('span').textContent = 'Upgrade for $4.99/mo';
+    }
+  }
+
+  yearlyOption.addEventListener('click', () => selectPlan('yearly'));
+  monthlyOption.addEventListener('click', () => selectPlan('monthly'));
+
+  // Purchase Simulation
+  purchaseBtn.addEventListener('click', () => {
+    // Show Loading
+    toggleLoading(true);
+    
+    // Simulate API/StoreKit latency
+    setTimeout(() => {
+      toggleLoading(false);
+      // Simulate Success
+      if(confirm('Simulated StoreKit Purchase: Successful?')) {
+        switchState('management');
+        alert('Welcome to ReadTrack Premium!');
+      } else {
+        alert('Purchase cancelled by user.');
+      }
+    }, 2000);
+  });
+
+  // State Switching (Dev Tool Logic)
+  function switchState(stateName) {
+    document.querySelectorAll('.state-view').forEach(el => el.classList.remove('active'));
+    
+    if (stateName === 'sales') {
+      document.getElementById('sales-view').classList.add('active');
+    } else if (stateName === 'management') {
+      document.getElementById('management-view').classList.add('active');
+    }
+  }
+
+  function toggleLoading(forceState) {
+    const isVisible = loadingOverlay.style.display !== 'none';
+    const newState = forceState !== undefined ? forceState : !isVisible;
+    
+    loadingOverlay.style.display = newState ? 'flex' : 'none';
+    loadingOverlay.setAttribute('aria-hidden', !newState);
+    
+    if(newState) {
+      purchaseBtn.disabled = true;
+    } else {
+      purchaseBtn.disabled = false;
+    }
+  }
+
+  // Initialize
+  selectPlan('yearly');
+
+</script>
+</body>
+</html>

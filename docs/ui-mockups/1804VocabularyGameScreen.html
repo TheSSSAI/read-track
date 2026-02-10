@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vocabulary Game Screen</title>
+  <style>
+    /* 
+      DESIGN SYSTEM TOKENS 
+      Based on provided Design System.md
+    */
+    :root {
+      /* Colors */
+      --primary-50: #EEF2FF;
+      --primary-100: #E0E7FF;
+      --primary-200: #C7D2FE;
+      --primary-500: #6366F1;
+      --primary-600: #4F46E5;
+      --primary-700: #4338CA;
+      --primary-900: #312E81;
+      
+      --secondary-50: #FFF1F2;
+      --secondary-500: #F43F5E;
+      
+      --neutral-white: #FFFFFF;
+      --neutral-50: #F8FAFC;
+      --neutral-100: #F1F5F9;
+      --neutral-200: #E2E8F0;
+      --neutral-300: #CBD5E1;
+      --neutral-500: #64748B;
+      --neutral-700: #334155;
+      --neutral-900: #0F172A;
+      
+      --semantic-success: #10B981;
+      --semantic-success-bg: #D1FAE5;
+      --semantic-error: #EF4444;
+      --semantic-error-bg: #FEE2E2;
+
+      /* Typography */
+      --font-primary: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-secondary: 'Merriweather', serif;
+      
+      /* Spacing */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --space-xxl: 48px;
+      
+      /* Radius */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      
+      /* Shadows */
+      --shadow-sm: 0px 1px 3px rgba(0,0,0,0.1);
+      --shadow-md: 0px 4px 6px -1px rgba(0,0,0,0.1);
+      --shadow-lg: 0px 10px 15px -3px rgba(0,0,0,0.1);
+      --shadow-active: 0px 4px 12px rgba(79, 70, 229, 0.3);
+    }
+
+    /* CSS RESET & BASE */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--neutral-50);
+      color: var(--neutral-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    button {
+      font-family: inherit;
+      border: none;
+      cursor: pointer;
+      background: none;
+    }
+
+    /* 
+      LAYOUT CONTAINERS 
+    */
+    .screen-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+      background-color: var(--neutral-white);
+      box-shadow: 0 0 20px rgba(0,0,0,0.05);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 
+      HEADER COMPONENT 
+    */
+    .game-header {
+      padding: var(--space-md);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--neutral-white);
+      border-bottom: 1px solid var(--neutral-100);
+      z-index: 10;
+    }
+
+    .close-btn {
+      color: var(--neutral-500);
+      padding: var(--space-sm);
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    .close-btn:hover {
+      background-color: var(--neutral-100);
+      color: var(--neutral-900);
+    }
+
+    .progress-track {
+      flex: 1;
+      height: 6px;
+      background-color: var(--neutral-200);
+      border-radius: 100px;
+      margin: 0 var(--space-lg);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background-color: var(--primary-600);
+      border-radius: 100px;
+      width: 30%; /* Dynamic */
+      transition: width 0.3s ease;
+    }
+
+    .score-badge {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary-700);
+      background-color: var(--primary-50);
+      padding: 4px 12px;
+      border-radius: 100px;
+    }
+
+    /* 
+      CONTENT AREA 
+    */
+    .game-content {
+      flex: 1;
+      position: relative;
+      overflow-y: auto;
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 
+      VIEW: INTRO / SELECTION 
+    */
+    .view-intro {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100%;
+      gap: var(--space-lg);
+      text-align: center;
+      padding: var(--space-lg);
+    }
+
+    .view-intro h1 {
+      font-size: 28px;
+      color: var(--neutral-900);
+      margin-bottom: var(--space-sm);
+    }
+
+    .view-intro p {
+      color: var(--neutral-500);
+      margin-bottom: var(--space-xl);
+    }
+
+    .game-mode-card {
+      background: var(--neutral-white);
+      border: 1px solid var(--neutral-200);
+      border-radius: var(--radius-md);
+      padding: var(--space-lg);
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .game-mode-card:hover {
+      border-color: var(--primary-500);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .mode-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--primary-50);
+      color: var(--primary-600);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .mode-info h3 {
+      font-size: 18px;
+      color: var(--neutral-900);
+      margin-bottom: 4px;
+    }
+
+    .mode-info p {
+      font-size: 14px;
+      color: var(--neutral-500);
+      margin: 0;
+    }
+
+    /* 
+      VIEW: FLASHCARD GAME 
+    */
+    .view-flashcard {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      perspective: 1000px;
+    }
+
+    .flashcard-container {
+      width: 100%;
+      max-width: 400px;
+      aspect-ratio: 3/4;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .flashcard {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .flashcard.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      background: var(--neutral-white);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--neutral-200);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-xl);
+      text-align: center;
+    }
+
+    .card-front {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+      background: #FFF;
+      justify-content: flex-start;
+      padding-top: var(--space-xxl);
+    }
+
+    .word-text {
+      font-family: var(--font-secondary);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--neutral-900);
+      margin-bottom: var(--space-sm);
+    }
+
+    .pronunciation {
+      font-family: var(--font-primary);
+      color: var(--neutral-500);
+      font-size: 16px;
+    }
+
+    .tap-hint {
+      position: absolute;
+      bottom: var(--space-lg);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--neutral-400);
+      font-weight: 600;
+    }
+
+    .definition-text {
+      font-size: 18px;
+      line-height: 1.5;
+      color: var(--neutral-700);
+      margin-bottom: var(--space-lg);
+    }
+
+    .example-box {
+      background: var(--primary-50);
+      padding: var(--space-md);
+      border-radius: var(--radius-sm);
+      border-left: 3px solid var(--primary-500);
+      width: 100%;
+      text-align: left;
+    }
+
+    .example-text {
+      font-style: italic;
+      color: var(--primary-900);
+      font-size: 14px;
+    }
+
+    .flashcard-controls {
+      display: flex;
+      gap: var(--space-md);
+      margin-top: var(--space-xl);
+      width: 100%;
+      max-width: 400px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s;
+      pointer-events: none;
+    }
+
+    .flashcard-controls.active {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: all;
+    }
+
+    .control-btn {
+      flex: 1;
+      height: 56px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.1s;
+    }
+
+    .control-btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-review {
+      background: var(--neutral-white);
+      border: 1px solid var(--neutral-300);
+      color: var(--neutral-700);
+    }
+
+    .btn-known {
+      background: var(--primary-600);
+      color: var(--neutral-white);
+      box-shadow: var(--shadow-active);
+    }
+
+    /* 
+      VIEW: QUIZ GAME 
+    */
+    .view-quiz {
+      max-width: 600px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .question-card {
+      text-align: center;
+      margin-bottom: var(--space-xl);
+    }
+
+    .question-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--neutral-500);
+      margin-bottom: var(--space-xs);
+    }
+
+    .question-word {
+      font-family: var(--font-secondary);
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--neutral-900);
+    }
+
+    .quiz-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-md);
+    }
+
+    @media (min-width: 600px) {
+      .quiz-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .quiz-option {
+      background: var(--neutral-white);
+      border: 2px solid var(--neutral-200);
+      padding: var(--space-lg);
+      border-radius: var(--radius-md);
+      text-align: left;
+      transition: all 0.2s;
+      position: relative;
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+    }
+
+    .quiz-option:hover {
+      border-color: var(--primary-300);
+      background: var(--primary-50);
+    }
+
+    .quiz-option.selected {
+      border-color: var(--primary-600);
+      background: var(--primary-50);
+    }
+
+    .quiz-option.correct {
+      border-color: var(--semantic-success);
+      background: var(--semantic-success-bg);
+      color: #064E3B;
+    }
+
+    .quiz-option.incorrect {
+      border-color: var(--semantic-error);
+      background: var(--semantic-error-bg);
+      color: #7F1D1D;
+    }
+
+    .status-icon {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 18px;
+    }
+
+    /* 
+      VIEW: RESULTS 
+    */
+    .view-results {
+      text-align: center;
+      padding: var(--space-xl) var(--space-md);
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .results-hero {
+      margin-bottom: var(--space-xl);
+    }
+
+    .score-circle {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: conic-gradient(var(--primary-500) 80%, var(--neutral-200) 0);
+      margin: 0 auto var(--space-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .score-circle::before {
+      content: "";
+      position: absolute;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: var(--neutral-white);
+    }
+
+    .score-value {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .score-number {
+      font-size: 42px;
+      font-weight: 800;
+      color: var(--neutral-900);
+      line-height: 1;
+    }
+
+    .score-label {
+      font-size: 14px;
+      color: var(--neutral-500);
+      font-weight: 500;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+    }
+
+    .stat-card {
+      background: var(--neutral-50);
+      padding: var(--space-md);
+      border-radius: var(--radius-md);
+    }
+
+    .stat-val {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--neutral-900);
+    }
+
+    .stat-key {
+      font-size: 12px;
+      color: var(--neutral-500);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .action-stack {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .btn-primary {
+      background: var(--primary-600);
+      color: white;
+      height: 56px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 16px;
+      width: 100%;
+      transition: background 0.2s;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-700);
+      box-shadow: var(--shadow-active);
+    }
+
+    .btn-text {
+      color: var(--neutral-600);
+      font-weight: 500;
+      padding: 12px;
+    }
+
+    /* 
+      DEBUG STATE SWITCHER 
+    */
+    .debug-controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.8);
+      padding: 10px;
+      border-radius: 8px;
+      display: flex;
+      gap: 10px;
+      z-index: 100;
+    }
+    
+    .debug-btn {
+      color: white;
+      font-size: 12px;
+      padding: 4px 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
+    }
+
+    .debug-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    /* UTILITY: Hide/Show Views */
+    .view-section {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .view-section.active {
+      display: flex; /* Or grid/block depending on view */
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="screen-container">
+    
+    <!-- HEADER (Common) -->
+    <header class="game-header">
+      <button class="close-btn" aria-label="Exit game">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      
+      <div class="progress-track" role="progressbar" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100">
+        <div class="progress-fill" style="width: 30%"></div>
+      </div>
+      
+      <div class="score-badge">3 / 10</div>
+    </header>
+
+    <main class="game-content">
+      
+      <!-- 1. INTRO VIEW -->
+      <section id="view-intro" class="view-section view-intro active">
+        <div>
+          <h1>Practice Mode</h1>
+          <p>Choose how you want to review your 12 pending words.</p>
+        </div>
+        
+        <button class="game-mode-card" onclick="switchView('view-flashcard')">
+          <div class="mode-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="4" y="4" width="16" height="16" rx="2" />
+              <path d="M9 9h6" />
+              <path d="M9 13h6" />
+              <path d="M9 17h4" />
+            </svg>
+          </div>
+          <div class="mode-info">
+            <h3>Flashcards</h3>
+            <p>Flip cards to test memory recall</p>
+          </div>
+        </button>
+
+        <button class="game-mode-card" onclick="switchView('view-quiz')">
+          <div class="mode-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 11l3 3L22 4" />
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+            </svg>
+          </div>
+          <div class="mode-info">
+            <h3>Multiple Choice</h3>
+            <p>Select the correct definition</p>
+          </div>
+        </button>
+      </section>
+
+      <!-- 2. FLASHCARD VIEW -->
+      <section id="view-flashcard" class="view-section view-flashcard">
+        <div class="flashcard-container" onclick="toggleFlip()">
+          <div class="flashcard" id="active-card">
+            <div class="card-face card-front">
+              <div class="word-text">Ephemeral</div>
+              <div class="pronunciation">/əˈfem(ə)rəl/</div>
+              <div class="tap-hint">Tap to flip</div>
+            </div>
+            <div class="card-face card-back">
+              <div class="definition-text">Lasting for a very short time.</div>
+              <div class="example-box">
+                <span class="example-text">"Fashions are ephemeral, changing with every season."</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flashcard-controls" id="flashcard-controls">
+          <button class="control-btn btn-review" onclick="nextCard()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 4v6h6"/>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+            </svg>
+            Review
+          </button>
+          <button class="control-btn btn-known" onclick="nextCard()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            Got it
+          </button>
+        </div>
+      </section>
+
+      <!-- 3. QUIZ VIEW -->
+      <section id="view-quiz" class="view-section view-quiz">
+        <div class="question-card">
+          <div class="question-label">Definition of</div>
+          <div class="question-word">Serendipity</div>
+        </div>
+
+        <div class="quiz-grid">
+          <button class="quiz-option" onclick="selectOption(this)">
+            The occurrence of events by chance in a happy or beneficial way.
+          </button>
+          <button class="quiz-option incorrect" onclick="selectOption(this)">
+            A feeling of pensive sadness, typically with no obvious cause.
+            <div class="status-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </div>
+          </button>
+          <button class="quiz-option correct" onclick="selectOption(this)">
+            The faculty or phenomenon of finding valuable things not sought for.
+            <div class="status-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+          </button>
+          <button class="quiz-option" onclick="selectOption(this)">
+            A visual presentation showing how something works.
+          </button>
+        </div>
+      </section>
+
+      <!-- 4. RESULTS VIEW -->
+      <section id="view-results" class="view-section view-results">
+        <div class="results-hero">
+          <div class="score-circle">
+            <div class="score-value">
+              <span class="score-number">80%</span>
+              <span class="score-label">Accuracy</span>
+            </div>
+          </div>
+          <h2>Great Job!</h2>
+          <p style="color: var(--neutral-500)">You've practiced 10 words today.</p>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-val">8</div>
+            <div class="stat-key">Correct</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val">2</div>
+            <div class="stat-key">Review</div>
+          </div>
+        </div>
+
+        <div class="action-stack">
+          <button class="btn-primary">Continue Practice</button>
+          <button class="btn-text">Back to Dashboard</button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Debug Switcher -->
+  <div class="debug-controls">
+    <button class="debug-btn" onclick="switchView('view-intro')">Intro</button>
+    <button class="debug-btn" onclick="switchView('view-flashcard')">Flashcard</button>
+    <button class="debug-btn" onclick="switchView('view-quiz')">Quiz</button>
+    <button class="debug-btn" onclick="switchView('view-results')">Results</button>
+  </div>
+
+  <script>
+    // State Switching Logic
+    function switchView(viewId) {
+      document.querySelectorAll('.view-section').forEach(el => {
+        el.classList.remove('active');
+      });
+      document.getElementById(viewId).classList.add('active');
+      
+      // Reset states when switching
+      if(viewId === 'view-flashcard') {
+        document.getElementById('active-card').classList.remove('flipped');
+        document.getElementById('flashcard-controls').classList.remove('active');
+      }
+    }
+
+    // Flashcard Logic
+    function toggleFlip() {
+      const card = document.getElementById('active-card');
+      const controls = document.getElementById('flashcard-controls');
+      card.classList.toggle('flipped');
+      
+      if (card.classList.contains('flipped')) {
+        setTimeout(() => {
+          controls.classList.add('active');
+        }, 300);
+      }
+    }
+
+    function nextCard() {
+      // Demo logic to reset card
+      const card = document.getElementById('active-card');
+      const controls = document.getElementById('flashcard-controls');
+      
+      // Animate out (simulated)
+      card.style.transform = "translateX(-120%) rotateY(180deg)";
+      controls.classList.remove('active');
+      
+      setTimeout(() => {
+        // Reset position instantly
+        card.style.transition = "none";
+        card.style.transform = "translateX(120%) rotateY(0deg)";
+        card.classList.remove('flipped');
+        
+        // Animate in
+        setTimeout(() => {
+          card.style.transition = "transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1)";
+          card.style.transform = "translateX(0) rotateY(0deg)";
+        }, 50);
+      }, 300);
+    }
+
+    // Quiz Logic
+    function selectOption(btn) {
+      // Demo visual feedback only
+      if (!btn.classList.contains('correct') && !btn.classList.contains('incorrect')) {
+        btn.style.borderColor = "var(--primary-600)";
+        btn.style.background = "var(--primary-50)";
+      }
+    }
+  </script>
+</body>
+</html>
