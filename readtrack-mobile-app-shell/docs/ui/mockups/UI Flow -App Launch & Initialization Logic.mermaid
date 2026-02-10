@@ -1,0 +1,76 @@
+flowchart TD
+    %% Styling Definitions
+    classDef process fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    classDef decision fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000
+    classDef screen fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000,rx:5,ry:5
+    classDef external fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,stroke-dasharray: 5 5,color:#000
+    classDef terminator fill:#ffcdd2,stroke:#c62828,stroke-width:2px,color:#000
+
+    Start([App Launch]) --> Init[Initialize Services<br/>Hive/Isar DB, Theme, Analytics]
+    Init --> CheckAuth{Has Valid<br/>Session Token?}
+
+    %% Unauthenticated Flow
+    CheckAuth -- No --> LoginScreen[Login Screen<br/>(US-001)]
+    LoginScreen --> UserLogin{User Action}
+    UserLogin -- Social Sign In --> Auth0((Auth0 / Backend))
+    Auth0 --> |Success| SaveToken[Secure Storage: Save JWT]
+    SaveToken --> CheckOnboarding
+
+    %% Authenticated Flow
+    CheckAuth -- Yes --> LoadLocal[Load User Profile<br/>from Isar DB]
+    LoadLocal --> CheckNetwork{Network<br/>Available?}
+    
+    subgraph BackgroundSync [Background Tasks]
+        direction TB
+        CheckNetwork -- Yes --> SyncSub[Sync Subscription Status<br/>(Check Expiry/Downgrade)]
+        SyncSub --> SyncQueue[Push Offline Changes<br/>(US-101)]
+        SyncQueue --> FetchConfig[Fetch Feature Flags<br/>& Year in Review Data]
+    end
+
+    CheckNetwork -- No --> CheckOnboarding
+    FetchConfig -.-> CheckOnboarding
+
+    %% Routing Logic
+    subgraph RoutingLogic [Routing & Interceptors]
+        CheckOnboarding{Onboarding<br/>Complete?}
+        CheckOnboarding -- No --> OnboardingFlow[Onboarding Flow<br/>(US-006)]
+        OnboardingFlow --> MarkOnbComplete[Set 'onboardingCompleted'<br/>in DB]
+        MarkOnbComplete --> CheckTour
+
+        CheckOnboarding -- Yes --> CheckTour{Feature Tour<br/>Seen?}
+        
+        CheckTour -- No --> TourOverlay[Feature Tour Overlay<br/>(US-011)]
+        TourOverlay --> MarkTourComplete[Set 'tourCompleted'<br/>in DB]
+        MarkTourComplete --> DashboardState
+        
+        CheckTour -- Yes --> DashboardState[Prepare Dashboard View]
+    end
+
+    %% Dashboard Presentation Logic
+    subgraph DashboardInterceptors [Dashboard Presentation]
+        DashboardState --> CheckYiR{Show Year<br/>in Review?}
+        
+        CheckYiR -- Yes (Jan 1+ & Flag True) --> YiRModal[Show Year in Review<br/>(US-066)]
+        YiRModal --> DismissYiR[Dismiss & Update Flag]
+        DismissYiR --> CheckGoals
+        
+        CheckYiR -- No --> CheckGoals{Goals Expired?}
+        
+        CheckGoals -- Yes --> GoalPrompt[Show 'Set New Goal' Modal<br/>(US-067)]
+        GoalPrompt --> DismissGoal[Dismiss/Set Goal]
+        DismissGoal --> FinalView
+        
+        CheckGoals -- No --> FinalView
+    end
+
+    FinalView[Main Dashboard Screen<br/>(US-056 / US-057)]
+
+    %% Connections for flow completion
+    LoginScreen --> |User Exits| Exit([App Close])
+
+    %% Styling Application
+    class Start,Init,LoadLocal,SaveToken,MarkOnbComplete,MarkTourComplete,DismissYiR,DismissGoal,SyncSub,SyncQueue,FetchConfig process
+    class CheckAuth,CheckNetwork,CheckOnboarding,CheckTour,CheckYiR,CheckGoals,UserLogin decision
+    class LoginScreen,OnboardingFlow,TourOverlay,YiRModal,GoalPrompt,FinalView screen
+    class Auth0 external
+    class Exit terminator

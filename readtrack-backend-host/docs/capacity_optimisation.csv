@@ -1,0 +1,3 @@
+"optimization_area","current_state","recommended_action","expected_benefit","implementation_cost","timeline","success_metrics","roi_calculation"
+"Cross-training","Siloed DevOps knowledge","Backend team to complete AWS CDK workshop","Redundancy for infrastructure deployment tasks","20","Sprint 1-2","Backend Dev can deploy stack to sandbox","Eliminates potential 1-week delay ($5000 value)"
+"Capacity Utilization","Low utilization across dev roles (~50%)","Pull forward technical debt or polish tasks; Increase unit test coverage","Higher code quality and reduced long-term maintenance","","Ongoing","Test coverage > 90%; 0 regression bugs","Reduced bug fixing time in future sprints"

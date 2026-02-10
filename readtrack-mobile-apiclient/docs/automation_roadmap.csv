@@ -1,0 +1,4 @@
+"automation_phase","priority","timeline_weeks","test_cases_count","automation_tool","estimated_effort_hours","roi_calculation","infrastructure_setup","success_metrics","business_value"
+"Phase 1: Core Logic & Unit Testing","Critical","2","150","xUnit (Backend), flutter_test (Mobile)","60","Very High - Catches regression instantly in CI","GitHub Actions CI pipeline","90% Branch Coverage on Domain Logic","Immediate feedback loop for developers"
+"Phase 2: Integration & Sync Reliability","High","3","80","TestContainers (DB), Flutter Integration Test","80","High - Ensures database and sync integrity","Dockerized dependencies in CI","Zero regression in offline sync logic","Prevents data corruption bugs"
+"Phase 3: E2E & Critical User Journeys","Medium","4","30","Maestro (Mobile UI), Postman (API)","100","Medium - High maintenance but validates UX","Device Farm / Emulator runners","Critical paths (Signup, Subscribe, Sync) verified nightly","Validates final product quality"

@@ -1,0 +1,79 @@
+sequenceDiagram
+    autonumber
+    participant UI as UI / App Lifecycle
+    participant Provider as AuthStateProvider
+    participant Service as LocalStorageService
+    participant Store as SecureStorage / Isar
+
+    %% Scenario 1: App Initialization (Auto-Login)
+    rect rgb(240, 248, 255)
+        note right of UI: Phase 1: Initialization
+        UI->>Provider: App Started / Init()
+        activate Provider
+        Provider->>Service: getStoredSession()
+        activate Service
+        Service->>Store: read(key: "auth_token")
+        activate Store
+        Store-->>Service: return token | null
+        deactivate Store
+        
+        alt Token Found
+            Service->>Store: read(key: "user_profile")
+            activate Store
+            Store-->>Service: return profile_json
+            deactivate Store
+            Service-->>Provider: SessionData(token, profile)
+            Provider->>Provider: state = Authenticated
+            Provider-->>UI: Navigate to Dashboard
+        else No Token / Error
+            Service-->>Provider: null
+            Provider->>Provider: state = Unauthenticated
+            Provider-->>UI: Navigate to Login
+        end
+        deactivate Service
+        deactivate Provider
+    end
+
+    %% Scenario 2: Login Success (Persist Data)
+    rect rgb(240, 255, 240)
+        note right of UI: Phase 2: Login Persistence
+        UI->>Provider: login(credentials) -> Success
+        activate Provider
+        Provider->>Service: persistSession(token, userProfile)
+        activate Service
+        
+        par Parallel Write
+            Service->>Store: write(key: "auth_token", value: token)
+            Service->>Store: write(key: "user_profile", value: json)
+        end
+        
+        alt Write Successful
+            Store-->>Service: success
+            Service-->>Provider: void
+            Provider->>Provider: state = Authenticated
+        else Write Failed (Exception)
+            Store-->>Service: throw Exception
+            Service-->>Provider: return Failure
+            Provider->>UI: Show "Session Save Error"
+        end
+        deactivate Service
+        deactivate Provider
+    end
+
+    %% Scenario 3: Logout (Clear Data)
+    rect rgb(255, 240, 240)
+        note right of UI: Phase 3: Logout / Cleanup
+        UI->>Provider: logout()
+        activate Provider
+        Provider->>Service: clearSession()
+        activate Service
+        Service->>Store: deleteAll(["auth_token", "user_profile"])
+        activate Store
+        Store-->>Service: success
+        deactivate Store
+        Service-->>Provider: void
+        deactivate Service
+        Provider->>Provider: state = Unauthenticated
+        Provider-->>UI: Navigate to Login
+        deactivate Provider
+    end

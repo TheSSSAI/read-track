@@ -1,0 +1,60 @@
+flowchart TD
+    %% Node Definitions
+    Start((App Launch))
+    InitServices[Initialize Core Services\n(Isar DB, Secure Storage, Analytics)]
+    
+    %% Data Checks
+    CheckAuth{Has Stored\nAuth Token?}
+    ValidateToken{Is Token Valid\nor Refreshable?}
+    CheckOnboarding{Is 'onboardingCompleted'\nFlag True?}
+    
+    %% Actions/Processes
+    RefreshProcess[Attempt Token Refresh\n(Background)]
+    FetchProfile[Fetch/Sync User Profile]
+    ClearSession[Clear Local Session Data]
+    
+    %% UI Screens
+    LoginScreen([Login Screen\n(US-001)])
+    Dashboard([Main Dashboard\n(REQ-FUNC-001)])
+    Onboarding([Onboarding Flow\n(REQ-FUNC-003)])
+    
+    %% Relationships
+    Start --> InitServices
+    InitServices --> CheckAuth
+    
+    %% Auth Logic
+    CheckAuth -- No --> LoginScreen
+    CheckAuth -- Yes --> ValidateToken
+    
+    ValidateToken -- No / Failed --> ClearSession
+    ClearSession --> LoginScreen
+    
+    ValidateToken -- Yes --> FetchProfile
+    
+    %% Offline Handling Note
+    subgraph Offline_Handling [Resilience Logic]
+        direction TB
+        FetchProfile -.-> |If Offline, use cached profile| CheckOnboarding
+        FetchProfile --> |If Online, sync latest| CheckOnboarding
+    end
+    
+    %% Routing Logic
+    CheckOnboarding -- Yes --> Dashboard
+    CheckOnboarding -- No --> Onboarding
+    
+    %% Post-Flow Connections
+    LoginScreen -.-> |Success| CheckOnboarding
+    Onboarding -.-> |Complete| Dashboard
+
+    %% Styling
+    classDef process fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    classDef decision fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000
+    classDef screen fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000,stroke-dasharray: 5 5
+    classDef terminator fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    classDef logic fill:#f5f5f5,stroke:#616161,stroke-width:1px,color:#000
+
+    class InitServices,RefreshProcess,FetchProfile,ClearSession process
+    class CheckAuth,ValidateToken,CheckOnboarding decision
+    class LoginScreen,Dashboard,Onboarding screen
+    class Start terminator
+    class Offline_Handling logic

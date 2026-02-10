@@ -1,0 +1,72 @@
+flowchart TD
+    %% Define Nodes
+    Start((App Launch))
+    
+    subgraph Initialization [Phase 1: Environment Check]
+        LoadConfig[Load Local Config & Secure Storage]
+        CheckNet{Network Available?}
+        FetchRemoteConfig[Fetch Remote Config / Version]
+        CheckUpdate{Is Forced Update<br/>Required?}
+        UpdateScreen[Display 'Update Required'<br/>Blocking Screen]
+    end
+
+    subgraph Auth_Validation [Phase 2: Authentication]
+        CheckAuth{Is User<br/>Authenticated?}
+        ValidateToken[Validate JWT / Refresh Token]
+        TokenValid{Token Valid?}
+        ClearSession[Clear Local Session]
+        LoginScreen[Display Login Screen<br/>(US-001)]
+    end
+
+    subgraph User_State [Phase 3: State & Routing]
+        FetchProfile[Fetch/Sync User Profile<br/>(Remote or Local Isar)]
+        CheckOnboarding{Is Onboarding<br/>Complete?}
+        OnboardingFlow[Start Onboarding Flow<br/>(REQ-ONB-001 / US-006)]
+    end
+
+    subgraph Destination [Phase 4: Landing]
+        Dashboard[Load Main Dashboard<br/>(US-056)]
+        AppStore[Redirect to App Store]
+    end
+
+    %% Define Flow
+    Start --> LoadConfig
+    LoadConfig --> CheckNet
+    
+    %% Network / Update Logic
+    CheckNet -- Yes --> FetchRemoteConfig
+    FetchRemoteConfig --> CheckUpdate
+    CheckNet -- No --> CheckAuth
+    
+    CheckUpdate -- Yes --> UpdateScreen
+    UpdateScreen --> AppStore
+    CheckUpdate -- No --> CheckAuth
+
+    %% Auth Logic
+    CheckAuth -- Yes (Has Credentials) --> ValidateToken
+    CheckAuth -- No --> LoginScreen
+    
+    ValidateToken -- Valid --> FetchProfile
+    ValidateToken -- Invalid/Expired --> ClearSession
+    ClearSession --> LoginScreen
+    
+    LoginScreen -- User Authenticates --> FetchProfile
+
+    %% Onboarding Logic
+    FetchProfile --> CheckOnboarding
+    CheckOnboarding -- Yes (True) --> Dashboard
+    CheckOnboarding -- No (False) --> OnboardingFlow
+    OnboardingFlow -- User Completes --> Dashboard
+
+    %% Styling
+    classDef process fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    classDef decision fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000
+    classDef screen fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
+    classDef terminator fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    classDef error fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
+
+    class LoadConfig,FetchRemoteConfig,ValidateToken,FetchProfile,ClearSession process
+    class CheckNet,CheckUpdate,CheckAuth,TokenValid,CheckOnboarding decision
+    class LoginScreen,OnboardingFlow,UpdateScreen screen
+    class Start,Dashboard terminator
+    class AppStore error

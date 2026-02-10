@@ -1,0 +1,3 @@
+"optimization_area","current_state","recommended_action","expected_benefit","implementation_cost","timeline","success_metrics","roi_calculation"
+"Workload Balancing","Backend 150% / DevOps 15% in Sprint 3","Shift OpenSearch Infra (TSK-INFRA-003) to Sprint 2; Assign Database Entity creation (TSK-BE-007) to DevOps (Cross-functional)","Reduces Backend load by ~12 hours; Increases DevOps utilization","8","Sprint 2","Backend Sprint 3 allocation < 110%","Prevents 1 week project slip ($4000 value)"
+"Scope Management","Full RAG + Full Sync in single sprint","De-scope 'Google Books Client' and 'Advanced RAG' to Sprint 4","Returns Sprint 3 to realistic 40h/person capacity","","Immediate","Sprint 3 completion rate 100%","Quality assurance buffer restored"

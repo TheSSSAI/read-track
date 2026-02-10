@@ -1,0 +1,61 @@
+flowchart TD
+    %% Global Styling
+    classDef screen fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1,rx:5,ry:5
+    classDef logic fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#e65100
+    classDef decision fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#f57f17,shape:rhombus
+    classDef action fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
+    classDef terminate fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#880e4f
+
+    Start([App Launch / Cold Start]) --> Init[Initialize App Config & Dependencies]
+    Init --> CheckAuth{Has Valid\nAuth Token?}
+    
+    %% Unauthenticated Path
+    CheckAuth -- No / Expired --> LoginScreen[Login Screen\n(US-001)]
+    class LoginScreen screen
+    
+    LoginScreen --> UserAuth[User Authenticates\n(Google/Apple)]
+    UserAuth -- Success --> SaveSession[Securely Store Tokens]
+    SaveSession --> FetchProfile
+    
+    %% Authenticated Path
+    CheckAuth -- Yes --> FetchProfile[Fetch User Profile & Flags]
+    class FetchProfile logic
+    
+    FetchProfile --> CheckOnboarding{Flag:\nonboardingCompleted?}
+    class CheckAuth,CheckOnboarding decision
+    
+    %% Onboarding Logic (REQ-FUNC-003, US-006)
+    CheckOnboarding -- No --> CheckResume{Local State:\nMid-Onboarding?}
+    class CheckResume decision
+    
+    CheckResume -- Yes --> RestoreState[Restore Last Step]
+    class RestoreState logic
+    CheckResume -- No --> StartOnboarding[Start Fresh Onboarding]
+    
+    subgraph OnboardingFlow [Onboarding Sequence]
+        direction TB
+        StartOnboarding --> SetGoal[Step 1: Set Goal]
+        RestoreState -.-> SetGoal
+        RestoreState -.-> AddBook[Step 2: Add Book]
+        SetGoal --> AddBook
+        AddBook --> FeatureTour[Step 3: Feature Tour]
+        class SetGoal,AddBook,FeatureTour screen
+    end
+    
+    FeatureTour -- Finish/Skip --> SetFlag[Update Backend:\nonboardingCompleted = true]
+    class SetFlag action
+    
+    %% Main App Path
+    CheckOnboarding -- Yes --> Dashboard[Main Dashboard\n(REQ-DSH-001)]
+    SetFlag --> Dashboard
+    class Dashboard screen
+    
+    %% Session Management (US-012)
+    Dashboard -.->|User Logout / Revoke| ClearData[Clear Local Session]
+    class ClearData terminate
+    ClearData --> LoginScreen
+
+    %% Offline Handling Note
+    FetchProfile -.->|Network Error| CheckOffline{Has Cached\nProfile?}
+    CheckOffline -- Yes --> CheckOnboarding
+    CheckOffline -- No --> LoginScreen
