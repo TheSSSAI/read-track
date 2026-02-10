@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  readtrack.api:
+    image: readtrack-api
+    build:
+      context: .
+      dockerfile: src/ReadTrack.Host/Dockerfile
+    ports:
+      - "5000:8080"
+      - "5001:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=readtrack.db;Port=5432;Database=ReadTrackUsersDb;Username=postgres;Password=postgres;
+      - AWS__ServiceURL=http://localstack:4566
+    depends_on:
+      - readtrack.db
+      - localstack
+
+  readtrack.db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ReadTrackUsersDb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  localstack:
+    image: localstack/localstack:3.0
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3,ses
+      - DEFAULT_REGION=us-east-1
+      - DEBUG=1
+    volumes:
+      - "./localstack-init:/etc/localstack/init/ready.d"
+
+volumes:
+  postgres_data:
