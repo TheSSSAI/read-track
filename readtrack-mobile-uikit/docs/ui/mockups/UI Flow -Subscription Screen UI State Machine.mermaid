@@ -1,0 +1,103 @@
+stateDiagram-v2
+    direction LR
+
+    %% Define styles
+    classDef default fill:#f9f9f9,stroke:#333,stroke-width:1px;
+    classDef errorState fill:#fee,stroke:#f00,stroke-width:2px;
+    classDef successState fill:#efe,stroke:#0f0,stroke-width:2px;
+    classDef interactiveState fill:#eef,stroke:#00f,stroke-width:2px;
+    classDef systemState fill:#eee,stroke:#666,stroke-width:1px,stroke-dasharray: 5 5;
+
+    [*] --> Initializing: Navigation to Screen
+
+    state "Data Loading Phase" as LoadingContext {
+        Initializing --> FetchingUserTier: Read Local State
+        FetchingUserTier --> FetchingStoreProducts: Check Connectivity
+        
+        state "Async Operations" as AsyncOps {
+            FetchingStoreProducts --> ValidatingStoreConnection
+            ValidatingStoreConnection --> RetrievingProductDetails
+        }
+    }
+
+    LoadingContext --> ErrorHandling: Network/Store Error
+    LoadingContext --> DisplayingContent: Data Ready
+
+    state "UI Presentation Phase" as DisplayingContent {
+        direction TB
+        
+        state "User Tier Check" as TierChoice <<choice>>
+        
+        [*] --> TierChoice
+        
+        TierChoice --> FreeTierView: User is Free
+        TierChoice --> PremiumTierView: User is Premium
+
+        state "Free User View" as FreeTierView {
+            [*] --> RenderBenefitsList
+            RenderBenefitsList --> RenderPricingCard
+            RenderPricingCard --> EnableUpgradeButton
+        }
+
+        state "Premium User View" as PremiumTierView {
+            [*] --> RenderActiveStatus
+            RenderActiveStatus --> RenderRenewalDate
+            RenderRenewalDate --> EnableManageSubButton
+        }
+    }
+
+    state "Purchase Transaction Flow" as PurchaseFlow {
+        DisplayingContent --> InitiatingPurchase: Tap 'Upgrade'
+        
+        state InitiatingPurchase {
+            [*] --> ShowLoadingOverlay
+            ShowLoadingOverlay --> RequestNativeSheet
+        }
+
+        InitiatingPurchase --> AwaitingStoreInteraction: Native Sheet Open
+        
+        state AwaitingStoreInteraction {
+            [*] --> UserInput
+            UserInput --> ProcessingPayment: Confirm
+            UserInput --> CancelledByUser: Cancel
+        }
+    }
+
+    PurchaseFlow --> DisplayingContent: User Cancelled
+    PurchaseFlow --> ErrorHandling: Payment Declined / Error
+    PurchaseFlow --> VerifyingPurchase: Store Success
+
+    state "Backend Verification" as VerifyingPurchase {
+        [*] --> SendingReceiptToAPI
+        SendingReceiptToAPI --> UpdatingUserStatus: Webhook/Response Valid
+    }
+
+    VerifyingPurchase --> ErrorHandling: Verification Failed
+    VerifyingPurchase --> PurchaseSuccess: Validation OK
+
+    state "Error Handling Presentation" as ErrorHandling {
+        state "Error Types" as ET {
+            NetworkError: No Internet / Timeout
+            StoreError: StoreKit / Play Billing Unavailable
+            PaymentError: Card Declined / Insufficient Funds
+        }
+        [*] --> DetermineErrorType
+        DetermineErrorType --> DisplayErrorMessage
+        DisplayErrorMessage --> EnableRetryButton
+    }
+
+    ErrorHandling --> LoadingContext: Tap 'Retry' (System Error)
+    ErrorHandling --> DisplayingContent: Tap 'Dismiss' (Payment Error)
+
+    state "Success State" as PurchaseSuccess {
+        [*] --> ShowSuccessConfetti
+        ShowSuccessConfetti --> TransitionToPremiumUI
+    }
+
+    PurchaseSuccess --> DisplayingContent: Auto-Refresh UI
+
+    %% Apply Styles
+    class ErrorHandling errorState
+    class PurchaseSuccess successState
+    class DisplayingContent interactiveState
+    class LoadingContext, VerifyingPurchase systemState
