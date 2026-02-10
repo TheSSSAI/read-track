@@ -1,0 +1,82 @@
+erDiagram
+    User {
+        Guid userId PK
+    }
+
+    Subscription {
+        Guid subscriptionId PK
+        Guid UserId FK
+    }
+
+    Book {
+        Guid bookId PK
+    }
+
+    LibraryItem {
+        Guid libraryItemId PK
+        Guid UserId FK
+        Guid BookId FK
+    }
+
+    ReadingSession {
+        Guid readingSessionId PK
+        DateTime startTime PK
+        Guid LibraryItemId FK
+        Guid UserId FK
+    }
+
+    Goal {
+        Guid goalId PK
+        Guid UserId FK
+    }
+
+    DailyTask {
+        Guid dailyTaskId PK
+        Guid UserId FK
+    }
+
+    TaskCompletion {
+        Guid taskCompletionId PK
+        Guid DailyTaskId FK
+        Guid UserId FK
+    }
+
+    Recommendation {
+        Guid recommendationId PK
+        Guid UserId FK
+    }
+
+    VocabularyItem {
+        Guid vocabularyItemId PK
+        Guid UserId FK
+    }
+
+    DataExportJob {
+        Guid dataExportJobId PK
+        Guid UserId FK
+    }
+
+    UserSetting {
+        Guid userSettingId PK
+        Guid UserId FK
+    }
+
+    UserReadingStats {
+        Guid UserId PK
+        Date statDate PK
+    }
+
+    User ||--o{ Subscription : has
+    User ||--o{ LibraryItem : owns
+    Book |o--o{ LibraryItem : references
+    User ||--o{ ReadingSession : logs
+    LibraryItem ||--o{ ReadingSession : for
+    User ||--o{ Goal : sets
+    User ||--o{ DailyTask : creates
+    DailyTask ||--o{ TaskCompletion : tracks
+    User ||--o{ TaskCompletion : completes
+    User ||--o{ Recommendation : receives
+    User ||--o{ VocabularyItem : saves
+    User ||--o{ DataExportJob : requests
+    User ||--o{ UserSetting : configures
+    User ||--o{ UserReadingStats : summarizes

@@ -1,0 +1,10 @@
+erDiagram
+    UserContextEmbedding {
+        Guid embeddingId PK "Primary Key"
+        Guid UserId
+        k-NN_Vector embeddingVector "dimension: 1536, space_type: cosinesimil"
+        TEXT sourceText
+        VARCHAR sourceType "ENUM('ReadingHistory', 'Goal', 'Vocabulary', 'Feedback')"
+        Guid sourceId
+        DateTime createdAt
+    }

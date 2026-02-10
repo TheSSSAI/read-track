@@ -1,0 +1,47 @@
+erDiagram
+    User {
+        Guid userId PK
+    }
+    Subscription {
+        Guid subscriptionId PK
+    }
+    Book {
+        Guid bookId PK
+    }
+    UserBook {
+        Guid userBookId PK
+    }
+    ReadingSession {
+        Guid readingSessionId PK
+    }
+    Goal {
+        Guid goalId PK
+    }
+    Recommendation {
+        Guid recommendationId PK
+    }
+    VocabularyItem {
+        Guid vocabularyItemId PK
+    }
+    DataExportJob {
+        Guid dataExportJobId PK
+    }
+    UserSetting {
+        Guid userSettingId PK
+    }
+    UserReadingStats {
+        Guid UserId PK
+        Date statDate PK
+    }
+
+    User ||--o{ Subscription : has
+    User ||--o{ UserBook : has
+    User ||--o{ Goal : sets
+    User ||--o{ Recommendation : receives
+    User ||--o{ VocabularyItem : saves
+    User ||--o{ DataExportJob : requests
+    User ||--o{ UserSetting : configures
+    User ||--o{ ReadingSession : performs
+    User ||--o{ UserReadingStats : aggregates
+    Book ||--o{ UserBook : contains
+    UserBook ||--o{ ReadingSession : logs
