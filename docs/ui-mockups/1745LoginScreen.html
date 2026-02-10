@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - ReadTrack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* 
+      DESIGN SYSTEM TOKENS 
+      Based on Indigo/Rose/Amber palette provided
+    */
+    :root {
+      /* Color Palette: Indigo Primary */
+      --color-primary-50: #EEF2FF;
+      --color-primary-100: #E0E7FF;
+      --color-primary-200: #C7D2FE;
+      --color-primary-300: #A5B4FC;
+      --color-primary-400: #818CF8;
+      --color-primary-500: #6366F1;
+      --color-primary-600: #4F46E5;
+      --color-primary-700: #4338CA;
+      --color-primary-800: #3730A3;
+      --color-primary-900: #312E81;
+
+      /* Neutrals */
+      --color-white: #FFFFFF;
+      --color-gray-50: #F8FAFC;
+      --color-gray-100: #F1F5F9;
+      --color-gray-200: #E2E8F0;
+      --color-gray-300: #CBD5E1;
+      --color-gray-400: #94A3B8;
+      --color-gray-500: #64748B;
+      --color-gray-600: #475569;
+      --color-gray-700: #334155;
+      --color-gray-800: #1E293B;
+      --color-gray-900: #0F172A;
+      --color-black: #020617;
+
+      /* Semantic */
+      --color-error: #EF4444;
+      --color-error-bg: #FEE2E2;
+
+      /* Theme Variables (Light Mode Default) */
+      --bg-app: var(--color-gray-50);
+      --bg-surface: var(--color-white);
+      --text-primary: var(--color-gray-900);
+      --text-secondary: var(--color-gray-500);
+      --border-color: var(--color-gray-200);
+      
+      /* Typography */
+      --font-primary: 'Inter', system-ui, sans-serif;
+      --font-secondary: 'Merriweather', Georgia, serif;
+
+      /* Spacing */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --space-2xl: 48px;
+      --space-3xl: 64px;
+
+      /* UI Elements */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      
+      /* Focus Ring */
+      --focus-ring: 0 0 0 3px var(--color-primary-300);
+    }
+
+    /* Dark Mode Overrides */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-app: var(--color-gray-900);
+        --bg-surface: var(--color-gray-800);
+        --text-primary: var(--color-gray-50);
+        --text-secondary: var(--color-gray-400);
+        --border-color: var(--color-gray-700);
+      }
+    }
+
+    /* CSS Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Screen Layout */
+    .screen-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: var(--space-lg);
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      justify-content: center;
+    }
+
+    /* Hero Section */
+    .auth-hero {
+      text-align: center;
+      margin-bottom: var(--space-3xl);
+      animation: fadeInDown 0.6s ease-out;
+    }
+
+    .auth-hero__logo {
+      width: 80px;
+      height: 80px;
+      background: var(--color-primary-600);
+      border-radius: 20px;
+      margin: 0 auto var(--space-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .auth-hero__logo svg {
+      width: 48px;
+      height: 48px;
+      color: white;
+    }
+
+    .auth-hero__title {
+      font-family: var(--font-secondary);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--space-sm);
+      letter-spacing: -0.02em;
+    }
+
+    .auth-hero__subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 300px;
+      margin: 0 auto;
+    }
+
+    /* Auth Actions Section */
+    .auth-actions {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+      width: 100%;
+      margin-bottom: var(--space-3xl);
+      animation: fadeInUp 0.6s ease-out 0.2s backwards;
+    }
+
+    /* Social Button Component */
+    .social-btn {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 56px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-primary);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.2s ease, background-color 0.2s;
+      border: 1px solid transparent;
+      padding: 0 var(--space-lg);
+      text-decoration: none;
+    }
+
+    .social-btn:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+    }
+
+    .social-btn:active {
+      transform: scale(0.98);
+    }
+
+    .social-btn__icon {
+      position: absolute;
+      left: 24px;
+      width: 24px;
+      height: 24px;
+    }
+
+    /* Google Button Variant */
+    .social-btn--google {
+      background-color: var(--color-white);
+      color: var(--color-gray-700);
+      border-color: var(--color-gray-300);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .social-btn--google:hover {
+      background-color: var(--color-gray-50);
+      border-color: var(--color-gray-400);
+    }
+
+    /* Apple Button Variant */
+    .social-btn--apple {
+      background-color: var(--color-black);
+      color: var(--color-white);
+      box-shadow: var(--shadow-md);
+    }
+
+    .social-btn--apple:hover {
+      background-color: var(--color-gray-900);
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Footer Section */
+    .auth-footer {
+      text-align: center;
+      margin-top: auto;
+      padding-top: var(--space-lg);
+      animation: fadeIn 0.8s ease-out 0.4s backwards;
+    }
+
+    .auth-footer__text {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .auth-footer__link {
+      color: var(--color-primary-600);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .auth-footer__link:hover {
+      color: var(--color-primary-700);
+      text-decoration: underline;
+    }
+
+    .auth-footer__link:focus-visible {
+      outline: none;
+      border-radius: 2px;
+      box-shadow: var(--focus-ring);
+    }
+
+    /* States & Utility Classes */
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* Loading State Overlay */
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.8);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      border-radius: var(--radius-md);
+      /* Hidden by default */
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .loading-overlay {
+        background: rgba(15, 23, 42, 0.8);
+      }
+    }
+
+    .is-loading .loading-overlay {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--color-primary-200);
+      border-radius: 50%;
+      border-top-color: var(--color-primary-600);
+      animation: spin 1s linear infinite;
+    }
+
+    /* Error Toast */
+    .error-toast {
+      position: fixed;
+      bottom: var(--space-xl);
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background-color: var(--color-error-bg);
+      color: var(--color-error);
+      padding: var(--space-md) var(--space-lg);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      width: 90%;
+      max-width: 400px;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      border: 1px solid var(--color-error);
+      z-index: 100;
+    }
+
+    .error-toast.is-visible {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Animations */
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Platform Simulator (For Demo Purposes) */
+    .platform-toggle {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      z-index: 9999;
+      opacity: 0.5;
+    }
+    .platform-toggle:hover { opacity: 1; }
+
+    /* Hide Apple button if not iOS (Simulated via class) */
+    .platform-android .social-btn--apple {
+      display: none;
+    }
+
+  </style>
+</head>
+<body class="platform-ios"> <!-- Default to iOS for full demo -->
+
+  <main class="screen-container">
+    
+    <!-- Hero Section -->
+    <header class="auth-hero" role="banner">
+      <div class="auth-hero__logo">
+        <!-- SVG Logo Icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M11.25 4.533A9.707 9.707 0 006 3.066c.583.18 1.047.687 1.047 1.286 0 .416-.202.825-.468 1.136a5.459 5.459 0 00-1.123 2.247c-.081.412-.132.839-.132 1.272a5.5 5.5 0 00.132 1.272c.243.766.71 1.547 1.123 2.247.266.311.468.72.468 1.136 0 .599-.464 1.106-1.047 1.286 3.75 3 8.25 3 12 0V9a2.25 2.25 0 00-2.25-2.25h-5.379a2.25 2.25 0 01-1.32-.423l-.75-.535A2.25 2.25 0 018 3.842V3.066z" />
+        </svg>
+      </div>
+      <h1 class="auth-hero__title">ReadTrack</h1>
+      <p class="auth-hero__subtitle">Your personal library, reading goals, and insights in one place.</p>
+    </header>
+
+    <!-- Auth Actions -->
+    <section class="auth-actions" role="main" aria-label="Sign in options">
+      
+      <!-- Google Button -->
+      <button class="social-btn social-btn--google" onclick="simulateLogin('google')" aria-label="Sign in with Google">
+        <svg class="social-btn__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+          <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+          <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+          <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+          <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+        </svg>
+        Sign in with Google
+        <div class="loading-overlay">
+          <div class="spinner"></div>
+        </div>
+      </button>
+
+      <!-- Apple Button (Condition via .platform-ios class on body) -->
+      <button class="social-btn social-btn--apple" onclick="simulateLogin('apple')" aria-label="Sign in with Apple">
+        <svg class="social-btn__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="white">
+          <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 52.3-11.4 69.5-34.3z"/>
+        </svg>
+        Sign in with Apple
+        <div class="loading-overlay">
+          <div class="spinner"></div>
+        </div>
+      </button>
+
+    </section>
+
+    <!-- Footer / Legal -->
+    <footer class="auth-footer">
+      <p class="auth-footer__text">
+        By continuing, you agree to our 
+        <br>
+        <a href="#" class="auth-footer__link">Terms of Service</a>
+        and
+        <a href="#" class="auth-footer__link">Privacy Policy</a>.
+      </p>
+    </footer>
+
+  </main>
+
+  <!-- Error Toast Component -->
+  <div id="errorToast" class="error-toast" role="alert" aria-live="assertive">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <span id="errorMsg">Authentication failed. Please try again.</span>
+  </div>
+
+  <!-- Platform Simulator Toggle (Dev Tool) -->
+  <div class="platform-toggle">
+    <label>
+      <input type="checkbox" checked onchange="document.body.classList.toggle('platform-ios'); document.body.classList.toggle('platform-android')">
+      Toggle iOS/Android
+    </label>
+  </div>
+
+  <script>
+    /* 
+      Interactive Demo Script 
+      Simulates the authentication flow states (Loading, Error, Success simulation)
+    */
+    
+    function simulateLogin(provider) {
+      const btn = document.querySelector(`.social-btn--${provider}`);
+      
+      // 1. Set Loading State
+      btn.classList.add('is-loading');
+      btn.setAttribute('aria-busy', 'true');
+
+      // Simulate API Latency (1.5s)
+      setTimeout(() => {
+        // Randomly simulate error for demonstration purposes (1 in 4 chance)
+        const shouldError = Math.random() > 0.75;
+
+        // 2. Remove Loading State
+        btn.classList.remove('is-loading');
+        btn.setAttribute('aria-busy', 'false');
+
+        if (shouldError) {
+          showError('Network error. Please check your connection.');
+        } else {
+          // Success Feedback (Usually redirects, here we alert)
+          // console.log(`Successfully authenticated with ${provider}`);
+          // Redirect simulation:
+          document.body.style.opacity = '0.5';
+          document.body.style.pointerEvents = 'none';
+          setTimeout(() => {
+            alert(`Welcome back! Successfully logged in via ${provider}.`);
+            document.body.style.opacity = '1';
+            document.body.style.pointerEvents = 'all';
+          }, 100);
+        }
+      }, 1500);
+    }
+
+    function showError(message) {
+      const toast = document.getElementById('errorToast');
+      const msg = document.getElementById('errorMsg');
+      
+      msg.textContent = message;
+      toast.classList.add('is-visible');
+
+      // Auto-hide after 3s
+      setTimeout(() => {
+        toast.classList.remove('is-visible');
+      }, 4000);
+    }
+  </script>
+</body>
+</html>

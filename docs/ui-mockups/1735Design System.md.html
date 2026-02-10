@@ -1,0 +1,371 @@
+
+{
+  "visual_foundation": {
+    "typography": {
+      "font_families": {
+        "primary": "Inter, system-ui, sans-serif",
+        "secondary": "Merriweather, Georgia, serif",
+        "monospace": "JetBrains Mono, monospace"
+      },
+      "font_scale": {
+        "h1": {
+          "size": "32px",
+          "weight": "700",
+          "line_height": "1.25",
+          "letter_spacing": "-0.02em",
+          "usage": "Screen Titles, Hero Stats"
+        },
+        "h2": {
+          "size": "24px",
+          "weight": "600",
+          "line_height": "1.3",
+          "letter_spacing": "-0.01em",
+          "usage": "Section Headers, Card Titles"
+        },
+        "h3": {
+          "size": "20px",
+          "weight": "600",
+          "line_height": "1.4",
+          "letter_spacing": "0",
+          "usage": "Subsection Headers, Modal Titles"
+        },
+        "h4": {
+          "size": "18px",
+          "weight": "500",
+          "line_height": "1.4",
+          "letter_spacing": "0",
+          "usage": "Book Titles in Lists"
+        },
+        "body_large": {
+          "size": "16px",
+          "weight": "400",
+          "line_height": "1.6",
+          "letter_spacing": "0",
+          "usage": "Primary Content, Articles"
+        },
+        "body_medium": {
+          "size": "14px",
+          "weight": "400",
+          "line_height": "1.5",
+          "letter_spacing": "0",
+          "usage": "Secondary Content, Descriptions"
+        },
+        "caption": {
+          "size": "12px",
+          "weight": "500",
+          "line_height": "1.4",
+          "letter_spacing": "0.02em",
+          "text_transform": "uppercase",
+          "usage": "Labels, Metadata, Axis Labels"
+        },
+        "button": {
+          "size": "16px",
+          "weight": "600",
+          "line_height": "1.0",
+          "letter_spacing": "0.01em",
+          "usage": "Interactive Elements"
+        }
+      },
+      "responsive_scaling": "Fluid typography using clamp() logic or Flutter textScaleFactor. On Tablet/Desktop, base font size increases by 2px (16px -> 18px body)."
+    },
+    "color_palette": {
+      "primary": {
+        "50": "#EEF2FF",
+        "100": "#E0E7FF",
+        "200": "#C7D2FE",
+        "300": "#A5B4FC",
+        "400": "#818CF8",
+        "500": "#6366F1",
+        "600": "#4F46E5",
+        "700": "#4338CA",
+        "800": "#3730A3",
+        "900": "#312E81",
+        "description": "Indigo - Represents focus, knowledge, and calm. Used for primary actions and active states."
+      },
+      "secondary": {
+        "50": "#FFF1F2",
+        "500": "#F43F5E",
+        "900": "#881337",
+        "description": "Rose - Used for 'Streaks', 'Hot' items, and high-priority notifications."
+      },
+      "premium": {
+        "100": "#FEF3C7",
+        "500": "#F59E0B",
+        "900": "#78350F",
+        "gradient": "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)",
+        "description": "Amber/Gold - Exclusive use for Premium features, lock icons, and upgrade CTAs."
+      },
+      "neutrals": {
+        "white": "#FFFFFF",
+        "gray_50": "#F8FAFC",
+        "gray_100": "#F1F5F9",
+        "gray_200": "#E2E8F0",
+        "gray_300": "#CBD5E1",
+        "gray_400": "#94A3B8",
+        "gray_500": "#64748B",
+        "gray_600": "#475569",
+        "gray_700": "#334155",
+        "gray_800": "#1E293B",
+        "gray_900": "#0F172A",
+        "black": "#020617"
+      },
+      "semantic": {
+        "success": "#10B981",
+        "success_bg": "#D1FAE5",
+        "warning": "#F59E0B",
+        "warning_bg": "#FEF3C7",
+        "error": "#EF4444",
+        "error_bg": "#FEE2E2",
+        "info": "#3B82F6",
+        "info_bg": "#DBEAFE"
+      },
+      "theme_modes": {
+        "light": {
+          "background": "#F8FAFC",
+          "surface": "#FFFFFF",
+          "text_primary": "#0F172A",
+          "text_secondary": "#64748B"
+        },
+        "dark": {
+          "background": "#0F172A",
+          "surface": "#1E293B",
+          "text_primary": "#F8FAFC",
+          "text_secondary": "#94A3B8"
+        }
+      }
+    },
+    "spacing_system": {
+      "scale": [
+        "0px",
+        "4px",
+        "8px",
+        "12px",
+        "16px",
+        "24px",
+        "32px",
+        "48px",
+        "64px"
+      ],
+      "grid_system": "12-column grid. Mobile: 4 cols, 16px gutter, 16px margin. Tablet: 8 cols, 24px gutter, 32px margin.",
+      "container_widths": {
+        "mobile": "100%",
+        "tablet": "600px",
+        "desktop": "1140px"
+      },
+      "responsive_spacing": "Margins and paddings increase by 1 step on the scale (e.g., 16px -> 24px) when moving from Mobile to Tablet."
+    }
+  },
+  "component_specifications": {
+    "buttons": {
+      "primary": {
+        "default_state": {
+          "background": "primary.600",
+          "text": "neutrals.white",
+          "border_radius": "12px",
+          "padding": "16px 24px",
+          "height": "56px",
+          "typography": "button"
+        },
+        "hover_state": {
+          "background": "primary.700",
+          "elevation": "0px 4px 12px rgba(79, 70, 229, 0.3)"
+        },
+        "active_state": {
+          "background": "primary.800",
+          "transform": "scale(0.98)"
+        },
+        "disabled_state": {
+          "background": "neutrals.gray_200",
+          "text": "neutrals.gray_400",
+          "cursor": "not-allowed"
+        },
+        "focus_state": {
+          "outline": "3px solid primary.300",
+          "outline_offset": "2px"
+        }
+      },
+      "secondary": {
+        "default_state": {
+          "background": "transparent",
+          "border": "2px solid primary.600",
+          "text": "primary.600",
+          "border_radius": "12px",
+          "height": "56px"
+        },
+        "hover_state": {
+          "background": "primary.50"
+        }
+      },
+      "floating_action_button": {
+        "default_state": {
+          "background": "secondary.500",
+          "icon_color": "neutrals.white",
+          "size": "56px",
+          "shape": "circle",
+          "elevation": "0px 4px 8px rgba(0,0,0,0.2)"
+        },
+        "accessibility": "Must have aria-label='Log Reading Session'"
+      },
+      "accessibility": "Minimum touch target 48x48px (including padding). Text contrast ratio > 4.5:1."
+    },
+    "form_inputs": {
+      "text_input": {
+        "default_state": {
+          "background": "neutrals.surface",
+          "border": "1px solid neutrals.gray_300",
+          "border_radius": "8px",
+          "padding": "14px 16px",
+          "text": "neutrals.gray_900"
+        },
+        "focus_state": {
+          "border": "2px solid primary.600",
+          "box_shadow": "0 0 0 4px primary.100"
+        },
+        "error_state": {
+          "border": "2px solid semantic.error",
+          "helper_text_color": "semantic.error",
+          "icon": "alert-circle"
+        },
+        "disabled_state": {
+          "background": "neutrals.gray_100",
+          "text": "neutrals.gray_400",
+          "border": "1px solid neutrals.gray_200"
+        },
+        "accessibility": "Labels must be visible (not just placeholders). Error messages linked via aria-describedby."
+      }
+    },
+    "navigation": {
+      "bottom_nav": {
+        "layout": "Fixed bottom, 4-5 items equal width",
+        "height": "64px + safe area",
+        "active_state": {
+          "icon_color": "primary.600",
+          "text_color": "primary.600",
+          "indicator": "Top border 2px solid primary.600"
+        },
+        "inactive_state": {
+          "icon_color": "neutrals.gray_400",
+          "text_color": "neutrals.gray_500"
+        },
+        "accessibility": "Role='tablist', labels required for icons."
+      },
+      "rail_nav": {
+        "layout": "Left vertical column (Tablet/Landscape)",
+        "width": "80px",
+        "behavior": "Replaces Bottom Nav on screens > 600px width"
+      }
+    },
+    "data_display": {
+      "book_card": {
+        "layout": "Vertical stack: Cover -> Title -> Author -> Progress",
+        "cover_aspect_ratio": "2:3",
+        "border_radius": "8px",
+        "shadow": "0px 2px 4px rgba(0,0,0,0.05)",
+        "progress_bar": {
+          "height": "4px",
+          "color": "semantic.success",
+          "track_color": "neutrals.gray_200"
+        }
+      },
+      "premium_lock_overlay": {
+        "visual": "Backdrop blur (5px) + Semi-transparent overlay (neutrals.black @ 60%)",
+        "icon": "Lock (24px) in premium.500",
+        "interaction": "Tap triggers Paywall Modal"
+      },
+      "heatmap_grid": {
+        "cell_size": "12px",
+        "gap": "4px",
+        "colors": ["neutrals.gray_100", "primary.200", "primary.400", "primary.600", "primary.800"],
+        "accessibility": "Tooltip on hover/press with exact value. Screen reader reads 'Date: Value'."
+      }
+    },
+    "feedback": {
+      "alerts": {
+        "success": {
+          "background": "semantic.success_bg",
+          "border_left": "4px solid semantic.success",
+          "text": "neutrals.gray_900",
+          "icon": "check-circle"
+        },
+        "warning": {
+          "background": "semantic.warning_bg",
+          "border_left": "4px solid semantic.warning",
+          "text": "neutrals.gray_900",
+          "icon": "alert-triangle"
+        },
+        "accessibility": "Role='alert', aria-live='polite'"
+      },
+      "sync_indicator": {
+        "states": {
+          "synced": {"icon": "cloud-check", "color": "semantic.success"},
+          "syncing": {"icon": "refresh-cw", "animation": "spin", "color": "primary.500"},
+          "offline": {"icon": "cloud-off", "color": "neutrals.gray_400"},
+          "error": {"icon": "alert-circle", "color": "semantic.error"}
+        }
+      }
+    }
+  },
+  "interaction_patterns": {
+    "micro_interactions": [
+      {
+        "pattern_name": "Card Press",
+        "trigger": "Touch down on Book Card",
+        "animation": "Scale to 0.98, elevation drops to 0",
+        "accessibility": "Respects prefers-reduced-motion"
+      },
+      {
+        "pattern_name": "Goal Completion",
+        "trigger": "Daily goal reached",
+        "animation": "Confetti burst + Progress Ring fills and pulses once",
+        "accessibility": "Haptic feedback (success pattern)"
+      }
+    ],
+    "loading_states": [
+      {
+        "pattern_name": "Skeleton Loading",
+        "visual": "Pulsing gray blocks matching content shape",
+        "duration": "1.5s loop",
+        "accessibility": "Aria-busy='true', label='Loading library content'"
+      }
+    ],
+    "gestures": [
+      {
+        "pattern_name": "Swipe to Action",
+        "context": "Library List Items",
+        "actions": {
+          "swipe_left": "Delete/Remove (Red)",
+          "swipe_right": "Mark as Read (Green)"
+        }
+      }
+    ]
+  },
+  "implementation_guidelines": {
+    "css_architecture": {
+      "custom_properties": {
+        "--color-primary-600": "#4F46E5",
+        "--color-surface": "#FFFFFF",
+        "--spacing-md": "16px",
+        "--radius-lg": "12px",
+        "--font-family-body": "'Inter', sans-serif"
+      },
+      "naming_conventions": "Strict BEM (Block Element Modifier) for web components; Flutter Widget naming follows PascalCase (e.g., PrimaryButton, BookCard).",
+      "component_organization": "Atomic Design: Atoms (Buttons, Inputs), Molecules (Form Fields, List Tiles), Organisms (Cards, Headers), Templates (Dashboard Layout).",
+      "utility_classes": "Use utility-first approach for margins/padding (e.g., p-4, m-2) matching the spacing scale."
+    },
+    "responsive_strategy": {
+      "breakpoints": {
+        "mobile": "0px - 599px",
+        "tablet": "600px - 1239px",
+        "desktop": "1240px+"
+      },
+      "approach": "Mobile-first. Layouts start as single column and expand to multi-column/rail navigation on Tablet.",
+      "component_adaptations": "Bottom Nav becomes Navigation Rail on Tablet. Grids change from 2 columns (Mobile) to 4-6 columns (Tablet)."
+    },
+    "accessibility_implementation": {
+      "focus_management": "Visible focus rings (3px solid primary.300) for keyboard/controller navigation. Logical tab order top-left to bottom-right.",
+      "color_contrast": "All text/background pairs tested to meet 4.5:1 (AA). Large text (18pt+) meets 3:1.",
+      "screen_reader_support": "All images require 'semanticLabel' (Flutter) or 'alt' text. Interactive elements must have labels describing action, not just icon name (e.g., 'Add Book' not 'Plus Icon').",
+      "dynamic_type": "Layouts must support text scaling up to 200% without breaking (use Flex/Wrap widgets, avoid fixed heights)."
+    }
+  }
+}

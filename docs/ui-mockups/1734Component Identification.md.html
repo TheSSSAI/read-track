@@ -1,0 +1,307 @@
+{
+  "component_inventory": {
+    "atomic_components": [
+      {
+        "component_name": "ConnectivityStatusIndicator",
+        "category": "feedback",
+        "variants": ["online", "offline", "syncing"],
+        "states": ["visible", "hidden", "animating"],
+        "responsive_needs": "minimal space in status bar or header",
+        "dependencies": ["Repo-FE-Lib-UIKit/Icon", "Riverpod/ConnectivityProvider"],
+        "complexity_level": "medium",
+        "implementation_priority": 1,
+        "estimated_effort": "3-4 hours"
+      },
+      {
+        "component_name": "PremiumLockBadge",
+        "category": "feedback",
+        "variants": ["icon_only", "with_text", "overlay"],
+        "states": ["locked", "unlocked (hidden)"],
+        "responsive_needs": "scales with parent container",
+        "dependencies": ["Repo-FE-Lib-UIKit/Icon", "Riverpod/UserProvider"],
+        "complexity_level": "low",
+        "implementation_priority": 2,
+        "estimated_effort": "2 hours"
+      },
+      {
+        "component_name": "AdBannerWrapper",
+        "category": "monetization",
+        "variants": ["adaptive_banner", "hidden"],
+        "states": ["loading", "loaded", "error", "suppressed (premium)"],
+        "responsive_needs": "adapts width to screen size, collapses height if premium",
+        "dependencies": ["Google AdMob SDK", "Riverpod/UserProvider"],
+        "complexity_level": "medium",
+        "implementation_priority": 3,
+        "estimated_effort": "4-6 hours"
+      }
+    ],
+    "molecular_components": [
+      {
+        "component_name": "BookListTile",
+        "category": "data_display",
+        "variants": ["library_view", "search_result", "dashboard_compact"],
+        "states": ["default", "loading", "error", "swiped_action"],
+        "responsive_needs": "list view on mobile, grid card on tablet",
+        "dependencies": ["Repo-FE-Lib-UIKit/BookCard", "Riverpod/LibraryProvider", "SlidableAction"],
+        "complexity_level": "medium",
+        "implementation_priority": 1,
+        "estimated_effort": "6-8 hours"
+      },
+      {
+        "component_name": "GoalProgressWidget",
+        "category": "dashboard",
+        "variants": ["daily_summary", "weekly_summary", "detailed_card"],
+        "states": ["in_progress", "completed", "empty"],
+        "responsive_needs": "flexible width",
+        "dependencies": ["Repo-FE-Lib-UIKit/ProgressBar", "Riverpod/GoalProvider"],
+        "complexity_level": "medium",
+        "implementation_priority": 2,
+        "estimated_effort": "5-7 hours"
+      },
+      {
+        "component_name": "ReadingTimerWidget",
+        "category": "tracking",
+        "variants": ["active", "paused", "stopped"],
+        "states": ["counting", "idle", "background_resumed"],
+        "responsive_needs": "large legible text",
+        "dependencies": ["Repo-FE-Lib-UIKit/PrimaryButton", "Isar/LocalStore", "AppLifecycleListener"],
+        "complexity_level": "high",
+        "implementation_priority": 2,
+        "estimated_effort": "8-10 hours"
+      },
+      {
+        "component_name": "DailyTaskItem",
+        "category": "gamification",
+        "variants": ["incomplete", "completed"],
+        "states": ["idle", "animating_completion"],
+        "responsive_needs": "touch friendly checkbox area",
+        "dependencies": ["Repo-FE-Lib-UIKit/Checkbox", "Riverpod/TaskProvider"],
+        "complexity_level": "low",
+        "implementation_priority": 3,
+        "estimated_effort": "3-4 hours"
+      }
+    ],
+    "organism_components": [
+      {
+        "component_name": "MainScaffoldShell",
+        "category": "layout",
+        "variants": ["default"],
+        "states": ["authenticated", "unauthenticated", "offline_mode"],
+        "responsive_needs": "switch between BottomNavigationBar (mobile) and NavigationRail (tablet)",
+        "dependencies": ["GoRouter", "Repo-FE-Lib-UIKit/BottomNav", "Riverpod/AuthProvider"],
+        "complexity_level": "high",
+        "implementation_priority": 1,
+        "estimated_effort": "12-16 hours"
+      },
+      {
+        "component_name": "PaywallModal",
+        "category": "monetization",
+        "variants": ["feature_lock", "limit_reached", "settings_upsell"],
+        "states": ["fetching_products", "displaying_products", "processing_purchase", "success", "error"],
+        "responsive_needs": "scrollable content on small screens",
+        "dependencies": ["InAppPurchase SDK", "Repo-FE-Lib-UIKit/Button", "Repo-FE-Lib-UIKit/Modal"],
+        "complexity_level": "high",
+        "implementation_priority": 2,
+        "estimated_effort": "16-20 hours"
+      },
+      {
+        "component_name": "ReadingSessionLogger",
+        "category": "tracking",
+        "variants": ["manual_entry", "timer_flow"],
+        "states": ["input", "validation_error", "saving", "success"],
+        "responsive_needs": "keyboard avoidance",
+        "dependencies": ["Repo-FE-Lib-UIKit/FormFields", "ReadingTimerWidget", "Repo-FE-Lib-ApiClient"],
+        "complexity_level": "high",
+        "implementation_priority": 2,
+        "estimated_effort": "10-14 hours"
+      },
+      {
+        "component_name": "LibraryFilterBar",
+        "category": "navigation",
+        "variants": ["shelves", "tags"],
+        "states": ["default", "filtered", "search_active"],
+        "responsive_needs": "horizontal scroll on mobile",
+        "dependencies": ["Repo-FE-Lib-UIKit/Chips", "Riverpod/LibraryProvider"],
+        "complexity_level": "medium",
+        "implementation_priority": 3,
+        "estimated_effort": "4-6 hours"
+      }
+    ]
+  },
+  "screen_inventory": [
+    {
+      "screen_name": "LoginScreen",
+      "screen_type": "authentication",
+      "variants": ["social_auth_only"],
+      "states": ["idle", "authenticating", "error", "network_error"],
+      "required_components": ["SocialSignInButton (Google/Apple)", "LogoHero", "LegalLinks"],
+      "platform_optimizations": "Apple Sign In visible only on iOS",
+      "implementation_priority": 1,
+      "estimated_effort": "6-8 hours",
+      "user_flow_criticality": "critical"
+    },
+    {
+      "screen_name": "OnboardingWizardScreen",
+      "screen_type": "flow",
+      "variants": ["step_goal", "step_add_book", "step_tour"],
+      "states": ["active", "submitting", "completed"],
+      "required_components": ["ProgressStepper", "GoalInputForm", "BookSearchWidget", "FeatureTourOverlay"],
+      "platform_optimizations": "adaptive layout for keyboard interaction",
+      "implementation_priority": 1,
+      "estimated_effort": "12-16 hours",
+      "user_flow_criticality": "high"
+    },
+    {
+      "screen_name": "DashboardScreen",
+      "screen_type": "dashboard",
+      "variants": ["empty_state", "populated_free", "populated_premium"],
+      "states": ["loading", "content", "pull_to_refresh"],
+      "required_components": ["CurrentReadingCarousel", "GoalProgressWidget", "DailyTasklist", "LogSessionShortcut"],
+      "platform_optimizations": "mobile: vertical scroll, tablet: masonry or grid",
+      "implementation_priority": 1,
+      "estimated_effort": "16-20 hours",
+      "user_flow_criticality": "high"
+    },
+    {
+      "screen_name": "LibraryScreen",
+      "screen_type": "list_view",
+      "variants": ["all_books", "filtered_shelf"],
+      "states": ["loading", "empty", "populated", "searching"],
+      "required_components": ["LibraryFilterBar", "BookListTile", "SearchAppBar", "FloatingActionButton"],
+      "platform_optimizations": "mobile: list tile, tablet: grid tile",
+      "implementation_priority": 1,
+      "estimated_effort": "10-12 hours",
+      "user_flow_criticality": "high"
+    },
+    {
+      "screen_name": "BookSearchScreen",
+      "screen_type": "data_entry",
+      "variants": ["api_search", "manual_entry"],
+      "states": ["idle", "searching", "results", "no_results", "error"],
+      "required_components": ["SearchInput", "BookListTile", "BarcodeScannerOverlay", "ManualEntryForm"],
+      "platform_optimizations": "camera permission handling for scanner",
+      "implementation_priority": 2,
+      "estimated_effort": "12-16 hours",
+      "user_flow_criticality": "high"
+    },
+    {
+      "screen_name": "BookDetailScreen",
+      "screen_type": "detail_view",
+      "variants": ["in_library", "search_result"],
+      "states": ["loading", "content", "edit_mode"],
+      "required_components": ["BookCoverHero", "ReadingSessionHistoryList", "ShelfSelector", "RatingWidget"],
+      "platform_optimizations": "collapsible sliver app bar",
+      "implementation_priority": 2,
+      "estimated_effort": "8-10 hours",
+      "user_flow_criticality": "medium"
+    },
+    {
+      "screen_name": "LogReadingSessionScreen",
+      "screen_type": "form",
+      "variants": ["manual", "timer"],
+      "states": ["timer_running", "data_entry", "submitting"],
+      "required_components": ["ReadingTimerWidget", "PageNumberInput", "DateSelector", "ConfettiOverlay"],
+      "platform_optimizations": "keep screen awake during timer",
+      "implementation_priority": 2,
+      "estimated_effort": "10-12 hours",
+      "user_flow_criticality": "high"
+    },
+    {
+      "screen_name": "StatisticsScreen",
+      "screen_type": "data_visualization",
+      "variants": ["basic (free)", "advanced (premium)"],
+      "states": ["loading", "content", "empty_data"],
+      "required_components": ["StatSummaryCard", "ReadingChart", "StreakCalendar", "PremiumUpsellBanner"],
+      "platform_optimizations": "chart tooltips interaction (touch vs hover)",
+      "implementation_priority": 3,
+      "estimated_effort": "14-18 hours",
+      "user_flow_criticality": "medium"
+    },
+    {
+      "screen_name": "SettingsScreen",
+      "screen_type": "configuration",
+      "variants": ["default"],
+      "states": ["content"],
+      "required_components": ["ProfileHeader", "ThemeSelector", "NotificationToggles", "DataExportButton", "DeleteAccountAction"],
+      "platform_optimizations": "native settings look and feel",
+      "implementation_priority": 3,
+      "estimated_effort": "6-8 hours",
+      "user_flow_criticality": "low"
+    },
+    {
+      "screen_name": "SubscriptionScreen",
+      "screen_type": "marketing",
+      "variants": ["sales_page", "management_page"],
+      "states": ["loading_products", "displaying_content", "purchase_pending", "success"],
+      "required_components": ["BenefitComparisonList", "PricingCard", "PurchaseButton", "RestorePurchasesLink"],
+      "platform_optimizations": "display localized prices from store",
+      "implementation_priority": 3,
+      "estimated_effort": "10-12 hours",
+      "user_flow_criticality": "medium"
+    },
+    {
+      "screen_name": "VocabularyGameScreen",
+      "screen_type": "interactive",
+      "variants": ["flashcards", "quiz"],
+      "states": ["intro", "playing", "results", "limit_reached"],
+      "required_components": ["FlashcardWidget", "QuizOptionGrid", "ScoreSummary", "GameControlBar"],
+      "platform_optimizations": "gestures for card flipping",
+      "implementation_priority": 4,
+      "estimated_effort": "16-20 hours",
+      "user_flow_criticality": "low"
+    },
+    {
+      "screen_name": "TipsContentScreen",
+      "screen_type": "content",
+      "variants": ["list", "detail"],
+      "states": ["loading", "content", "offline_cached"],
+      "required_components": ["ArticleCard", "RichTextRenderer", "CategoryFilter"],
+      "platform_optimizations": "reader mode layout",
+      "implementation_priority": 4,
+      "estimated_effort": "8-10 hours",
+      "user_flow_criticality": "low"
+    }
+  ],
+  "implementation_plan": {
+    "phase_1_foundation": {
+      "components": ["MainScaffoldShell", "ConnectivityStatusIndicator", "LoginScreen", "OnboardingWizardScreen"],
+      "rationale": "Establishes the app entry point, authentication flow, and basic navigation structure necessary for any other feature.",
+      "estimated_duration": "4-5 days"
+    },
+    "phase_2_core_loop": {
+      "components": ["DashboardScreen", "LibraryScreen", "BookSearchScreen", "BookListTile", "BookDetailScreen", "LibraryFilterBar"],
+      "rationale": "Implements the primary value proposition: finding books, adding them to the library, and viewing them.",
+      "estimated_duration": "6-8 days"
+    },
+    "phase_3_tracking_and_goals": {
+      "components": ["LogReadingSessionScreen", "ReadingTimerWidget", "ReadingSessionLogger", "GoalProgressWidget", "DailyTaskItem"],
+      "rationale": "Enables the tracking functionality and habit-formation features (goals/tasks) which feed data into the dashboard.",
+      "estimated_duration": "6-8 days"
+    },
+    "phase_4_monetization_and_polish": {
+      "components": ["SubscriptionScreen", "PaywallModal", "AdBannerWrapper", "PremiumLockBadge", "SettingsScreen", "StatisticsScreen"],
+      "rationale": "Adds the business model logic (ads, subscription), user configuration, and visual data summaries.",
+      "estimated_duration": "6-8 days"
+    },
+    "phase_5_engagement_features": {
+      "components": ["VocabularyGameScreen", "TipsContentScreen"],
+      "rationale": "Secondary features that enhance retention but are not strictly required for MVP launch.",
+      "estimated_duration": "5-7 days"
+    }
+  },
+  "platform_implementation_strategy": {
+    "target_platform": "iOS and Android (Flutter)",
+    "implementation_approach": "mobile_first",
+    "responsive_strategy": "Use LayoutBuilder for high-level structure (BottomNav vs Rail), Flex/Expanded for component-level adaptation.",
+    "progressive_enhancement": "Core tracking works offline → Syncs when online → Enhanced with AI/Images when connection is strong.",
+    "browser_support": "N/A (Mobile App)",
+    "accessibility_integration": "Semantics widgets for screen readers, dynamic type support, minimum 44px tap targets."
+  },
+  "quality_assurance_plan": {
+    "component_testing": "Widget tests using flutter_test for individual molecular components and organisms.",
+    "integration_testing": "Integration tests for full screen flows (e.g., Login -> Onboarding -> Dashboard) using integration_test package.",
+    "responsive_testing": "Verify layout on small (SE/Pixel 4a) and large (Max/Ultra) screens, plus tablet simulators.",
+    "accessibility_testing": "Manual verification using TalkBack (Android) and VoiceOver (iOS) plus visual contrast checks.",
+    "performance_testing": "Frame timing analysis on physical devices, particularly for list scrolling and page transitions."
+  }
+}

@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistics & Insights - ReadTrack</title>
+  <style>
+    /* 
+      DESIGN SYSTEM FOUNDATION 
+      Based on provided design tokens
+    */
+    :root {
+      /* Colors: Indigo Primary */
+      --primary-50: #EEF2FF;
+      --primary-100: #E0E7FF;
+      --primary-200: #C7D2FE;
+      --primary-300: #A5B4FC;
+      --primary-400: #818CF8;
+      --primary-500: #6366F1;
+      --primary-600: #4F46E5;
+      --primary-700: #4338CA;
+      --primary-800: #3730A3;
+      --primary-900: #312E81;
+
+      /* Colors: Rose Secondary */
+      --secondary-50: #FFF1F2;
+      --secondary-500: #F43F5E;
+      --secondary-900: #881337;
+
+      /* Colors: Premium Amber */
+      --premium-100: #FEF3C7;
+      --premium-500: #F59E0B;
+      --premium-700: #B45309;
+      --premium-900: #78350F;
+      --premium-gradient: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+
+      /* Colors: Neutrals */
+      --white: #FFFFFF;
+      --gray-50: #F8FAFC;
+      --gray-100: #F1F5F9;
+      --gray-200: #E2E8F0;
+      --gray-300: #CBD5E1;
+      --gray-400: #94A3B8;
+      --gray-500: #64748B;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1E293B;
+      --gray-900: #0F172A;
+
+      /* Semantic */
+      --success: #10B981;
+      --error: #EF4444;
+
+      /* Typography */
+      --font-primary: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-secondary: 'Merriweather', Georgia, serif;
+
+      /* Spacing & Layout */
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --nav-height: 64px;
+    }
+
+    /* CSS Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--gray-50);
+      color: var(--gray-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: calc(var(--nav-height) + 20px);
+    }
+
+    button {
+      font-family: inherit;
+      border: none;
+      background: none;
+      cursor: pointer;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* 
+      LAYOUT ARCHITECTURE 
+    */
+    .screen-container {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Header Section */
+    .screen-header {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    @media (min-width: 600px) {
+      .screen-header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+    }
+
+    .screen-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--gray-900);
+      letter-spacing: -0.02em;
+    }
+
+    /* Period Selector */
+    .period-selector {
+      display: inline-flex;
+      background: var(--gray-200);
+      padding: 4px;
+      border-radius: var(--radius-md);
+    }
+
+    .period-btn {
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-600);
+      transition: all 0.2s ease;
+    }
+
+    .period-btn.active {
+      background: var(--white);
+      color: var(--primary-600);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .period-btn:focus-visible {
+      outline: 2px solid var(--primary-400);
+      z-index: 1;
+    }
+
+    /* 
+      STAT SUMMARY CARDS 
+    */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 600px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .stat-card {
+      background: var(--white);
+      padding: 20px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border: 1px solid var(--gray-100);
+      transition: transform 0.2s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .stat-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--gray-500);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .stat-icon {
+      width: 20px;
+      height: 20px;
+      color: var(--primary-500);
+    }
+
+    .stat-icon.secondary { color: var(--secondary-500); }
+    .stat-icon.premium { color: var(--premium-500); }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--gray-900);
+      letter-spacing: -0.01em;
+    }
+
+    .stat-meta {
+      font-size: 12px;
+      color: var(--success);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: auto;
+    }
+
+    .stat-meta.neutral { color: var(--gray-500); }
+
+    /* 
+      READING CHART SECTION 
+    */
+    .chart-section {
+      background: var(--white);
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-100);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--gray-800);
+    }
+
+    /* CSS Bar Chart Implementation */
+    .bar-chart-container {
+      height: 200px;
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      padding-bottom: 24px; /* Space for labels */
+      position: relative;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .chart-bar-wrapper {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .chart-bar {
+      width: 100%;
+      background: var(--primary-200);
+      border-radius: 4px 4px 0 0;
+      transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s;
+      position: relative;
+    }
+
+    .chart-bar:hover, .chart-bar:focus {
+      background: var(--primary-500);
+    }
+
+    .chart-bar.current {
+      background: var(--primary-500);
+    }
+
+    /* Tooltip */
+    .chart-tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--gray-900);
+      color: var(--white);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      margin-bottom: 4px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 10;
+    }
+
+    .chart-bar-wrapper:hover .chart-tooltip,
+    .chart-bar-wrapper:focus-within .chart-tooltip {
+      opacity: 1;
+    }
+
+    .chart-label {
+      position: absolute;
+      bottom: -24px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+
+    /* 
+      STREAK CALENDAR (HEATMAP)
+    */
+    .streak-section {
+      background: var(--white);
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-100);
+    }
+
+    .heatmap-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(12px, 1fr)); /* Adaptive */
+      gap: 4px;
+      margin-top: 16px;
+    }
+    
+    /* Simulate a GitHub-like contribution graph but simplified for mobile/responsive */
+    .heatmap-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .heat-cell {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      background: var(--gray-100);
+    }
+
+    @media (min-width: 600px) {
+        .heat-cell {
+            width: 14px;
+            height: 14px;
+        }
+    }
+
+    .heat-cell.level-1 { background: var(--primary-200); }
+    .heat-cell.level-2 { background: var(--primary-400); }
+    .heat-cell.level-3 { background: var(--primary-600); }
+    .heat-cell.level-4 { background: var(--primary-800); }
+
+    /* 
+      PREMIUM SECTION & UPSELL 
+    */
+    .premium-wrapper {
+      position: relative;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    /* The actual content that gets blurred */
+    .advanced-stats {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 600px) {
+      .advanced-stats {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .insight-card {
+      background: var(--white);
+      padding: 20px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--gray-100);
+    }
+
+    .insight-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--gray-800);
+    }
+
+    .insight-list {
+      list-style: none;
+    }
+
+    .insight-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--gray-50);
+      font-size: 14px;
+    }
+
+    .insight-item:last-child { border-bottom: none; }
+
+    /* Blurred State */
+    .is-blurred {
+      filter: blur(6px);
+      user-select: none;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    /* Upsell Banner Overlay */
+    .upsell-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.4);
+      z-index: 10;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .upsell-card {
+      background: var(--white);
+      padding: 32px;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      max-width: 400px;
+      border: 1px solid var(--premium-100);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .lock-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--premium-100);
+      color: var(--premium-700);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .upsell-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--gray-900);
+    }
+
+    .upsell-desc {
+      font-size: 14px;
+      color: var(--gray-600);
+      margin-bottom: 8px;
+    }
+
+    .btn-premium {
+      background: var(--premium-gradient);
+      color: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 12px 32px;
+      font-weight: 600;
+      font-size: 16px;
+      border: none;
+      box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.3);
+      transition: transform 0.1s;
+    }
+
+    .btn-premium:hover {
+      transform: scale(1.02);
+    }
+
+    /* 
+      EMPTY STATE 
+    */
+    .empty-state {
+      text-align: center;
+      padding: 64px 20px;
+      color: var(--gray-500);
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      border: 1px dashed var(--gray-300);
+    }
+
+    /* 
+      BOTTOM NAVIGATION (Mock)
+    */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: var(--nav-height);
+      background: var(--white);
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: var(--gray-400);
+      padding: 8px;
+    }
+
+    .nav-item.active {
+      color: var(--primary-600);
+    }
+
+    .nav-icon {
+      width: 24px;
+      height: 24px;
+      background-color: currentColor;
+      mask-size: contain;
+      -webkit-mask-size: contain;
+    }
+
+    /* Utilities */
+    .hidden { display: none !important; }
+    
+    /* Toggle Control for Demo */
+    .demo-controls {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.8);
+      padding: 10px;
+      border-radius: 8px;
+      z-index: 1000;
+      display: flex;
+      gap: 8px;
+    }
+    .demo-btn {
+      font-size: 12px;
+      color: white;
+      border: 1px solid white;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .demo-btn.active { background: white; color: black; }
+
+  </style>
+</head>
+<body class="mode-free"> <!-- Default to Free mode -->
+
+  <!-- DEV CONTROLS: For demonstration purposes only -->
+  <div class="demo-controls">
+    <button class="demo-btn active" onclick="setMode('free')">Free View</button>
+    <button class="demo-btn" onclick="setMode('premium')">Premium View</button>
+    <button class="demo-btn" onclick="setMode('loading')">Loading</button>
+    <button class="demo-btn" onclick="setMode('empty')">Empty</button>
+  </div>
+
+  <main class="screen-container" id="main-content">
+    
+    <!-- Header -->
+    <header class="screen-header">
+      <h1 class="screen-title">Statistics</h1>
+      <div class="period-selector" role="tablist" aria-label="Time period selection">
+        <button class="period-btn active" role="tab" aria-selected="true" tabindex="0">Week</button>
+        <button class="period-btn" role="tab" aria-selected="false" tabindex="0">Month</button>
+        <button class="period-btn" role="tab" aria-selected="false" tabindex="0">Year</button>
+      </div>
+    </header>
+
+    <!-- CONTENT STATE -->
+    <div id="content-view">
+      
+      <!-- Summary Cards -->
+      <section class="stats-grid" aria-label="Key Statistics">
+        
+        <article class="stat-card">
+          <div class="stat-header">
+            <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+            <span>Books Read</span>
+          </div>
+          <div class="stat-value">12</div>
+          <div class="stat-meta">
+            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+            <span>2 this month</span>
+          </div>
+        </article>
+
+        <article class="stat-card">
+          <div class="stat-header">
+            <svg class="stat-icon secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            <span>Pages Read</span>
+          </div>
+          <div class="stat-value">3,450</div>
+          <div class="stat-meta neutral">
+            <span>Avg 42/day</span>
+          </div>
+        </article>
+
+        <article class="stat-card">
+          <div class="stat-header">
+            <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span>Reading Time</span>
+          </div>
+          <div class="stat-value">84h 12m</div>
+          <div class="stat-meta">
+            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+            <span>+12% vs last mo</span>
+          </div>
+        </article>
+
+        <article class="stat-card">
+          <div class="stat-header">
+            <svg class="stat-icon secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"></path></svg>
+            <span>Current Streak</span>
+          </div>
+          <div class="stat-value">14 Days</div>
+          <div class="stat-meta neutral">
+            <span>Best: 21 Days</span>
+          </div>
+        </article>
+
+      </section>
+
+      <!-- Reading Activity Chart -->
+      <section class="chart-section" aria-label="Reading Activity Chart">
+        <div class="section-header">
+          <h2 class="section-title">Reading Activity</h2>
+        </div>
+        <div class="bar-chart-container" role="img" aria-label="Bar chart showing pages read per day this week">
+          
+          <!-- Mon -->
+          <div class="chart-bar-wrapper" tabindex="0">
+            <div class="chart-bar" style="height: 40%"></div>
+            <div class="chart-tooltip">45 Pages</div>
+            <span class="chart-label">Mon</span>
+          </div>
+          
+          <!-- Tue -->
+          <div class="chart-bar-wrapper" tabindex="0">
+            <div class="chart-bar" style="height: 65%"></div>
+            <div class="chart-tooltip">72 Pages</div>
+            <span class="chart-label">Tue</span>
+          </div>
+
+          <!-- Wed -->
+          <div class="chart-bar-wrapper" tabindex="0">
+            <div class="chart-bar" style="height: 20%"></div>
+            <div class="chart-tooltip">22 Pages</div>
+            <span class="chart-label">Wed</span>
+          </div>
+
+          <!-- Thu -->
+          <div class="chart-bar-wrapper" tabindex="0">
+            <div class="chart-bar" style="height: 80%"></div>
+            <div class="chart-tooltip">90 Pages</div>
+            <span class="chart-label">Thu</span>
+          </div>
+
+          <!-- Fri -->
+          <div class="chart-bar-wrapper" tabindex="0">
+            <div class="chart-bar current" style="height: 50%"></div>
+            <div class="chart-tooltip">55 Pages</div>
+            <span class="chart-label" style="font-weight: 700; color: var(--primary-600)">Fri</span>
+          </div>
+
+          <!-- Sat -->
+          <div class="chart-bar-wrapper" tabindex="0">
+            <div class="chart-bar" style="height: 0%"></div>
+            <div class="chart-tooltip">0 Pages</div>
+            <span class="chart-label">Sat</span>
+          </div>
+
+          <!-- Sun -->
+          <div class="chart-bar-wrapper" tabindex="0">
+            <div class="chart-bar" style="height: 0%"></div>
+            <div class="chart-tooltip">0 Pages</div>
+            <span class="chart-label">Sun</span>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Streak Calendar (Premium Feature in some flows, but usually standard) -->
+      <section class="streak-section" aria-label="Reading Consistency Calendar">
+        <div class="section-header">
+          <h2 class="section-title">Consistency</h2>
+        </div>
+        <div class="heatmap-container" id="heatmap-container">
+          <!-- JS will populate, simulating manual implementation for demo -->
+          <!-- 28 days visual representation -->
+          <div class="heat-cell level-1" title="Nov 1: 10 mins"></div>
+          <div class="heat-cell level-3" title="Nov 2: 45 mins"></div>
+          <div class="heat-cell level-2" title="Nov 3: 20 mins"></div>
+          <div class="heat-cell level-4" title="Nov 4: 90 mins"></div>
+          <div class="heat-cell level-0" title="Nov 5: 0 mins"></div>
+          <div class="heat-cell level-1" title="Nov 6: 15 mins"></div>
+          <div class="heat-cell level-2" title="Nov 7: 30 mins"></div>
+          <!-- More cells would go here... added via JS for brevity -->
+        </div>
+      </section>
+
+      <!-- PREMIUM SECTION (Advanced Insights) -->
+      <div class="premium-wrapper" id="premium-section">
+        
+        <!-- Upsell Overlay (Visible only when FREE) -->
+        <div class="upsell-overlay" id="upsell-overlay">
+          <div class="upsell-card">
+            <div class="lock-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            </div>
+            <div>
+              <h3 class="upsell-title">Unlock Advanced Insights</h3>
+              <p class="upsell-desc">See your most read genres, authors, and reading habits by time of day.</p>
+            </div>
+            <button class="btn-premium">Upgrade to Premium</button>
+          </div>
+        </div>
+
+        <!-- The Content (Blurred when Free, Clear when Premium) -->
+        <div class="advanced-stats is-blurred" id="advanced-content">
+          
+          <article class="insight-card">
+            <h3>Top Genres</h3>
+            <ul class="insight-list">
+              <li class="insight-item">
+                <span>Science Fiction</span>
+                <span>45%</span>
+              </li>
+              <li class="insight-item">
+                <span>Biography</span>
+                <span>30%</span>
+              </li>
+              <li class="insight-item">
+                <span>History</span>
+                <span>15%</span>
+              </li>
+              <li class="insight-item">
+                <span>Self-Help</span>
+                <span>10%</span>
+              </li>
+            </ul>
+          </article>
+
+          <article class="insight-card">
+            <h3>Reading Habits</h3>
+            <ul class="insight-list">
+              <li class="insight-item">
+                <span>Most Active Time</span>
+                <span>Evening (8 PM)</span>
+              </li>
+              <li class="insight-item">
+                <span>Avg Session</span>
+                <span>42 mins</span>
+              </li>
+              <li class="insight-item">
+                <span>Fastest Pace</span>
+                <span>65 pgs/hr</span>
+              </li>
+            </ul>
+          </article>
+
+        </div>
+      </div>
+
+    </div> <!-- End Content View -->
+
+    <!-- LOADING STATE (Hidden by default) -->
+    <div id="loading-view" class="hidden">
+      <div class="stats-grid">
+        <div class="stat-card" style="height: 120px; background: #f1f5f9; animation: pulse 1.5s infinite;"></div>
+        <div class="stat-card" style="height: 120px; background: #f1f5f9; animation: pulse 1.5s infinite;"></div>
+        <div class="stat-card" style="height: 120px; background: #f1f5f9; animation: pulse 1.5s infinite;"></div>
+        <div class="stat-card" style="height: 120px; background: #f1f5f9; animation: pulse 1.5s infinite;"></div>
+      </div>
+      <div class="chart-section" style="height: 300px; margin-top: 24px; background: #f1f5f9; animation: pulse 1.5s infinite;"></div>
+    </div>
+
+    <!-- EMPTY STATE (Hidden by default) -->
+    <div id="empty-view" class="hidden">
+      <div class="empty-state">
+        <svg style="width: 64px; height: 64px; color: var(--gray-400); margin-bottom: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+        <h3>No reading data yet</h3>
+        <p style="margin-top: 8px; color: var(--gray-500);">Start logging your reading sessions to see your stats here.</p>
+        <button style="margin-top: 24px; background: var(--primary-600); color: white; padding: 12px 24px; border-radius: 8px; font-weight: 600;">Log Reading</button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="#" class="nav-item">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+      <span>Home</span>
+    </a>
+    <a href="#" class="nav-item">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+      <span>Library</span>
+    </a>
+    <a href="#" class="nav-item active">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+      <span>Stats</span>
+    </a>
+    <a href="#" class="nav-item">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <style>
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+  </style>
+
+  <script>
+    // JS for populating heatmap and handling mode switching
+    
+    // Populate Heatmap
+    const heatmap = document.getElementById('heatmap-container');
+    const levels = [0, 1, 2, 3, 4];
+    for(let i = 0; i < 90; i++) { // Approx 3 months
+      const cell = document.createElement('div');
+      const level = Math.random() > 0.3 ? levels[Math.floor(Math.random() * levels.length)] : 0;
+      cell.className = `heat-cell level-${level}`;
+      cell.title = `Activity Level: ${level}`;
+      heatmap.appendChild(cell);
+    }
+
+    // State Management for Demo
+    function setMode(mode) {
+      const contentView = document.getElementById('content-view');
+      const loadingView = document.getElementById('loading-view');
+      const emptyView = document.getElementById('empty-view');
+      const upsell = document.getElementById('upsell-overlay');
+      const advancedContent = document.getElementById('advanced-content');
+      const buttons = document.querySelectorAll('.demo-btn');
+
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      // Reset
+      contentView.classList.add('hidden');
+      loadingView.classList.add('hidden');
+      emptyView.classList.add('hidden');
+
+      if (mode === 'loading') {
+        loadingView.classList.remove('hidden');
+      } else if (mode === 'empty') {
+        emptyView.classList.remove('hidden');
+      } else {
+        contentView.classList.remove('hidden');
+        if (mode === 'premium') {
+          upsell.classList.add('hidden');
+          advancedContent.classList.remove('is-blurred');
+        } else {
+          upsell.classList.remove('hidden');
+          advancedContent.classList.add('is-blurred');
+        }
+      }
+    }
+  </script>
+</body>
+</html>

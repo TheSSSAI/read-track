@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Premium Subscription | ReadTracker</title>
+  <style>
+    /* 
+      DESIGN SYSTEM TOKENS 
+      Based on provided JSON spec
+    */
+    :root {
+      /* Colors - Primary (Indigo) */
+      --color-primary-50: #EEF2FF;
+      --color-primary-100: #E0E7FF;
+      --color-primary-500: #6366F1;
+      --color-primary-600: #4F46E5;
+      --color-primary-700: #4338CA;
+
+      /* Colors - Premium (Amber/Gold) */
+      --color-premium-100: #FEF3C7;
+      --color-premium-500: #F59E0B;
+      --color-premium-600: #D97706;
+      --color-premium-900: #78350F;
+      --gradient-premium: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+
+      /* Colors - Neutrals */
+      --color-white: #FFFFFF;
+      --color-gray-50: #F8FAFC;
+      --color-gray-100: #F1F5F9;
+      --color-gray-200: #E2E8F0;
+      --color-gray-300: #CBD5E1;
+      --color-gray-400: #94A3B8;
+      --color-gray-500: #64748B;
+      --color-gray-700: #334155;
+      --color-gray-800: #1E293B;
+      --color-gray-900: #0F172A;
+
+      /* Colors - Semantic */
+      --color-success: #10B981;
+      --color-error: #EF4444;
+
+      /* Typography */
+      --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-h1: 700 32px/1.25 var(--font-family);
+      --font-h2: 600 24px/1.3 var(--font-family);
+      --font-h3: 600 20px/1.4 var(--font-family);
+      --font-body: 400 16px/1.6 var(--font-family);
+      --font-body-sm: 400 14px/1.5 var(--font-family);
+      --font-button: 600 16px/1.0 var(--font-family);
+      --font-caption: 500 12px/1.4 var(--font-family);
+
+      /* Spacing */
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      --spacing-2xl: 48px;
+
+      /* Layout */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --container-width-desktop: 900px;
+      --header-height: 64px;
+    }
+
+    /* CSS Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button {
+      font: inherit;
+      border: none;
+      background: none;
+      cursor: pointer;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    /* 
+      LAYOUT ARCHITECTURE 
+    */
+    .screen-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Header */
+    .screen-header {
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--spacing-md);
+      background: var(--color-white);
+      border-bottom: 1px solid var(--color-gray-200);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-action {
+      color: var(--color-gray-500);
+      font-size: 14px;
+      font-weight: 500;
+      padding: var(--spacing-sm);
+    }
+
+    .header-title {
+      font: var(--font-body);
+      font-weight: 600;
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      padding: var(--spacing-lg) var(--spacing-md) 100px; /* Bottom padding for sticky footer */
+      max-width: var(--container-width-desktop);
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* 
+      COMPONENTS 
+    */
+
+    /* State Views Container */
+    .view-state {
+      display: none;
+      animation: fadeIn 0.3s ease-out;
+    }
+    
+    .view-state.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Loading State */
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 60vh;
+      color: var(--color-gray-500);
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--color-gray-200);
+      border-top-color: var(--color-primary-600);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: var(--spacing-md);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Sales Page Layout */
+    .sales-layout {
+      display: grid;
+      gap: var(--spacing-2xl);
+    }
+
+    @media (min-width: 768px) {
+      .sales-layout {
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+      }
+    }
+
+    /* Hero Section */
+    .hero-section {
+      text-align: center;
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .hero-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--color-premium-100);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--spacing-md);
+      color: var(--color-premium-600);
+    }
+
+    .hero-title {
+      font: var(--font-h1);
+      margin-bottom: var(--spacing-sm);
+      background: var(--gradient-premium);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font: var(--font-body);
+      color: var(--color-gray-500);
+    }
+
+    /* Benefit List */
+    .benefit-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+
+    .benefit-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-md);
+      padding: var(--spacing-sm);
+    }
+
+    .benefit-icon {
+      color: var(--color-premium-500);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .benefit-text h4 {
+      font: var(--font-body);
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .benefit-text p {
+      font: var(--font-body-sm);
+      color: var(--color-gray-500);
+    }
+
+    /* Pricing Section */
+    .pricing-container {
+      background: var(--color-white);
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .pricing-grid {
+      display: grid;
+      gap: var(--spacing-md);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    /* Pricing Card */
+    .pricing-card {
+      position: relative;
+      border: 2px solid var(--color-gray-200);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-lg);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .pricing-card:hover {
+      border-color: var(--color-premium-500);
+      background-color: var(--color-gray-50);
+    }
+
+    .pricing-card.selected {
+      border-color: var(--color-premium-500);
+      background-color: var(--color-premium-100);
+      box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+    }
+
+    .pricing-info h3 {
+      font: var(--font-h3);
+      margin-bottom: 4px;
+    }
+
+    .pricing-price {
+      font: var(--font-body);
+      font-weight: 500;
+      color: var(--color-gray-700);
+    }
+
+    .pricing-savings {
+      font: var(--font-caption);
+      color: var(--color-success);
+      margin-top: 4px;
+      display: block;
+    }
+
+    /* Best Value Badge */
+    .badge-best-value {
+      position: absolute;
+      top: -12px;
+      right: 12px;
+      background: var(--gradient-premium);
+      color: var(--color-white);
+      padding: 4px 8px;
+      border-radius: 12px;
+      font: var(--font-caption);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .radio-indicator {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--color-gray-400);
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .pricing-card.selected .radio-indicator {
+      border-color: var(--color-premium-600);
+      background: var(--color-white);
+    }
+
+    .pricing-card.selected .radio-indicator::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 10px;
+      height: 10px;
+      background: var(--color-premium-600);
+      border-radius: 50%;
+    }
+
+    /* Sticky Footer */
+    .sticky-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--color-white);
+      padding: var(--spacing-md);
+      border-top: 1px solid var(--color-gray-200);
+      z-index: 100;
+      box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .footer-content {
+      max-width: var(--container-width-desktop);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
+    }
+
+    .btn-premium {
+      background: var(--gradient-premium);
+      color: var(--color-white);
+      font: var(--font-button);
+      padding: 16px 24px;
+      border-radius: var(--radius-md);
+      width: 100%;
+      transition: transform 0.1s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-premium:active {
+      transform: scale(0.98);
+    }
+
+    .btn-premium:disabled {
+      background: var(--color-gray-300);
+      cursor: not-allowed;
+    }
+
+    .legal-links {
+      text-align: center;
+      font: var(--font-caption);
+      color: var(--color-gray-500);
+    }
+
+    .legal-links a {
+      color: var(--color-gray-500);
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* Success State */
+    .success-view {
+      text-align: center;
+      padding: var(--spacing-2xl) var(--spacing-md);
+    }
+
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--color-success);
+      color: var(--color-white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--spacing-lg);
+      font-size: 40px;
+    }
+
+    /* Management View */
+    .management-card {
+      background: var(--color-white);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      border: 1px solid var(--color-gray-200);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      background: var(--color-premium-100);
+      color: var(--color-premium-900);
+      border-radius: 100px;
+      font: var(--font-caption);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .manage-btn {
+      margin-top: var(--spacing-lg);
+      width: 100%;
+      background: var(--color-gray-100);
+      color: var(--color-gray-900);
+      padding: 12px;
+      border-radius: var(--radius-md);
+      font: var(--font-button);
+    }
+
+    /* Developer Controls (Demo Only) */
+    .dev-controls {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      background: rgba(0,0,0,0.8);
+      padding: 10px;
+      border-radius: 8px;
+      z-index: 9999;
+      color: white;
+      font-size: 12px;
+    }
+    .dev-controls button {
+      background: #333;
+      color: white;
+      padding: 4px 8px;
+      margin: 2px;
+      border-radius: 4px;
+    }
+
+    /* Responsive Adjustments */
+    @media (min-width: 768px) {
+      .pricing-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .sticky-footer {
+        position: static;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        margin-top: var(--spacing-lg);
+        padding: 0;
+      }
+      .main-content {
+        padding-bottom: var(--spacing-lg);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Demo Controls -->
+  <div class="dev-controls">
+    <p>Debug States:</p>
+    <button onclick="setScreenState('loading_products')">Loading</button>
+    <button onclick="setScreenState('sales_page')">Sales</button>
+    <button onclick="setScreenState('management_page')">Managed</button>
+  </div>
+
+  <div class="screen-container">
+    
+    <!-- Header -->
+    <header class="screen-header">
+      <button class="header-action" onclick="alert('Navigate Back')">Close</button>
+      <div class="header-title">Premium</div>
+      <button class="header-action" onclick="triggerRestore()">Restore</button>
+    </header>
+
+    <main class="main-content">
+      
+      <!-- STATE: LOADING -->
+      <div id="loading_products" class="view-state loading-container">
+        <div class="spinner"></div>
+        <p class="body-medium">Loading subscription options...</p>
+      </div>
+
+      <!-- STATE: SALES PAGE -->
+      <div id="sales_page" class="view-state active">
+        <div class="sales-layout">
+          
+          <!-- Left Column: Value Prop -->
+          <section class="benefits-section">
+            <div class="hero-section">
+              <div class="hero-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
+                </svg>
+              </div>
+              <h1 class="hero-title">Unlock Unlimited Reading</h1>
+              <p class="hero-subtitle">Supercharge your learning with advanced tracking and insights.</p>
+            </div>
+
+            <div class="benefit-list">
+              <div class="benefit-item">
+                <div class="benefit-icon">✓</div>
+                <div class="benefit-text">
+                  <h4>Unlimited Library</h4>
+                  <p>Track as many books as you want. No limits.</p>
+                </div>
+              </div>
+              <div class="benefit-item">
+                <div class="benefit-icon">✓</div>
+                <div class="benefit-text">
+                  <h4>Advanced Statistics</h4>
+                  <p>Deep dive into your reading habits and trends.</p>
+                </div>
+              </div>
+              <div class="benefit-item">
+                <div class="benefit-icon">✓</div>
+                <div class="benefit-text">
+                  <h4>Personal Vocabulary Lists</h4>
+                  <p>Build custom lists and quiz yourself.</p>
+                </div>
+              </div>
+              <div class="benefit-item">
+                <div class="benefit-icon">✓</div>
+                <div class="benefit-text">
+                  <h4>Ad-Free Experience</h4>
+                  <p>Focus on reading without distractions.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Right Column: Pricing -->
+          <section class="pricing-container">
+            <div class="pricing-grid" role="radiogroup" aria-label="Subscription Plans">
+              
+              <!-- Yearly Plan -->
+              <div class="pricing-card selected" id="plan-yearly" onclick="selectPlan('yearly')" role="radio" aria-checked="true" tabindex="0">
+                <div class="badge-best-value">Best Value</div>
+                <div class="pricing-info">
+                  <h3>Yearly</h3>
+                  <div class="pricing-price">$29.99 / year</div>
+                  <span class="pricing-savings">Save 50%</span>
+                </div>
+                <div class="radio-indicator"></div>
+              </div>
+
+              <!-- Monthly Plan -->
+              <div class="pricing-card" id="plan-monthly" onclick="selectPlan('monthly')" role="radio" aria-checked="false" tabindex="0">
+                <div class="pricing-info">
+                  <h3>Monthly</h3>
+                  <div class="pricing-price">$4.99 / month</div>
+                </div>
+                <div class="radio-indicator"></div>
+              </div>
+
+            </div>
+
+            <!-- Sticky Footer Content (Moved here for desktop layout, handled via fixed pos on mobile) -->
+            <div class="sticky-footer">
+              <div class="footer-content">
+                <button id="purchase-btn" class="btn-premium" onclick="initiatePurchase()">
+                  Start 7-Day Free Trial
+                </button>
+                <div class="legal-links">
+                  <p>Recurring billing. Cancel anytime.</p>
+                  <p>
+                    <a href="#">Terms of Service</a> &bull; <a href="#">Privacy Policy</a>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- STATE: PURCHASE PENDING -->
+      <div id="purchase_pending" class="view-state loading-container">
+        <div class="spinner"></div>
+        <p class="body-medium">Processing secure payment...</p>
+      </div>
+
+      <!-- STATE: SUCCESS -->
+      <div id="success" class="view-state success-view">
+        <div class="success-icon">🎉</div>
+        <h1 style="font: var(--font-h2); margin-bottom: var(--spacing-md);">Welcome to Premium!</h1>
+        <p class="body-large" style="color: var(--color-gray-500); margin-bottom: var(--spacing-xl);">
+          You've successfully unlocked all features. Your reading journey just got a major upgrade.
+        </p>
+        <button class="btn-premium" onclick="window.location.reload()">Start Exploring</button>
+      </div>
+
+      <!-- STATE: MANAGEMENT PAGE (For existing subscribers) -->
+      <div id="management_page" class="view-state">
+        <div class="management-card">
+          <div class="status-badge">Active Subscription</div>
+          <h2 style="font: var(--font-h2); margin-bottom: var(--spacing-sm);">ReadTracker Premium (Yearly)</h2>
+          <p class="body-medium" style="color: var(--color-gray-500);">
+            Renews automatically on <strong>December 15, 2025</strong>.
+          </p>
+          
+          <div style="margin-top: var(--spacing-xl);">
+            <h3 style="font: var(--font-h3); margin-bottom: var(--spacing-md);">Your Benefits</h3>
+            <ul class="benefit-list">
+              <li class="benefit-item">
+                <span class="benefit-icon">✓</span> Unlimited Books
+              </li>
+              <li class="benefit-item">
+                <span class="benefit-icon">✓</span> Advanced Stats
+              </li>
+              <li class="benefit-item">
+                <span class="benefit-icon">✓</span> Ad-Free
+              </li>
+            </ul>
+          </div>
+
+          <button class="manage-btn" onclick="alert('Opening OS Subscription Settings...')">
+            Manage Subscription
+          </button>
+        </div>
+        <p style="text-align: center; margin-top: var(--spacing-md); color: var(--color-gray-500); font-size: 12px;">
+          Subscription management is handled by your device's app store.
+        </p>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    // State Management Logic for Demo
+    let selectedPlan = 'yearly';
+    const plans = {
+      yearly: {
+        id: 'plan-yearly',
+        price: '$29.99',
+        cta: 'Start 7-Day Free Trial'
+      },
+      monthly: {
+        id: 'plan-monthly',
+        price: '$4.99',
+        cta: 'Subscribe for $4.99/mo'
+      }
+    };
+
+    function selectPlan(planKey) {
+      selectedPlan = planKey;
+      
+      // Update UI selection
+      document.querySelectorAll('.pricing-card').forEach(card => {
+        card.classList.remove('selected');
+        card.setAttribute('aria-checked', 'false');
+      });
+      
+      const selectedCard = document.getElementById(plans[planKey].id);
+      selectedCard.classList.add('selected');
+      selectedCard.setAttribute('aria-checked', 'true');
+
+      // Update CTA text
+      document.getElementById('purchase-btn').textContent = plans[planKey].cta;
+    }
+
+    function setScreenState(stateId) {
+      // Hide all states
+      document.querySelectorAll('.view-state').forEach(el => {
+        el.classList.remove('active');
+      });
+      
+      // Show requested state
+      document.getElementById(stateId).classList.add('active');
+
+      // State specific logic
+      if (stateId === 'loading_products') {
+        setTimeout(() => setScreenState('sales_page'), 1500);
+      }
+    }
+
+    function initiatePurchase() {
+      setScreenState('purchase_pending');
+      
+      // Simulate API/StoreKit delay
+      setTimeout(() => {
+        setScreenState('success');
+      }, 2000);
+    }
+
+    function triggerRestore() {
+      setScreenState('purchase_pending');
+      setTimeout(() => {
+        alert("Restore completed. No previous purchases found.");
+        setScreenState('sales_page');
+      }, 1500);
+    }
+
+    // Initialize accessible interactions
+    document.querySelectorAll('.pricing-card').forEach(card => {
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          card.click();
+        }
+      });
+    });
+
+    // Start with a mock loading state to simulate real-world data fetching
+    // setScreenState('loading_products');
+  </script>
+</body>
+</html>

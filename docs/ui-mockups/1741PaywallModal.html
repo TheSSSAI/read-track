@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paywall Modal Organism</title>
+  <style>
+    /* =========================================
+       DESIGN SYSTEM & COMPONENT CSS
+       ========================================= */
+    :root {
+      /* Premium Palette (Amber/Gold) */
+      --color-premium-50: #FFFBEB;
+      --color-premium-100: #FEF3C7;
+      --color-premium-200: #FDE68A;
+      --color-premium-500: #F59E0B;
+      --color-premium-600: #D97706;
+      --color-premium-700: #B45309;
+      --color-premium-900: #78350F;
+      --gradient-premium: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+      
+      /* Base & Neutrals */
+      --color-surface: #FFFFFF;
+      --color-background: #F8FAFC;
+      --color-text-primary: #0F172A;
+      --color-text-secondary: #64748B;
+      --color-text-tertiary: #94A3B8;
+      --color-divider: #E2E8F0;
+      --color-backdrop: rgba(15, 23, 42, 0.65);
+      
+      /* Semantic */
+      --color-error: #EF4444;
+      --color-focus: #6366F1;
+
+      /* Spacing */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      
+      /* Typography */
+      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-size-base: 16px;
+      --font-weight-regular: 400;
+      --font-weight-medium: 500;
+      --font-weight-bold: 700;
+      
+      /* Layout & Shape */
+      --radius-md: 8px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --radius-full: 9999px;
+      --shadow-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Reset & Base */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-family);
+      background-color: var(--color-background);
+      color: var(--color-text-primary);
+      line-height: 1.5;
+      padding: 40px;
+      min-height: 100vh;
+    }
+
+    /* Documentation Styles */
+    .doc-container { max-width: 1200px; margin: 0 auto; }
+    .doc-header { margin-bottom: 60px; border-bottom: 1px solid var(--color-divider); padding-bottom: 20px; }
+    .doc-title { font-size: 32px; font-weight: var(--font-weight-bold); margin-bottom: 10px; color: var(--color-text-primary); }
+    .doc-section { margin-bottom: 80px; }
+    .doc-subtitle { font-size: 20px; font-weight: var(--font-weight-bold); margin-bottom: 24px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+    .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 40px; }
+    .doc-note { background: #EEF2FF; border-left: 4px solid #6366F1; padding: 16px; margin-bottom: 24px; border-radius: 4px; color: #3730A3; }
+
+    /* =========================================
+       COMPONENT: PaywallModal
+       ========================================= */
+    
+    /* 1. Backdrop Overlay */
+    .paywall-overlay {
+      /* positioning handled in preview wrapper for docs, fixed for real use */
+      position: relative; 
+      inset: 0;
+      background-color: var(--color-backdrop);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-md);
+      z-index: 100;
+      /* For demo purposes, we define height */
+      min-height: 800px; 
+      border-radius: var(--radius-md);
+    }
+
+    /* 2. Modal Container */
+    .paywall-modal {
+      background: var(--color-surface);
+      width: 100%;
+      max-width: 440px;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-modal);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* 3. Header & Hero */
+    .paywall-header {
+      background: linear-gradient(180deg, var(--color-premium-100) 0%, rgba(255,255,255,0) 100%);
+      padding: var(--space-xl) var(--space-lg) var(--space-md);
+      text-align: center;
+      position: relative;
+    }
+
+    .paywall-hero-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--gradient-premium);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-md);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+      color: white;
+    }
+    
+    .paywall-hero-icon svg { width: 32px; height: 32px; }
+
+    .paywall-title {
+      font-size: 24px;
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-xs);
+      line-height: 1.2;
+    }
+
+    .paywall-subtitle {
+      font-size: 16px;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Close Button */
+    .paywall-close {
+      position: absolute;
+      top: var(--space-md);
+      right: var(--space-md);
+      background: rgba(0,0,0,0.05);
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--color-text-secondary);
+      transition: background 0.2s;
+    }
+    .paywall-close:hover { background: rgba(0,0,0,0.1); }
+    .paywall-close:focus-visible { outline: 2px solid var(--color-focus); }
+
+    /* 4. Body Content */
+    .paywall-body {
+      padding: 0 var(--space-lg) var(--space-lg);
+      flex: 1;
+      overflow-y: auto; /* Scrollable content */
+    }
+
+    /* Benefits List Molecule */
+    .benefit-list {
+      list-style: none;
+      margin: var(--space-md) 0 var(--space-xl);
+    }
+
+    .benefit-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-md);
+      padding: var(--space-sm) 0;
+    }
+
+    .benefit-icon {
+      color: var(--color-premium-600);
+      background: var(--color-premium-50);
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .benefit-icon svg { width: 14px; height: 14px; stroke-width: 3; }
+
+    .benefit-text {
+      font-size: 15px;
+      color: var(--color-text-primary);
+      line-height: 1.4;
+    }
+    .benefit-text strong { font-weight: 600; color: var(--color-text-primary); }
+
+    /* Plan Selector Molecule */
+    .plan-selector {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+
+    .plan-card {
+      border: 2px solid var(--color-divider);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .plan-card:hover { border-color: var(--color-premium-200); }
+    
+    .plan-card[aria-checked="true"] {
+      border-color: var(--color-premium-500);
+      background-color: var(--color-premium-50);
+    }
+
+    .plan-info { display: flex; flex-direction: column; }
+    .plan-name { font-weight: var(--font-weight-bold); font-size: 14px; margin-bottom: 2px; }
+    .plan-price { font-size: 16px; color: var(--color-text-primary); }
+    .plan-detail { font-size: 12px; color: var(--color-text-secondary); }
+
+    .plan-radio {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--color-text-tertiary);
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .plan-card[aria-checked="true"] .plan-radio {
+      border-color: var(--color-premium-600);
+      background: var(--color-premium-600);
+    }
+    .plan-card[aria-checked="true"] .plan-radio::after {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .plan-badge {
+      position: absolute;
+      top: -10px;
+      right: 16px;
+      background: var(--color-premium-600);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    /* 5. Footer & CTA */
+    .paywall-footer {
+      padding: var(--space-lg);
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-divider);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .btn-premium {
+      width: 100%;
+      background: var(--gradient-premium);
+      color: white;
+      border: none;
+      padding: 16px;
+      border-radius: var(--radius-lg);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+      transition: transform 0.1s, box-shadow 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-premium:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(245, 158, 11, 0.5);
+    }
+    
+    .btn-premium:active { transform: translateY(0); }
+    
+    .btn-premium:disabled {
+      background: var(--color-text-tertiary);
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    /* Loading State Spinner */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s linear infinite;
+    }
+
+    /* Legal Links */
+    .legal-links {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+    .legal-link { color: inherit; text-decoration: none; }
+    .legal-link:hover { text-decoration: underline; }
+
+    /* Animations */
+    @keyframes modalSlideUp {
+      from { transform: translateY(100px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 
+       Responsive Behavior 
+       Mobile: Bottom Sheet style
+       Desktop: Centered Modal
+    */
+    @media (max-width: 600px) {
+      .paywall-overlay {
+        align-items: flex-end; /* Bottom alignment */
+        padding: 0;
+      }
+      .paywall-modal {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        max-width: 100%;
+        max-height: 90vh;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="doc-container">
+    <header class="doc-header">
+      <h1 class="doc-title">Paywall Modal</h1>
+      <p>A high-conversion organism used for monetization, feature locking, and limit enforcement.</p>
+    </header>
+
+    <!-- VARIANT 1: LIMIT REACHED -->
+    <section class="doc-section">
+      <div class="doc-subtitle">Variant 1: Limit Reached (Free Tier Cap)</div>
+      <div class="doc-note">Used when a user hits a hard limit (e.g., 20 books) and tries to add more. Focuses on "Unlimited" value.</div>
+      
+      <div class="paywall-overlay">
+        <div class="paywall-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-1">
+          <!-- Close Button -->
+          <button class="paywall-close" aria-label="Close modal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+
+          <!-- Header -->
+          <div class="paywall-header">
+            <div class="paywall-hero-icon">
+              <!-- Stack Icon -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <h2 id="modal-title-1" class="paywall-title">Library Limit Reached</h2>
+            <p class="paywall-subtitle">You've tracked 20 books! Upgrade to Premium to track unlimited books and support the app.</p>
+          </div>
+
+          <!-- Body -->
+          <div class="paywall-body">
+            <ul class="benefit-list">
+              <li class="benefit-item">
+                <div class="benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                <span class="benefit-text"><strong>Unlimited Books</strong> in your library</span>
+              </li>
+              <li class="benefit-item">
+                <div class="benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                <span class="benefit-text"><strong>Unlimited Active Goals</strong> to build habits</span>
+              </li>
+              <li class="benefit-item">
+                <div class="benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                <span class="benefit-text"><strong>Advanced Statistics</strong> & insights</span>
+              </li>
+            </ul>
+
+            <!-- Simple Plan Selection -->
+            <div class="plan-selector">
+              <div class="plan-card" role="radio" aria-checked="true" tabindex="0">
+                <span class="plan-badge">Best Value</span>
+                <div class="plan-info">
+                  <span class="plan-name">Annual Plan</span>
+                  <span class="plan-price">$29.99 / year</span>
+                  <span class="plan-detail">Just $2.50/month</span>
+                </div>
+                <div class="plan-radio"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="paywall-footer">
+            <button class="btn-premium">
+              Try 7 Days Free
+            </button>
+            <div class="legal-links">
+              <a href="#" class="legal-link">Restore Purchase</a>
+              <a href="#" class="legal-link">Terms</a>
+              <a href="#" class="legal-link">Privacy</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VARIANT 2: FEATURE LOCK -->
+    <section class="doc-section">
+      <div class="doc-subtitle">Variant 2: Feature Lock</div>
+      <div class="doc-note">Used when a user tries to access a Premium-only screen like "Insights". Shows multiple plan options.</div>
+
+      <div class="paywall-overlay">
+        <div class="paywall-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-2">
+          <button class="paywall-close" aria-label="Close modal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+
+          <div class="paywall-header">
+            <div class="paywall-hero-icon">
+              <!-- Lock Icon -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </div>
+            <h2 id="modal-title-2" class="paywall-title">Unlock Insights</h2>
+            <p class="paywall-subtitle">Get deep analysis of your reading habits, streaks, and trends with Premium.</p>
+          </div>
+
+          <div class="paywall-body">
+            <ul class="benefit-list">
+              <li class="benefit-item">
+                <div class="benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                <span class="benefit-text"><strong>Detailed Charts</strong> & reading heatmaps</span>
+              </li>
+              <li class="benefit-item">
+                <div class="benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                <span class="benefit-text"><strong>Remove Ads</strong> for focused reading</span>
+              </li>
+            </ul>
+
+            <div class="plan-selector">
+              <div class="plan-card" role="radio" aria-checked="true" tabindex="0">
+                <span class="plan-badge">Save 50%</span>
+                <div class="plan-info">
+                  <span class="plan-name">Annual</span>
+                  <span class="plan-price">$29.99 / year</span>
+                </div>
+                <div class="plan-radio"></div>
+              </div>
+              <div class="plan-card" role="radio" aria-checked="false" tabindex="0">
+                <div class="plan-info">
+                  <span class="plan-name">Monthly</span>
+                  <span class="plan-price">$4.99 / month</span>
+                </div>
+                <div class="plan-radio"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="paywall-footer">
+            <button class="btn-premium">
+              Continue
+            </button>
+            <div class="legal-links">
+              <a href="#" class="legal-link">Restore Purchase</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATE: PROCESSING -->
+    <section class="doc-section">
+      <div class="doc-subtitle">State: Processing Purchase</div>
+      <div class="doc-note">Button state when communicating with App Store/Play Store.</div>
+
+      <div class="paywall-overlay">
+        <div class="paywall-modal" role="dialog" aria-modal="true" aria-busy="true">
+          <div class="paywall-header">
+            <h2 class="paywall-title">Confirming Purchase...</h2>
+            <p class="paywall-subtitle">Please wait while we secure your subscription.</p>
+          </div>
+          
+          <div class="paywall-body" style="display: flex; justify-content: center; align-items: center; min-height: 200px;">
+             <!-- Large spinner or skeleton illustration would go here -->
+             <div class="spinner" style="border-color: var(--color-premium-200); border-top-color: var(--color-premium-600); width: 48px; height: 48px; border-width: 4px;"></div>
+          </div>
+
+          <div class="paywall-footer">
+            <button class="btn-premium" disabled>
+              <div class="spinner"></div> Processing...
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // Simple script to demonstrate toggle interaction for documentation purposes
+    document.querySelectorAll('.plan-card').forEach(card => {
+      card.addEventListener('click', function() {
+        const parent = this.closest('.plan-selector');
+        parent.querySelectorAll('.plan-card').forEach(c => c.setAttribute('aria-checked', 'false'));
+        this.setAttribute('aria-checked', 'true');
+      });
+    });
+  </script>
+</body>
+</html>

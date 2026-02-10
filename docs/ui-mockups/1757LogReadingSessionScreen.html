@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log Reading Session - ReadTrack</title>
+  <style>
+    /* 
+      DESIGN SYSTEM TOKENS 
+      Based on Indigo/Rose/Amber palette & Inter font
+    */
+    :root {
+      /* Typography */
+      --font-primary: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Colors - Indigo Primary */
+      --primary-50: #EEF2FF;
+      --primary-100: #E0E7FF;
+      --primary-300: #A5B4FC;
+      --primary-500: #6366F1;
+      --primary-600: #4F46E5;
+      --primary-700: #4338CA;
+      --primary-800: #3730A3;
+
+      /* Colors - Neutrals */
+      --neutral-white: #FFFFFF;
+      --neutral-50: #F8FAFC;
+      --neutral-100: #F1F5F9;
+      --neutral-200: #E2E8F0;
+      --neutral-300: #CBD5E1;
+      --neutral-400: #94A3B8;
+      --neutral-500: #64748B;
+      --neutral-800: #1E293B;
+      --neutral-900: #0F172A;
+
+      /* Colors - Semantic */
+      --color-success: #10B981;
+      --color-error: #EF4444;
+      --color-overlay: rgba(15, 23, 42, 0.6);
+
+      /* Spacing */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --space-2xl: 48px;
+
+      /* UI Metrics */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-full: 9999px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      
+      /* Transitions */
+      --transition-base: all 0.2s ease-in-out;
+    }
+
+    /* CSS RESET & BASE STYLES */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--neutral-50);
+      color: var(--neutral-900);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: var(--space-md);
+    }
+
+    /* LAYOUT UTILITIES */
+    .screen-container {
+      width: 100%;
+      max-width: 1140px; /* Desktop constraint */
+      background: var(--neutral-white);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      display: grid;
+      grid-template-columns: 1fr;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* On Desktop: Split View */
+    @media (min-width: 768px) {
+      .screen-container {
+        grid-template-columns: 320px 1fr;
+        min-height: 600px;
+        margin-top: var(--space-xl);
+      }
+    }
+
+    /* LEFT COLUMN: BOOK CONTEXT */
+    .book-context {
+      background-color: var(--neutral-50);
+      padding: var(--space-lg);
+      border-right: 1px solid var(--neutral-200);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .book-cover {
+      width: 120px;
+      height: 180px;
+      background-color: var(--neutral-300);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-md);
+      margin-bottom: var(--space-md);
+      background-image: url('https://placehold.co/120x180/4F46E5/FFFFFF?text=Dune');
+      background-size: cover;
+      background-position: center;
+    }
+
+    .book-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--neutral-900);
+      margin-bottom: var(--space-xs);
+    }
+
+    .book-author {
+      font-size: 14px;
+      color: var(--neutral-500);
+      margin-bottom: var(--space-lg);
+    }
+
+    .current-progress-pill {
+      background: var(--primary-50);
+      color: var(--primary-700);
+      padding: var(--space-xs) var(--space-md);
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    /* RIGHT COLUMN: MAIN CONTENT */
+    .session-content {
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    /* Header */
+    .session-header {
+      padding: var(--space-lg);
+      border-bottom: 1px solid var(--neutral-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .session-header h1 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--neutral-400);
+      cursor: pointer;
+      padding: var(--space-xs);
+      border-radius: var(--radius-sm);
+      transition: var(--transition-base);
+    }
+
+    .close-btn:hover {
+      background: var(--neutral-100);
+      color: var(--neutral-900);
+    }
+
+    /* Tab Switcher / Segmented Control */
+    .mode-switcher {
+      padding: var(--space-md) var(--space-lg);
+      background: var(--neutral-white);
+    }
+
+    .segmented-control {
+      display: flex;
+      background: var(--neutral-100);
+      padding: 4px;
+      border-radius: var(--radius-md);
+      position: relative;
+    }
+
+    .segment-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 8px;
+      font-weight: 500;
+      color: var(--neutral-500);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: var(--transition-base);
+      z-index: 2;
+    }
+
+    .segment-btn[aria-selected="true"] {
+      color: var(--primary-700);
+      background: var(--neutral-white);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .segment-btn:focus-visible {
+      outline: 2px solid var(--primary-300);
+    }
+
+    /* VIEW CONTAINERS */
+    .view-container {
+      flex: 1;
+      padding: var(--space-lg);
+      display: none; /* Hidden by default */
+      flex-direction: column;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .view-container.active {
+      display: flex;
+    }
+
+    /* TIMER WIDGET */
+    .timer-display {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+    }
+
+    .time-value {
+      font-family: var(--font-mono);
+      font-size: 64px;
+      font-weight: 700;
+      color: var(--neutral-900);
+      margin-bottom: var(--space-lg);
+      letter-spacing: -2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .timer-controls {
+      display: flex;
+      gap: var(--space-lg);
+    }
+
+    .timer-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition-base);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-play {
+      background: var(--primary-600);
+      color: white;
+    }
+    .btn-play:hover { background: var(--primary-700); transform: scale(1.05); }
+    .btn-play:active { transform: scale(0.95); }
+
+    .btn-pause {
+      background: var(--neutral-white);
+      color: var(--neutral-900);
+      border: 2px solid var(--neutral-200);
+      display: none;
+    }
+    
+    .btn-stop {
+      background: var(--neutral-100);
+      color: var(--color-error);
+    }
+    .btn-stop:hover { background: var(--color-error); color: white; }
+
+    /* Timer Running State styles handled via JS class toggling */
+    .timer-running .btn-play { display: none; }
+    .timer-running .btn-pause { display: flex; }
+    .timer-running .time-value { color: var(--primary-600); }
+
+    /* FORM STYLES */
+    .form-grid {
+      display: grid;
+      gap: var(--space-lg);
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .input-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--neutral-700);
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-md);
+    }
+
+    .form-input {
+      padding: 12px 16px;
+      border: 1px solid var(--neutral-300);
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      color: var(--neutral-900);
+      background: var(--neutral-white);
+      transition: var(--transition-base);
+      width: 100%;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary-600);
+      box-shadow: 0 0 0 4px var(--primary-100);
+    }
+
+    .form-input:disabled {
+      background: var(--neutral-100);
+      color: var(--neutral-500);
+      cursor: not-allowed;
+    }
+
+    .input-hint {
+      font-size: 12px;
+      color: var(--neutral-500);
+    }
+
+    /* FOOTER ACTIONS */
+    .session-footer {
+      padding: var(--space-lg);
+      border-top: 1px solid var(--neutral-200);
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-md);
+      background: var(--neutral-white);
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: var(--transition-base);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--neutral-600);
+    }
+    .btn-secondary:hover { background: var(--neutral-50); color: var(--neutral-900); }
+
+    .btn-primary {
+      background: var(--primary-600);
+      color: white;
+      box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+    }
+    .btn-primary:hover { background: var(--primary-700); transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+
+    /* CONFETTI OVERLAY */
+    .confetti-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 50;
+      overflow: hidden;
+      display: none;
+    }
+    .confetti-overlay.active { display: block; }
+    
+    .confetti-piece {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: var(--primary-500);
+      top: -10px;
+      opacity: 0;
+    }
+
+    @keyframes fall {
+      0% { top: -10px; opacity: 1; transform: rotate(0deg); }
+      100% { top: 100%; opacity: 0; transform: rotate(360deg); }
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Success State */
+    .success-modal {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(4px);
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .success-modal.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .success-icon {
+      font-size: 48px;
+      color: var(--color-success);
+      margin-bottom: var(--space-md);
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="screen-container">
+    
+    <!-- LEFT: CONTEXT -->
+    <aside class="book-context">
+      <div class="book-cover" role="img" aria-label="Book cover for Dune"></div>
+      <h2 class="book-title">Dune</h2>
+      <p class="book-author">Frank Herbert</p>
+      <span class="current-progress-pill">Current: Pg 142 of 680</span>
+    </aside>
+
+    <!-- RIGHT: INTERACTION -->
+    <main class="session-content">
+      
+      <header class="session-header">
+        <h1>Log Reading Session</h1>
+        <button class="close-btn" aria-label="Close">
+          <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </header>
+
+      <!-- MODE SWITCHER -->
+      <div class="mode-switcher">
+        <div class="segmented-control" role="tablist">
+          <button class="segment-btn" id="tab-manual" role="tab" aria-selected="true" aria-controls="panel-manual">Manual Entry</button>
+          <button class="segment-btn" id="tab-timer" role="tab" aria-selected="false" aria-controls="panel-timer">Timer</button>
+        </div>
+      </div>
+
+      <!-- PANEL 1: MANUAL ENTRY FORM -->
+      <form id="panel-manual" class="view-container active" role="tabpanel" aria-labelledby="tab-manual">
+        <div class="form-grid">
+          
+          <div class="input-row">
+            <div class="input-group">
+              <label class="input-label" for="date">Date</label>
+              <input type="date" id="date" class="form-input" required>
+            </div>
+            
+            <div class="input-group">
+              <label class="input-label" for="duration">Duration</label>
+              <input type="text" id="duration" class="form-input" placeholder="e.g. 45 min" required>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="pages">End Page Number</label>
+            <input type="number" id="pages" class="form-input" placeholder="Last page read (e.g. 155)" min="142" max="680" required>
+            <span class="input-hint">You started at page 142</span>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="notes">Session Notes (Optional)</label>
+            <textarea id="notes" class="form-input" rows="4" placeholder="What stood out to you?"></textarea>
+          </div>
+
+        </div>
+      </form>
+
+      <!-- PANEL 2: TIMER -->
+      <div id="panel-timer" class="view-container" role="tabpanel" aria-labelledby="tab-timer">
+        <div class="timer-display">
+          <div class="time-value" id="timer-val" role="timer" aria-live="polite">00:00:00</div>
+          
+          <div class="timer-controls">
+            <button class="timer-btn btn-stop" id="stop-btn" aria-label="Stop Timer">
+              <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+              </svg>
+            </button>
+
+            <button class="timer-btn btn-play" id="play-btn" aria-label="Start Timer">
+              <svg width="32" height="32" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </button>
+
+            <button class="timer-btn btn-pause" id="pause-btn" aria-label="Pause Timer">
+              <svg width="32" height="32" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <p style="text-align: center; color: var(--neutral-500); margin-top: -30px;">Screen will stay awake</p>
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="session-footer">
+        <button class="btn btn-secondary" type="button">Cancel</button>
+        <button class="btn btn-primary" type="button" id="save-btn">Save Session</button>
+      </footer>
+
+    </main>
+
+    <!-- SUCCESS OVERLAY -->
+    <div class="success-modal" id="success-overlay">
+      <div class="success-icon">
+        <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <h2>Session Logged!</h2>
+      <p style="color: var(--neutral-500); margin-bottom: var(--space-lg);">You read for 45 minutes.</p>
+      <button class="btn btn-primary" onclick="window.location.reload()">Done</button>
+    </div>
+
+    <!-- CONFETTI CANVAS -->
+    <div class="confetti-overlay" id="confetti-container"></div>
+
+  </div>
+
+  <script>
+    // --- MODE SWITCHING LOGIC ---
+    const manualTab = document.getElementById('tab-manual');
+    const timerTab = document.getElementById('tab-timer');
+    const manualPanel = document.getElementById('panel-manual');
+    const timerPanel = document.getElementById('panel-timer');
+    const saveBtn = document.getElementById('save-btn');
+
+    function switchTab(mode) {
+      if (mode === 'manual') {
+        manualTab.setAttribute('aria-selected', 'true');
+        timerTab.setAttribute('aria-selected', 'false');
+        manualPanel.classList.add('active');
+        timerPanel.classList.remove('active');
+        saveBtn.style.display = 'block';
+      } else {
+        manualTab.setAttribute('aria-selected', 'false');
+        timerTab.setAttribute('aria-selected', 'true');
+        manualPanel.classList.remove('active');
+        timerPanel.classList.add('active');
+        saveBtn.style.display = 'none'; // Hide save button in timer mode initially
+      }
+    }
+
+    manualTab.addEventListener('click', () => switchTab('manual'));
+    timerTab.addEventListener('click', () => switchTab('timer'));
+
+    // --- TIMER LOGIC ---
+    let startTime;
+    let timerInterval;
+    let elapsedSeconds = 0;
+    let isRunning = false;
+    const timerDisplay = document.getElementById('timer-val');
+    const playBtn = document.getElementById('play-btn');
+    const pauseBtn = document.getElementById('pause-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const timerContainer = document.querySelector('.timer-display');
+
+    function formatTime(totalSeconds) {
+      const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+      const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+      const s = (totalSeconds % 60).toString().padStart(2, '0');
+      return `${h}:${m}:${s}`;
+    }
+
+    function updateTimer() {
+      elapsedSeconds++;
+      timerDisplay.textContent = formatTime(elapsedSeconds);
+    }
+
+    playBtn.addEventListener('click', () => {
+      isRunning = true;
+      timerContainer.classList.add('timer-running');
+      timerInterval = setInterval(updateTimer, 1000);
+      // Simulate Wake Lock API
+      console.log('Simulating Wake Lock: Active');
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      isRunning = false;
+      timerContainer.classList.remove('timer-running');
+      clearInterval(timerInterval);
+    });
+
+    stopBtn.addEventListener('click', () => {
+      if (elapsedSeconds > 0) {
+        // Stop timer
+        isRunning = false;
+        clearInterval(timerInterval);
+        timerContainer.classList.remove('timer-running');
+        
+        // Transfer time to manual input
+        const minutes = Math.ceil(elapsedSeconds / 60);
+        document.getElementById('duration').value = `${minutes} min`;
+        document.getElementById('date').valueAsDate = new Date();
+        
+        // Switch to manual view to confirm/add details
+        switchTab('manual');
+        // Reset timer
+        elapsedSeconds = 0;
+        timerDisplay.textContent = "00:00:00";
+      }
+    });
+
+    // --- FORM SUBMISSION & CONFETTI ---
+    saveBtn.addEventListener('click', () => {
+      // Basic validation
+      const pagesInput = document.getElementById('pages');
+      if (!pagesInput.value) {
+        pagesInput.focus();
+        pagesInput.style.borderColor = 'var(--color-error)';
+        return;
+      }
+
+      // Show success
+      document.getElementById('success-overlay').classList.add('visible');
+      triggerConfetti();
+    });
+
+    // Simple confetti implementation via DOM injection
+    function triggerConfetti() {
+      const container = document.getElementById('confetti-container');
+      container.classList.add('active');
+      const colors = ['#6366F1', '#F43F5E', '#F59E0B', '#10B981'];
+      
+      for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement('div');
+        confetti.classList.add('confetti-piece');
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.animation = `fall ${Math.random() * 2 + 2}s linear forwards`;
+        container.appendChild(confetti);
+      }
+    }
+
+    // Initialize Date Input
+    document.getElementById('date').valueAsDate = new Date();
+
+  </script>
+</body>
+</html>

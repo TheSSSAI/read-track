@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Library - ReadTrack</title>
+  <style>
+    /* -----------------------------------------------------------------------------
+     * CSS RESET & BASE STYLES
+     * -------------------------------------------------------------------------- */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      /* Color Palette - Indigo Primary */
+      --primary-50: #EEF2FF;
+      --primary-100: #E0E7FF;
+      --primary-200: #C7D2FE;
+      --primary-500: #6366F1;
+      --primary-600: #4F46E5;
+      --primary-700: #4338CA;
+      --primary-800: #3730A3;
+
+      /* Secondary - Rose */
+      --secondary-500: #F43F5E;
+
+      /* Neutrals */
+      --white: #FFFFFF;
+      --gray-50: #F8FAFC;
+      --gray-100: #F1F5F9;
+      --gray-200: #E2E8F0;
+      --gray-300: #CBD5E1;
+      --gray-400: #94A3B8;
+      --gray-500: #64748B;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1E293B;
+      --gray-900: #0F172A;
+
+      /* Semantic */
+      --success: #10B981;
+      --success-bg: #D1FAE5;
+      --warning: #F59E0B;
+
+      /* Typography */
+      --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --h4-size: 1.125rem; /* 18px */
+      --body-md-size: 0.875rem; /* 14px */
+      --caption-size: 0.75rem; /* 12px */
+
+      /* Spacing & Layout */
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --header-height: 64px;
+      --bottom-nav-height: 80px; /* Safe area included */
+
+      /* Shadows */
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-fab: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--gray-50);
+      color: var(--gray-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: var(--bottom-nav-height); /* Space for bottom nav */
+    }
+
+    /* -----------------------------------------------------------------------------
+     * LAYOUT STRUCTURE
+     * -------------------------------------------------------------------------- */
+    .screen-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      min-height: 100vh;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* -----------------------------------------------------------------------------
+     * COMPONENT: APP BAR (SEARCH)
+     * -------------------------------------------------------------------------- */
+    .app-bar {
+      background-color: var(--white);
+      padding: var(--spacing-sm) var(--spacing-md);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      height: var(--header-height);
+    }
+
+    .search-container {
+      position: relative;
+      width: 100%;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray-400);
+      width: 20px;
+      height: 20px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 12px 10px 40px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--gray-200);
+      background-color: var(--gray-50);
+      font-size: var(--body-md-size);
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary-500);
+      background-color: var(--white);
+      box-shadow: 0 0 0 3px var(--primary-100);
+    }
+
+    /* -----------------------------------------------------------------------------
+     * COMPONENT: FILTER BAR
+     * -------------------------------------------------------------------------- */
+    .filter-bar {
+      background-color: var(--white);
+      padding: var(--spacing-sm) var(--spacing-md);
+      overflow-x: auto;
+      white-space: nowrap;
+      display: flex;
+      gap: var(--spacing-sm);
+      border-bottom: 1px solid var(--gray-200);
+      /* Hide scrollbar */
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    
+    .filter-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: var(--body-md-size);
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--gray-300);
+      background-color: var(--white);
+      color: var(--gray-600);
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .filter-chip:hover {
+      background-color: var(--gray-50);
+    }
+
+    .filter-chip.active {
+      background-color: var(--primary-50);
+      border-color: var(--primary-200);
+      color: var(--primary-700);
+    }
+
+    .filter-chip:focus-visible {
+      outline: 2px solid var(--primary-500);
+      outline-offset: 2px;
+    }
+
+    /* -----------------------------------------------------------------------------
+     * COMPONENT: LIBRARY CONTENT (GRID/LIST)
+     * -------------------------------------------------------------------------- */
+    .library-content {
+      padding: var(--spacing-md);
+      display: grid;
+      gap: var(--spacing-md);
+      /* Mobile default: Single column list */
+      grid-template-columns: 1fr;
+    }
+
+    /* -----------------------------------------------------------------------------
+     * COMPONENT: BOOK CARD (Responsive)
+     * -------------------------------------------------------------------------- */
+    .book-card {
+      background-color: var(--white);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-md);
+      display: flex;
+      gap: var(--spacing-md);
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .book-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-100);
+    }
+
+    .book-card:focus-visible {
+      outline: 3px solid var(--primary-500);
+      outline-offset: 2px;
+    }
+
+    /* Cover Art */
+    .book-cover {
+      width: 72px;
+      height: 108px;
+      flex-shrink: 0;
+      border-radius: 4px;
+      background-color: var(--gray-200);
+      object-fit: cover;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Book Info */
+    .book-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0; /* Text truncation fix */
+    }
+
+    .book-title {
+      font-size: var(--h4-size);
+      font-weight: 600;
+      color: var(--gray-900);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .book-author {
+      font-size: var(--body-md-size);
+      color: var(--gray-500);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    /* Metadata Badge */
+    .book-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .badge {
+      font-size: var(--caption-size);
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .badge-reading {
+      background-color: var(--primary-100);
+      color: var(--primary-700);
+    }
+
+    .badge-want {
+      background-color: var(--gray-100);
+      color: var(--gray-600);
+    }
+
+    .badge-read {
+      background-color: var(--success-bg);
+      color: #047857; /* Darker green for text */
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      height: 4px;
+      background-color: var(--gray-200);
+      border-radius: 2px;
+      width: 100%;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background-color: var(--success);
+      border-radius: 2px;
+    }
+
+    .progress-text {
+      font-size: var(--caption-size);
+      color: var(--gray-500);
+      margin-top: 4px;
+    }
+
+    /* -----------------------------------------------------------------------------
+     * STATE: SKELETON LOADING
+     * -------------------------------------------------------------------------- */
+    .skeleton {
+      background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+      border-radius: 4px;
+    }
+
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .book-card.loading {
+      pointer-events: none;
+    }
+    
+    .book-card.loading .book-cover {
+      background: none; /* Remove default bg to show skeleton */
+    }
+
+    .skeleton-text {
+      height: 14px;
+      margin-bottom: 8px;
+      width: 80%;
+    }
+    .skeleton-text.short { width: 40%; }
+
+    /* -----------------------------------------------------------------------------
+     * STATE: EMPTY
+     * -------------------------------------------------------------------------- */
+    .empty-state {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-xl);
+      text-align: center;
+      color: var(--gray-500);
+      min-height: 300px;
+    }
+
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      margin-bottom: var(--spacing-md);
+      color: var(--gray-300);
+    }
+
+    /* -----------------------------------------------------------------------------
+     * COMPONENT: FLOATING ACTION BUTTON
+     * -------------------------------------------------------------------------- */
+    .fab {
+      position: fixed;
+      bottom: calc(var(--bottom-nav-height) + 16px);
+      right: 16px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background-color: var(--secondary-500);
+      color: var(--white);
+      border: none;
+      box-shadow: var(--shadow-fab);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s ease, background-color 0.2s ease;
+      z-index: 500;
+    }
+
+    .fab:hover {
+      background-color: #E11D48; /* Darker rose */
+      transform: scale(1.05);
+    }
+
+    .fab svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    /* -----------------------------------------------------------------------------
+     * COMPONENT: BOTTOM NAVIGATION
+     * -------------------------------------------------------------------------- */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--bottom-nav-height);
+      background-color: var(--white);
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding-bottom: 16px; /* Safe area assumption */
+      z-index: 400;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--gray-400);
+      text-decoration: none;
+      font-size: 10px;
+      font-weight: 500;
+      width: 100%;
+      height: 100%;
+      justify-content: center;
+      border-top: 2px solid transparent;
+    }
+
+    .nav-item.active {
+      color: var(--primary-600);
+      border-top-color: var(--primary-600);
+    }
+
+    .nav-item svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    /* -----------------------------------------------------------------------------
+     * RESPONSIVE ADAPTATIONS (Tablet/Desktop)
+     * -------------------------------------------------------------------------- */
+    @media (min-width: 600px) {
+      .library-content {
+        /* Switch to Grid Layout */
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      }
+
+      .book-card {
+        flex-direction: column; /* Vertical stack for grid items */
+        padding: var(--spacing-lg);
+      }
+
+      .book-cover {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 2/3;
+        margin-bottom: var(--spacing-sm);
+      }
+
+      .book-info {
+        justify-content: flex-start;
+      }
+
+      .book-title {
+        white-space: normal; /* Allow wrap in grid */
+        line-height: 1.3;
+      }
+
+      .fab {
+        right: 32px;
+        bottom: 32px;
+      }
+      
+      body {
+        padding-bottom: 0; /* Bottom nav might become rail or footer */
+      }
+      
+      .bottom-nav {
+        display: none; /* Hide bottom nav on larger screens per spec hint, assuming rail */
+      }
+      
+      /* Simulation of a sidebar/rail container for demo purposes */
+      .screen-container {
+        padding-left: 80px; /* Space for hypotethical rail */
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Mock Navigation Rail (Desktop Only Visual) -->
+  <div style="display:none; position:fixed; left:0; top:0; bottom:0; width:80px; background:white; border-right:1px solid #E2E8F0; flex-direction:column; align-items:center; padding-top:24px; z-index:900;" class="desktop-rail">
+    <div style="width:40px; height:40px; background:#4F46E5; border-radius:8px; margin-bottom:40px;"></div>
+    <!-- Icons would go here -->
+  </div>
+  <script>
+    if(window.innerWidth >= 600) {
+      document.querySelector('.desktop-rail').style.display = 'flex';
+    }
+  </script>
+
+  <div class="screen-container">
+    
+    <!-- 1. Search App Bar -->
+    <header class="app-bar" role="banner">
+      <div class="search-container">
+        <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+        <input type="text" class="search-input" placeholder="Search title, author, or ISBN..." aria-label="Search your library">
+      </div>
+    </header>
+
+    <!-- 2. Filter Bar -->
+    <nav class="filter-bar" role="tablist" aria-label="Library Shelves">
+      <button class="filter-chip active" role="tab" aria-selected="true" tabindex="0">All Books</button>
+      <button class="filter-chip" role="tab" aria-selected="false" tabindex="0">Reading</button>
+      <button class="filter-chip" role="tab" aria-selected="false" tabindex="0">Want to Read</button>
+      <button class="filter-chip" role="tab" aria-selected="false" tabindex="0">Finished</button>
+      <button class="filter-chip" role="tab" aria-selected="false" tabindex="0">DNF</button>
+    </nav>
+
+    <!-- 3. Main Content Area -->
+    <main class="library-content" id="main-content" aria-live="polite">
+      
+      <!-- ITEM 1: Currently Reading -->
+      <article class="book-card" tabindex="0" aria-label="Atomic Habits by James Clear, 45% complete">
+        <img src="https://m.media-amazon.com/images/I/81wgcld4wxL._AC_UF1000,1000_QL80_.jpg" alt="Cover of Atomic Habits" class="book-cover">
+        <div class="book-info">
+          <h4 class="book-title">Atomic Habits</h4>
+          <p class="book-author">James Clear</p>
+          
+          <div class="progress-container">
+            <div class="progress-bar" style="width: 45%;"></div>
+          </div>
+          <p class="progress-text">144 of 320 pages</p>
+          
+          <div class="book-meta" style="margin-top:8px;">
+            <span class="badge badge-reading">Reading</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- ITEM 2: Finished -->
+      <article class="book-card" tabindex="0" aria-label="Project Hail Mary by Andy Weir, Finished">
+        <img src="https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1597695864i/54493401.jpg" alt="Cover of Project Hail Mary" class="book-cover">
+        <div class="book-info">
+          <h4 class="book-title">Project Hail Mary</h4>
+          <p class="book-author">Andy Weir</p>
+          
+          <div class="book-meta">
+            <span class="badge badge-read">Read</span>
+            <span style="font-size: 12px; color: var(--gray-500); margin-left: auto;">5/5 ★</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- ITEM 3: Want to Read -->
+      <article class="book-card" tabindex="0" aria-label="Dune by Frank Herbert, Want to Read">
+        <img src="https://images-na.ssl-images-amazon.com/images/I/41-3+2qW9-L._SX322_BO1,204,203,200_.jpg" alt="Cover of Dune" class="book-cover">
+        <div class="book-info">
+          <h4 class="book-title">Dune</h4>
+          <p class="book-author">Frank Herbert</p>
+          <div class="book-meta">
+            <span class="badge badge-want">Want to Read</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- ITEM 4: Skeleton Loading State (Demo) -->
+      <article class="book-card loading" aria-hidden="true">
+        <div class="book-cover skeleton"></div>
+        <div class="book-info">
+          <div class="skeleton skeleton-text"></div>
+          <div class="skeleton skeleton-text short"></div>
+          <div class="skeleton skeleton-text" style="height: 4px; margin-top: 12px;"></div>
+        </div>
+      </article>
+
+    </main>
+
+    <!-- 4. Floating Action Button -->
+    <button class="fab" aria-label="Add new book">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+      </svg>
+    </button>
+
+    <!-- 5. Bottom Navigation (Mobile Only) -->
+    <nav class="bottom-nav">
+      <a href="#" class="nav-item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+        Home
+      </a>
+      <a href="#" class="nav-item active" aria-current="page">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+        Library
+      </a>
+      <a href="#" class="nav-item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"></path></svg>
+        Stats
+      </a>
+      <a href="#" class="nav-item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+        Profile
+      </a>
+    </nav>
+
+  </div>
+
+  <!-- -----------------------------------------------------------------------------
+   * JAVASCRIPT FOR INTERACTION DEMO
+   * -------------------------------------------------------------------------- -->
+  <script>
+    // Filter Chip Interaction Logic
+    const filterChips = document.querySelectorAll('.filter-chip');
+    const mainContent = document.getElementById('main-content');
+
+    filterChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        // Toggle active state visual
+        filterChips.forEach(c => {
+          c.classList.remove('active');
+          c.setAttribute('aria-selected', 'false');
+        });
+        chip.classList.add('active');
+        chip.setAttribute('aria-selected', 'true');
+
+        // Simulate Content Filtering
+        const filterText = chip.innerText;
+        console.log(`Filter applied: ${filterText}`);
+        
+        // Demo: Show Empty State for 'DNF'
+        if (filterText === 'DNF') {
+          mainContent.innerHTML = `
+            <div class="empty-state">
+              <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+              </svg>
+              <h3>No books found</h3>
+              <p>You haven't marked any books as Did Not Finish yet.</p>
+            </div>
+          `;
+        } else if (filterText === 'All Books') {
+          // Restore (simplified reload for demo)
+          location.reload(); 
+        }
+      });
+    });
+
+    // Keyboard navigation support for list items
+    const bookCards = document.querySelectorAll('.book-card');
+    bookCards.forEach(card => {
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          console.log('Navigating to book detail');
+          // Simulate navigation trigger
+          card.style.transform = 'scale(0.98)';
+          setTimeout(() => card.style.transform = '', 150);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

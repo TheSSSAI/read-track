@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - ReadTrack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* 
+      DESIGN SYSTEM TOKENS & RESET 
+    */
+    :root {
+      /* Color Palette: Primary (Indigo) */
+      --primary-50: #EEF2FF;
+      --primary-100: #E0E7FF;
+      --primary-500: #6366F1;
+      --primary-600: #4F46E5;
+      --primary-700: #4338CA;
+      
+      /* Color Palette: Premium (Amber) */
+      --premium-100: #FEF3C7;
+      --premium-500: #F59E0B;
+      --premium-gradient: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+
+      /* Color Palette: Neutrals */
+      --white: #FFFFFF;
+      --gray-50: #F8FAFC;
+      --gray-100: #F1F5F9;
+      --gray-200: #E2E8F0;
+      --gray-300: #CBD5E1;
+      --gray-400: #94A3B8;
+      --gray-500: #64748B;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1E293B;
+      --gray-900: #0F172A;
+
+      /* Semantic */
+      --error: #EF4444;
+      --error-bg: #FEE2E2;
+      --success: #10B981;
+      
+      /* Typography */
+      --font-primary: 'Inter', system-ui, sans-serif;
+      --font-secondary: 'Merriweather', serif;
+
+      /* Spacing */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --space-xxl: 48px;
+
+      /* Layout */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-full: 9999px;
+      --container-width: 800px;
+      --header-height: 64px;
+    }
+
+    /* CSS Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--gray-50);
+      color: var(--gray-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button {
+      font-family: inherit;
+      border: none;
+      background: none;
+      cursor: pointer;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* 
+      LAYOUT COMPONENTS 
+    */
+    .app-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .main-content {
+      flex: 1;
+      width: 100%;
+      max-width: var(--container-width);
+      margin: 0 auto;
+      padding: var(--space-md);
+      padding-bottom: 80px; /* Space for bottom nav on mobile */
+    }
+
+    /* Header */
+    .screen-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: var(--space-lg);
+      padding-top: var(--space-sm);
+    }
+
+    .screen-title {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--gray-900);
+    }
+
+    /* Profile Card */
+    .profile-card {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      padding: var(--space-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      margin-bottom: var(--space-xl);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .profile-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background-color: var(--primary-100);
+      color: var(--primary-600);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 600;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .profile-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .profile-info {
+      flex: 1;
+    }
+
+    .profile-name {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin-bottom: 2px;
+    }
+
+    .profile-email {
+      font-size: 14px;
+      color: var(--gray-500);
+      margin-bottom: var(--space-xs);
+    }
+
+    .profile-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      background: var(--premium-100);
+      color: var(--premium-500); /* Darker for text contrast */
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    
+    .profile-badge svg {
+      width: 12px;
+      height: 12px;
+      fill: currentColor;
+    }
+
+    .profile-edit-btn {
+      color: var(--primary-600);
+      font-weight: 500;
+      font-size: 14px;
+      padding: var(--space-sm);
+      border-radius: var(--radius-sm);
+      transition: background 0.2s;
+    }
+
+    .profile-edit-btn:hover {
+      background: var(--primary-50);
+    }
+
+    /* Settings Sections */
+    .settings-section {
+      margin-bottom: var(--space-xl);
+    }
+
+    .section-header {
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--gray-500);
+      margin-bottom: var(--space-sm);
+      padding-left: var(--space-xs);
+    }
+
+    .settings-group {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .settings-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--gray-100);
+      transition: background 0.2s;
+      min-height: 56px;
+    }
+
+    .settings-item:last-child {
+      border-bottom: none;
+    }
+
+    .settings-item.clickable {
+      cursor: pointer;
+    }
+
+    .settings-item.clickable:hover {
+      background: var(--gray-50);
+    }
+
+    .item-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .item-label {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--gray-900);
+    }
+
+    .item-description {
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+
+    /* Controls */
+    .chevron-icon {
+      width: 20px;
+      height: 20px;
+      color: var(--gray-400);
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--gray-300);
+      transition: .4s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    input:checked + .slider {
+      background-color: var(--primary-600);
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 0 3px var(--primary-100);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Theme Selector */
+    .theme-selector {
+      display: flex;
+      background: var(--gray-100);
+      padding: 4px;
+      border-radius: 10px;
+      width: 100%;
+    }
+
+    .theme-option {
+      flex: 1;
+      text-align: center;
+      padding: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-600);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .theme-option.active {
+      background: var(--white);
+      color: var(--primary-600);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      font-weight: 600;
+    }
+
+    /* Action Buttons */
+    .item-action-text {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-500);
+    }
+
+    .text-danger {
+      color: var(--error);
+    }
+
+    .settings-item.danger:hover {
+      background: var(--error-bg);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-content {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      padding: var(--space-lg);
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      transform: translateY(10px);
+      transition: transform 0.2s;
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: translateY(0);
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin-bottom: var(--space-sm);
+    }
+
+    .modal-body {
+      font-size: 14px;
+      color: var(--gray-600);
+      margin-bottom: var(--space-lg);
+      line-height: 1.6;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: var(--space-md);
+      justify-content: flex-end;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary {
+      background: var(--white);
+      border: 1px solid var(--gray-300);
+      color: var(--gray-700);
+    }
+
+    .btn-secondary:hover {
+      background: var(--gray-50);
+    }
+
+    .btn-danger {
+      background: var(--error);
+      color: var(--white);
+      border: 1px solid var(--error);
+    }
+
+    .btn-danger:hover {
+      background: #DC2626;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--gray-800);
+      color: var(--white);
+      padding: 12px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 200;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .toast.active {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast svg {
+      color: var(--success);
+    }
+
+    /* Mobile Bottom Nav Simulation (Visual only for context) */
+    .bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: var(--white);
+      border-top: 1px solid var(--gray-200);
+      padding: 12px 0;
+      justify-content: space-around;
+      z-index: 50;
+    }
+
+    @media (max-width: 600px) {
+      .bottom-nav {
+        display: flex;
+      }
+      .main-content {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+      .screen-title {
+        font-size: 24px;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="app-shell">
+    <main class="main-content">
+      
+      <!-- Header -->
+      <header class="screen-header">
+        <h1 class="screen-title">Settings</h1>
+      </header>
+
+      <!-- Profile Section -->
+      <section class="profile-card">
+        <div class="profile-avatar">
+          <img src="https://ui-avatars.com/api/?name=Alex+Reader&background=6366F1&color=fff" alt="Alex Reader Avatar">
+        </div>
+        <div class="profile-info">
+          <div class="profile-name">Alex Reader</div>
+          <div class="profile-email">alex.reader@example.com</div>
+          <div class="profile-badge">
+            <svg viewBox="0 0 24 24" width="12" height="12">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            Premium
+          </div>
+        </div>
+        <button class="profile-edit-btn" aria-label="Edit Profile">Edit</button>
+      </section>
+
+      <!-- Appearance Section -->
+      <section class="settings-section">
+        <h2 class="section-header">Appearance</h2>
+        <div class="settings-group" style="padding: 16px;">
+          <div class="theme-selector" role="radiogroup" aria-label="Theme Selection">
+            <button class="theme-option" role="radio" aria-checked="false" onclick="setTheme(this, 'light')">Light</button>
+            <button class="theme-option active" role="radio" aria-checked="true" onclick="setTheme(this, 'system')">System</button>
+            <button class="theme-option" role="radio" aria-checked="false" onclick="setTheme(this, 'dark')">Dark</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Notifications Section -->
+      <section class="settings-section">
+        <h2 class="section-header">Notifications</h2>
+        <div class="settings-group">
+          <!-- Goal Reminders -->
+          <div class="settings-item">
+            <div class="item-content">
+              <span class="item-label" id="goal-reminders-label">Goal Reminders</span>
+              <span class="item-description">Get notified about your reading goals progress</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" checked aria-labelledby="goal-reminders-label">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <!-- Daily Task Reminders -->
+          <div class="settings-item">
+            <div class="item-content">
+              <span class="item-label" id="task-reminders-label">Daily Task Reminders</span>
+              <span class="item-description">Remind me to complete my daily reading tasks</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" aria-labelledby="task-reminders-label">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Account & Data Section -->
+      <section class="settings-section">
+        <h2 class="section-header">Account & Data</h2>
+        <div class="settings-group">
+          <!-- Subscription -->
+          <div class="settings-item clickable" onclick="alert('Navigate to Subscription Management')">
+            <div class="item-content">
+              <span class="item-label">Subscription</span>
+              <span class="item-description">Manage your Premium plan</span>
+            </div>
+            <div class="item-action-text">Active <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-left: 4px;"><path d="M9 18l6-6-6-6"/></svg></div>
+          </div>
+          <!-- Export Data -->
+          <div class="settings-item clickable" onclick="triggerDataExport()">
+            <div class="item-content">
+              <span class="item-label">Export My Data</span>
+              <span class="item-description">Download a copy of your library and history</span>
+            </div>
+            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- Danger Zone -->
+      <section class="settings-section">
+        <h2 class="section-header" style="color: var(--error);">Danger Zone</h2>
+        <div class="settings-group">
+          <!-- Delete Account -->
+          <button class="settings-item clickable danger" style="width: 100%;" onclick="openDeleteModal()">
+            <div class="item-content">
+              <span class="item-label text-danger">Delete Account</span>
+              <span class="item-description">Permanently delete your account and data</span>
+            </div>
+            <svg class="chevron-icon text-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <div style="text-align: center; color: var(--gray-400); font-size: 12px; margin-top: 32px;">
+        ReadTrack v1.2.0 (Build 45)
+      </div>
+
+    </main>
+
+    <!-- Mobile Bottom Nav -->
+    <nav class="bottom-nav">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--gray-400);">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span style="font-size: 10px; font-weight: 500;">Home</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--gray-400);">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span style="font-size: 10px; font-weight: 500;">Library</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--gray-400);">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span style="font-size: 10px; font-weight: 500;">Stats</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--primary-600);">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span style="font-size: 10px; font-weight: 600;">Settings</span>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Delete Account Modal -->
+  <div class="modal-overlay" id="deleteModal" aria-modal="true" role="dialog" aria-labelledby="modal-title">
+    <div class="modal-content">
+      <h3 class="modal-title" id="modal-title">Delete Account?</h3>
+      <p class="modal-body">
+        This action is irreversible. All your reading history, library data, and statistics will be permanently removed.
+      </p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+        <button class="btn btn-danger" onclick="confirmDelete()">Delete Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    <span id="toast-message">Action successful</span>
+  </div>
+
+  <script>
+    // Theme Selector Logic
+    function setTheme(element, theme) {
+      // Visual update
+      document.querySelectorAll('.theme-option').forEach(el => {
+        el.classList.remove('active');
+        el.setAttribute('aria-checked', 'false');
+      });
+      element.classList.add('active');
+      element.setAttribute('aria-checked', 'true');
+      
+      // In a real app, this would update CSS variables or the flutter theme
+      console.log(`Theme set to: ${theme}`);
+    }
+
+    // Modal Logic
+    const deleteModal = document.getElementById('deleteModal');
+
+    function openDeleteModal() {
+      deleteModal.classList.add('active');
+      // Trap focus logic would go here in a full app
+    }
+
+    function closeDeleteModal() {
+      deleteModal.classList.remove('active');
+    }
+
+    function confirmDelete() {
+      closeDeleteModal();
+      showToast('Account deletion scheduled.');
+      // API call would happen here
+    }
+
+    // Data Export Logic
+    function triggerDataExport() {
+      // Simulate API call
+      setTimeout(() => {
+        showToast('Export started. Check your email.');
+      }, 300);
+    }
+
+    // Toast Logic
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-message');
+      toastMsg.textContent = message;
+      toast.classList.add('active');
+      
+      setTimeout(() => {
+        toast.classList.remove('active');
+      }, 3000);
+    }
+
+    // Close modal on outside click
+    deleteModal.addEventListener('click', (e) => {
+      if (e.target === deleteModal) {
+        closeDeleteModal();
+      }
+    });
+  </script>
+</body>
+</html>

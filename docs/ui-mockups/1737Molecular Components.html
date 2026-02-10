@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Molecular Components Library - Reading Tracker</title>
+    <style>
+        /* 
+         * ==========================================
+         * DESIGN SYSTEM TOKENS & BASE
+         * ==========================================
+         */
+        :root {
+            /* Typography */
+            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-secondary: 'Merriweather', Georgia, serif;
+            --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+            /* Colors: Primary (Indigo) */
+            --color-primary-50: #EEF2FF;
+            --color-primary-100: #E0E7FF;
+            --color-primary-300: #A5B4FC;
+            --color-primary-500: #6366F1;
+            --color-primary-600: #4F46E5;
+            --color-primary-700: #4338CA;
+            --color-primary-800: #3730A3;
+
+            /* Colors: Semantic */
+            --color-success: #10B981;
+            --color-success-bg: #D1FAE5;
+            --color-warning: #F59E0B;
+            --color-error: #EF4444;
+            
+            /* Colors: Neutrals */
+            --color-surface: #FFFFFF;
+            --color-background: #F8FAFC;
+            --color-gray-100: #F1F5F9;
+            --color-gray-200: #E2E8F0;
+            --color-gray-300: #CBD5E1;
+            --color-gray-400: #94A3B8;
+            --color-gray-500: #64748B;
+            --color-gray-600: #475569;
+            --color-gray-700: #334155;
+            --color-gray-900: #0F172A;
+
+            /* Spacing */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+
+            /* Borders */
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-full: 9999px;
+
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Base Reset */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-primary);
+            background-color: var(--color-background);
+            color: var(--color-gray-900);
+            line-height: 1.5;
+            padding: var(--space-lg);
+        }
+
+        /* Documentation Layout */
+        .doc-header {
+            margin-bottom: var(--space-xl);
+            border-bottom: 1px solid var(--color-gray-200);
+            padding-bottom: var(--space-md);
+        }
+
+        .doc-section {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            margin-bottom: var(--space-xl);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .doc-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--color-gray-900);
+            margin-bottom: var(--space-lg);
+            padding-bottom: var(--space-sm);
+            border-bottom: 2px solid var(--color-gray-100);
+        }
+
+        .variant-container {
+            margin-bottom: var(--space-xl);
+            padding: var(--space-md);
+            background-color: var(--color-gray-50);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-gray-200);
+        }
+
+        .variant-label {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--color-gray-500);
+            margin-bottom: var(--space-md);
+            display: block;
+            font-weight: 600;
+        }
+
+        .variant-description {
+            font-size: 14px;
+            color: var(--color-gray-600);
+            margin-bottom: var(--space-md);
+            font-style: italic;
+        }
+
+        /* 
+         * ==========================================
+         * COMPONENT 1: BOOK LIST TILE (Molecular)
+         * ==========================================
+         */
+        
+        /* Base styles */
+        .book-tile {
+            display: flex;
+            background: var(--color-surface);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid var(--color-gray-200);
+            position: relative;
+            max-width: 100%;
+        }
+
+        .book-tile:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--color-primary-200);
+        }
+
+        .book-tile:focus-within {
+            outline: 2px solid var(--color-primary-600);
+            outline-offset: 2px;
+        }
+
+        /* Image Container */
+        .book-tile__cover-container {
+            width: 80px;
+            flex-shrink: 0;
+            position: relative;
+            background-color: var(--color-gray-200); /* Placeholder color */
+        }
+
+        .book-tile__cover {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            aspect-ratio: 2/3;
+        }
+
+        /* Content Container */
+        .book-tile__content {
+            flex: 1;
+            padding: var(--space-md);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 0; /* Prevent text overflow issues */
+        }
+
+        /* Typography */
+        .book-tile__title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-gray-900);
+            margin-bottom: var(--space-xs);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .book-tile__author {
+            font-size: 14px;
+            color: var(--color-gray-500);
+            margin-bottom: var(--space-sm);
+        }
+
+        /* Progress Bar Molecule */
+        .progress-bar {
+            height: 6px;
+            background-color: var(--color-gray-200);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+            margin-bottom: var(--space-xs);
+        }
+
+        .progress-bar__fill {
+            height: 100%;
+            background-color: var(--color-success);
+            border-radius: var(--radius-full);
+            transition: width 0.3s ease;
+        }
+
+        .book-tile__meta {
+            font-size: 12px;
+            color: var(--color-gray-500);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* VARIANT: Compact (Grid/Dashboard View) */
+        .book-tile--compact {
+            flex-direction: column;
+            width: 140px;
+        }
+
+        .book-tile--compact .book-tile__cover-container {
+            width: 100%;
+            height: 210px; /* Force aspect ratio */
+        }
+
+        .book-tile--compact .book-tile__content {
+            padding: var(--space-sm);
+        }
+
+        /* VARIANT: Search Result (No Progress, Add Button) */
+        .book-tile--search .book-tile__actions {
+            margin-left: auto;
+        }
+
+        .btn-icon-add {
+            background: var(--color-primary-50);
+            color: var(--color-primary-600);
+            border: none;
+            border-radius: var(--radius-full);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-icon-add:hover {
+            background: var(--color-primary-100);
+        }
+
+        /* STATE: Loading (Skeleton) */
+        .book-tile--loading {
+            pointer-events: none;
+        }
+        .skeleton {
+            background: linear-gradient(90deg, var(--color-gray-200) 25%, var(--color-gray-100) 50%, var(--color-gray-200) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: var(--radius-sm);
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* STATE: Swiped Action (Simulation) */
+        .book-tile-wrapper--swiped {
+            position: relative;
+            background: var(--color-error); /* Delete action background */
+            border-radius: var(--radius-md);
+        }
+        .book-tile-wrapper--swiped .book-tile {
+            transform: translateX(-80px); /* Simulate swipe */
+        }
+        .swipe-action {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* 
+         * ==========================================
+         * COMPONENT 2: GOAL PROGRESS WIDGET (Molecular)
+         * ==========================================
+         */
+        
+        .goal-widget {
+            background: var(--color-surface);
+            border: 1px solid var(--color-gray-200);
+            border-radius: var(--radius-lg);
+            padding: var(--space-md);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .goal-widget__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .goal-widget__title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-gray-700);
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .goal-widget__value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--color-gray-900);
+        }
+
+        .goal-widget__target {
+            font-size: 14px;
+            color: var(--color-gray-500);
+            font-weight: 400;
+        }
+
+        /* Circular Progress Variant */
+        .goal-widget--weekly {
+            flex-direction: row;
+            align-items: center;
+        }
+        
+        .progress-ring {
+            width: 48px;
+            height: 48px;
+            position: relative;
+            flex-shrink: 0;
+        }
+        
+        .progress-ring svg {
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+        }
+        
+        .progress-ring__circle-bg {
+            fill: transparent;
+            stroke: var(--color-gray-200);
+            stroke-width: 4;
+        }
+        
+        .progress-ring__circle-fg {
+            fill: transparent;
+            stroke: var(--color-primary-600);
+            stroke-width: 4;
+            stroke-dasharray: 100; /* Simulated circumference */
+            stroke-dashoffset: 25; /* 75% filled */
+            stroke-linecap: round;
+        }
+
+        /* STATE: Completed */
+        .goal-widget--completed .progress-bar__fill,
+        .goal-widget--completed .progress-ring__circle-fg {
+            stroke: var(--color-success);
+            background-color: var(--color-success);
+        }
+        
+        .goal-widget--completed .goal-widget__value {
+            color: var(--color-success);
+        }
+
+        /* 
+         * ==========================================
+         * COMPONENT 3: READING TIMER WIDGET (Molecular)
+         * ==========================================
+         */
+
+        .timer-widget {
+            background: var(--color-surface);
+            padding: var(--space-xl);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            border: 1px solid var(--color-gray-200);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .timer-widget__display {
+            font-family: var(--font-mono);
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--color-gray-900);
+            margin-bottom: var(--space-lg);
+            letter-spacing: -1px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .timer-widget__controls {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-md);
+        }
+
+        .btn-control {
+            height: 56px;
+            padding: 0 32px;
+            border-radius: 28px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .btn-control--primary {
+            background: var(--color-primary-600);
+            color: var(--color-surface);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-control--primary:hover {
+            background: var(--color-primary-700);
+            transform: translateY(-1px);
+        }
+
+        .btn-control--secondary {
+            background: var(--color-gray-100);
+            color: var(--color-gray-700);
+        }
+
+        .btn-control--secondary:hover {
+            background: var(--color-gray-200);
+        }
+
+        .btn-control--danger {
+            background: var(--color-error);
+            color: white;
+        }
+
+        /* STATE: Active vs Paused */
+        .timer-widget--active .timer-widget__display {
+            color: var(--color-primary-600);
+        }
+
+        /* 
+         * ==========================================
+         * COMPONENT 4: DAILY TASK ITEM (Molecular)
+         * ==========================================
+         */
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: var(--space-md);
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--color-gray-100);
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .task-item:hover {
+            background: var(--color-gray-50);
+        }
+
+        /* Custom Checkbox */
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--color-gray-400);
+            border-radius: 6px;
+            margin-right: var(--space-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+        }
+
+        .checkbox__icon {
+            width: 14px;
+            height: 14px;
+            fill: white;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.2s;
+        }
+
+        .task-item__content {
+            flex: 1;
+        }
+
+        .task-item__title {
+            font-size: 16px;
+            color: var(--color-gray-900);
+            transition: color 0.2s;
+        }
+
+        .task-item__streak {
+            font-size: 12px;
+            color: var(--color-warning);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* VARIANT: Completed */
+        .task-item--completed .checkbox {
+            background: var(--color-success);
+            border-color: var(--color-success);
+        }
+
+        .task-item--completed .checkbox__icon {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .task-item--completed .task-item__title {
+            color: var(--color-gray-400);
+            text-decoration: line-through;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header class="doc-header">
+        <h1 class="doc-title">Molecular Components Library</h1>
+        <p>A collection of reusable UI molecules for the Reading Tracker app.</p>
+    </header>
+
+    <!-- SECTION: BookListTile -->
+    <section class="doc-section">
+        <h2 class="doc-title">1. Book List Tile</h2>
+        
+        <div class="variant-container">
+            <span class="variant-label">Variant: Library View (Default)</span>
+            <div class="variant-description">Standard list item with progress bar for the user's library.</div>
+            
+            <article class="book-tile" role="button" tabindex="0">
+                <div class="book-tile__cover-container">
+                    <img src="https://via.placeholder.com/80x120/4F46E5/FFFFFF?text=Book" alt="Cover of The Martian" class="book-tile__cover">
+                </div>
+                <div class="book-tile__content">
+                    <h4 class="book-tile__title">The Martian</h4>
+                    <p class="book-tile__author">Andy Weir</p>
+                    <div class="progress-bar" role="progressbar" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar__fill" style="width: 65%;"></div>
+                    </div>
+                    <div class="book-tile__meta">
+                        <span>Page 240 of 369</span>
+                        <span>65%</span>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="variant-container">
+            <span class="variant-label">Variant: Search Result</span>
+            <div class="variant-description">Used in search screens. Replaces progress bar with an action button.</div>
+            
+            <article class="book-tile book-tile--search" role="button" tabindex="0">
+                <div class="book-tile__cover-container">
+                    <img src="https://via.placeholder.com/80x120/10B981/FFFFFF?text=Dune" alt="Cover of Dune" class="book-tile__cover">
+                </div>
+                <div class="book-tile__content">
+                    <div style="display: flex; align-items: start;">
+                        <div style="flex: 1;">
+                            <h4 class="book-tile__title">Dune</h4>
+                            <p class="book-tile__author">Frank Herbert</p>
+                            <p class="book-tile__meta">Sci-Fi • 1965</p>
+                        </div>
+                        <button class="btn-icon-add" aria-label="Add to library">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 5v14M5 12h14"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="variant-container">
+            <span class="variant-label">Variant: Dashboard Compact</span>
+            <div class="variant-description">Vertical card layout for grids or horizontal scrolling lists.</div>
+            
+            <div style="display: flex; gap: 16px;">
+                <article class="book-tile book-tile--compact" role="button" tabindex="0">
+                    <div class="book-tile__cover-container">
+                        <img src="https://via.placeholder.com/140x210/6366F1/FFFFFF?text=Project+Hail+Mary" alt="Cover" class="book-tile__cover">
+                    </div>
+                    <div class="book-tile__content">
+                        <h4 class="book-tile__title">Project Hail Mary</h4>
+                        <div class="progress-bar" style="margin-top: 8px;">
+                            <div class="progress-bar__fill" style="width: 15%;"></div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+
+        <div class="variant-container">
+            <span class="variant-label">State: Loading (Skeleton)</span>
+            
+            <article class="book-tile book-tile--loading">
+                <div class="book-tile__cover-container skeleton"></div>
+                <div class="book-tile__content">
+                    <div class="skeleton" style="width: 70%; height: 20px; margin-bottom: 8px;"></div>
+                    <div class="skeleton" style="width: 40%; height: 16px; margin-bottom: 16px;"></div>
+                    <div class="skeleton" style="width: 100%; height: 6px;"></div>
+                </div>
+            </article>
+        </div>
+
+        <div class="variant-container">
+            <span class="variant-label">State: Swiped Action (Simulated)</span>
+            <div class="variant-description">Reveals actions beneath the tile. Implemented via stacking context.</div>
+            
+            <div class="book-tile-wrapper--swiped">
+                <div class="swipe-action">Delete</div>
+                <article class="book-tile">
+                    <div class="book-tile__cover-container">
+                        <img src="https://via.placeholder.com/80x120/EF4444/FFFFFF?text=Bad+Book" alt="Cover" class="book-tile__cover">
+                    </div>
+                    <div class="book-tile__content">
+                        <h4 class="book-tile__title">Book to Delete</h4>
+                        <p class="book-tile__author">Unknown</p>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION: GoalProgressWidget -->
+    <section class="doc-section">
+        <h2 class="doc-title">2. Goal Progress Widget</h2>
+
+        <div class="variant-container">
+            <span class="variant-label">Variant: Daily Summary (In Progress)</span>
+            
+            <div class="goal-widget" style="max-width: 320px;">
+                <div class="goal-widget__header">
+                    <span class="goal-widget__title">Daily Reading</span>
+                    <span class="goal-widget__target">Goal: 30m</span>
+                </div>
+                <div class="goal-widget__value">15m <span style="font-size: 14px; font-weight: 400; color: var(--color-gray-500);">read today</span></div>
+                <div class="progress-bar">
+                    <div class="progress-bar__fill" style="width: 50%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="variant-container">
+            <span class="variant-label">Variant: Weekly Summary (Completed)</span>
+            
+            <div class="goal-widget goal-widget--weekly goal-widget--completed" style="max-width: 320px;">
+                <div class="progress-ring">
+                    <svg viewBox="0 0 36 36">
+                        <path class="progress-ring__circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path class="progress-ring__circle-fg" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                </div>
+                <div class="goal-widget__content" style="flex: 1; margin-left: 16px;">
+                    <span class="goal-widget__title">Weekly Books</span>
+                    <div class="goal-widget__value">1 / 1</div>
+                    <span class="goal-widget__target" style="color: var(--color-success); font-weight: 600;">Goal Met!</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION: ReadingTimerWidget -->
+    <section class="doc-section">
+        <h2 class="doc-title">3. Reading Timer Widget</h2>
+
+        <div class="variant-container">
+            <span class="variant-label">State: Active (Counting)</span>
+            
+            <div class="timer-widget timer-widget--active">
+                <div class="timer-widget__display">00:42:15</div>
+                <div class="timer-widget__controls">
+                    <button class="btn-control btn-control--primary">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        Pause
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="variant-container">
+            <span class="variant-label">State: Paused</span>
+            
+            <div class="timer-widget">
+                <div class="timer-widget__display" style="opacity: 0.7;">00:42:15</div>
+                <div class="timer-widget__controls">
+                    <button class="btn-control btn-control--primary">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                        Resume
+                    </button>
+                    <button class="btn-control btn-control--secondary btn-control--danger">
+                        Stop & Log
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION: DailyTaskItem -->
+    <section class="doc-section">
+        <h2 class="doc-title">4. Daily Task Item</h2>
+
+        <div class="variant-container">
+            <span class="variant-label">Variant: Incomplete</span>
+            
+            <div class="task-item" role="checkbox" aria-checked="false" tabindex="0">
+                <div class="checkbox">
+                    <svg class="checkbox__icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                </div>
+                <div class="task-item__content">
+                    <div class="task-item__title">Read for 15 minutes</div>
+                    <div class="task-item__streak">
+                        <span>🔥</span> 3 day streak
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="variant-container">
+            <span class="variant-label">Variant: Completed</span>
+            
+            <div class="task-item task-item--completed" role="checkbox" aria-checked="true" tabindex="0">
+                <div class="checkbox">
+                    <svg class="checkbox__icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                </div>
+                <div class="task-item__content">
+                    <div class="task-item__title">Review 5 vocabulary words</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</body>
+</html>
