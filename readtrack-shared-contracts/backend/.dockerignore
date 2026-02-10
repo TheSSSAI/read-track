@@ -1,0 +1,22 @@
+# Docker build context exclusions
+**/.dockerignore
+**/.env
+**/.git
+**/.gitignore
+**/.vs
+**/.vscode
+**/bin
+**/obj
+**/out
+**/TestResults
+**/*.user
+**/*.suo
+**/*.launchSettings.json
+
+# Exclude markdown and config files not needed for build
+README.md
+*.sln
+docker-compose*.yml
+coverage.runsettings
+.editorconfig
+global.json

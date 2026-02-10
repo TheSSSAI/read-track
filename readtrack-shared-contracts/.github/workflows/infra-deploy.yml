@@ -1,0 +1,54 @@
+name: Infrastructure Deployment
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'infrastructure/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target Environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+        - dev
+        - staging
+        - prod
+
+jobs:
+  deploy:
+    name: Deploy AWS Infrastructure
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'dev' }}
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: infrastructure/package-lock.json
+
+    - name: Install CDK Dependencies
+      working-directory: ./infrastructure
+      run: npm ci
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: CDK Synth
+      working-directory: ./infrastructure
+      run: npx cdk synth
+
+    - name: CDK Deploy
+      working-directory: ./infrastructure
+      run: npx cdk deploy --require-approval never

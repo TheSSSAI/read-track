@@ -1,0 +1,48 @@
+name: Mobile CI
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+    paths:
+      - 'mobile/**'
+  pull_request:
+    branches: [ "main", "develop" ]
+    paths:
+      - 'mobile/**'
+  workflow_dispatch:
+
+jobs:
+  flutter-analyze-test:
+    name: Flutter Analyze & Test
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./mobile
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Flutter SDK
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        flutter-version: '3.19.x'
+        cache: true
+
+    - name: Install Dependencies
+      run: flutter pub get
+
+    - name: Generate Code (Build Runner)
+      # Necessary for packages like Freezed, JSON Serializable, or Riverpod Generator
+      run: dart run build_runner build --delete-conflicting-outputs
+
+    - name: Analyze Code (Linting)
+      run: flutter analyze
+
+    - name: Run Unit & Widget Tests
+      run: flutter test --coverage
+
+    - name: Dry Run Build (Android)
+      run: flutter build apk --debug --no-pub

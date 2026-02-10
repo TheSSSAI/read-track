@@ -1,0 +1,81 @@
+# General
+[Bb]in/
+[Oo]bj/
+.vs/
+.vscode/
+.idea/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.userprefs
+*.DS_Store
+Thumbs.db
+
+# .NET / C#
+*.dll
+*.exe
+*.pdb
+*.cache
+*_i.c
+*_p.c
+*.ilk
+*.meta
+*.obj
+*.pch
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*_wpftmp.csproj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+.nuget/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Visual Studio Code
+.ionic/
+.history/
+
+# Node.js / CDK
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+cdk.out/
+.env
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+android/app/build
+ios/.generated/
+
+# Coverage
+*.coverage
+*.coveragexml
+
+# Docker
+docker-compose.override.yml
