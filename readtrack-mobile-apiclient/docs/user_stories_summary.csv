@@ -1,0 +1,2 @@
+"total_stories","total_story_points","must_have_stories","should_have_stories","could_have_stories","epics_identified","estimated_sprints","key_dependencies"
+"5","44","4","1","0","[""Mobile Core & Offline Sync"",""Monetization & Freemium"",""AI Recommendations (RAG)"",""Reading Tracking & Library"",""Authentication & User Management""]","4","[""Infrastructure Setup (WI-INFRA)"",""Auth0 Configuration"",""App Store Connect / Google Play Console Setup""]"

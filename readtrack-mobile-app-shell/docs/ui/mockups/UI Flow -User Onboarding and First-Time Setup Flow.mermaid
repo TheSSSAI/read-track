@@ -1,0 +1,81 @@
+flowchart TD
+    %% Nodes
+    Start((Start: Auth Success))
+    CheckState{Onboarding\nCompleted?}
+    Dashboard[Load Main Dashboard]
+
+    subgraph Step1_Goal["Step 1: Set Yearly Goal (US-007)"]
+        GoalUI[Display 'Set Yearly Goal' UI]
+        GoalInput[/User Input: Target Books/]
+        GoalSkip{User Action}
+        GoalValid{Input Valid?}
+        GoalError[Show Inline Error]
+    end
+
+    subgraph Step2_Book["Step 2: Add First Book (US-009)"]
+        BookUI[Display 'Add Current Book' UI]
+        BookSearch[/User Searches Book/]
+        BookAPI_Search[API: GET /books/search]
+        BookSelect{User Action}
+    end
+
+    subgraph Step3_Tour["Step 3: Feature Tour (US-011)"]
+        TourUI[Display Feature Tour Overlay]
+        TourAction{User Action}
+    end
+
+    subgraph Backend["Backend & Persistence"]
+        API_SaveGoal[API: POST /api/v1/goals]
+        API_SaveBook[API: POST /api/v1/library]
+        API_Complete[API: PATCH /api/v1/users/onboarding]
+        DB[(Primary DB)]
+    end
+
+    %% Flow: Start & Check
+    Start --> CheckState
+    CheckState -- Yes --> Dashboard
+    CheckState -- No --> GoalUI
+
+    %% Step 1 Logic: Goal
+    GoalUI --> GoalInput
+    GoalInput --> GoalSkip
+    GoalSkip -- "Skip (US-008)" --> BookUI
+    GoalSkip -- "Set Goal" --> GoalValid
+    GoalValid -- No (>0 Int) --> GoalError --> GoalInput
+    GoalValid -- Yes --> API_SaveGoal
+
+    API_SaveGoal -- Success --> DB
+    API_SaveGoal -- Error --> GoalErrorAPI[Show Network Error] --> GoalUI
+    DB -.-> BookUI
+
+    %% Step 2 Logic: Book
+    BookUI --> BookSearch
+    BookSearch --> BookAPI_Search
+    BookAPI_Search -- Results --> BookSelect
+    BookSelect -- "Skip (US-010)" --> TourUI
+    BookSelect -- "Select & Add" --> API_SaveBook
+
+    API_SaveBook -- Success --> DB
+    API_SaveBook -- Error --> BookErrorAPI[Show Network Error] --> BookUI
+    DB -.-> TourUI
+
+    %% Step 3 Logic: Tour & Finish
+    TourUI --> TourAction
+    TourAction -- "Skip / Done" --> API_Complete
+
+    API_Complete -- Success --> DB
+    API_Complete -- Error --> TourError[Log Silent Failure] --> Dashboard
+    DB -.-> Dashboard
+
+    %% Styling
+    classDef ui fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
+    classDef backend fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
+    classDef decision fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000
+    classDef error fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
+    classDef terminal fill:#212121,stroke:#000,stroke-width:2px,color:#fff
+
+    class GoalUI,BookUI,TourUI,GoalInput,BookSearch ui
+    class API_SaveGoal,API_SaveBook,API_Complete,BookAPI_Search,DB backend
+    class CheckState,GoalSkip,GoalValid,BookSelect,TourAction decision
+    class GoalError,GoalErrorAPI,BookErrorAPI,TourError error
+    class Start,Dashboard terminal

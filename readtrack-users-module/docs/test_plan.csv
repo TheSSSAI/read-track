@@ -1,0 +1,2 @@
+"project_name","architecture_type","total_estimated_test_cases","automation_target_percentage","risk_coverage_percentage","testing_tools","environments_defined"
+"ReadTrack Platform","Modular Monolith (.NET 8) + Flutter Mobile","450","80","98","[""xUnit"",""flutter_test"",""integration_test"",""k6"",""OWASP ZAP""]","[""Local"",""Development"",""Staging (Sandbox IAP)"",""Production""]"

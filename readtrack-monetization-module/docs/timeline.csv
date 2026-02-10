@@ -1,0 +1,3 @@
+"scenario_name","team_size","estimated_duration_weeks","total_cost","risk_level","capacity_utilization","skill_constraints","critical_path_duration","parallel_work_percentage","resource_bottlenecks","mitigation_strategies","success_probability","quality_risk","timeline_buffer"
+"Balanced Load (Recommended)","3","4","25600","Low","69","Mobile velocity limited by single resource","3.5","70","Mobile Dev in Sprint 2","Move TASK-MOB-003 to Sprint 1; Backend Dev writes API integration tests","90","Low","0.5"
+"Aggressive - 3 Week Delivery","3","3","25600","High","92","No buffer for sync logic debugging","3","90","All resources saturated","Cut AI recommendation features; Scope cut to basic sync only","60","High",""

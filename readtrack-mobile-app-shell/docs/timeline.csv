@@ -1,0 +1,4 @@
+"scenario_name","team_size","estimated_duration_weeks","total_cost","risk_level","capacity_utilization","skill_constraints","critical_path_duration","parallel_work_percentage","resource_bottlenecks","mitigation_strategies","success_probability","quality_risk","timeline_buffer"
+"Current Plan (High Risk)","3","6","23708","Critical","115","Backend capacity deficit of 40+ hours in Sprint 3","6","70","Backend Developer in Sprint 3 (150% load)","None applied; high probability of failure","20","Critical",""
+"Optimization A: DevOps Reallocation","3","6","23708","High","95","Requires DevOps dev to write C# code","6","75","Backend still tight, but manageable","DevOps takes TSK-BE-007, TSK-BE-005, TSK-SYNC-003 support","60","Medium","0.5"
+"Optimization B: 4-Sprint Schedule","3","8","31610","Low","85","None","8","60","None","Push AI & Google Books integration to Sprint 4","90","Low","2"

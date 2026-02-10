@@ -1,0 +1,3 @@
+"scenario_name","team_size","estimated_duration_weeks","total_cost","risk_level","capacity_utilization","skill_constraints","critical_path_duration","parallel_work_percentage","resource_bottlenecks","mitigation_strategies","success_probability","quality_risk","timeline_buffer"
+"Baseline - Current Allocation","4","6","21175","Medium","45","Single Mobile Developer","5.5","40","Backend API definition blocking Mobile Sync Logic","Sprint 1 focus on API Contracts to unblock Mobile","80","Medium","0.5"
+"Accelerated - Mobile Contractor Added","5","4","30000","Low","60","Integration overhead","4","70","Code Review bandwidth","Contractor handles UI widgets; Senior handles Core Sync logic","90","Low","1"

@@ -1,0 +1,2 @@
+"project_name","total_planned_test_cases","automation_target_percentage","estimated_setup_effort_hours","quality_confidence_score","risk_coverage_percentage","maintenance_overhead","testing_frameworks","environments_defined"
+"Reading Tracker App","185","85","120","0.94","98","Medium","[""flutter_test"",""integration_test"",""xUnit"",""Moq"",""k6"",""OWASP ZAP""]","[""Local Dev"",""CI/Ephemeral"",""Staging (AWS)"",""Production""]"

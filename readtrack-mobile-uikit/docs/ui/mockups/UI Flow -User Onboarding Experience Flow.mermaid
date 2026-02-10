@@ -1,0 +1,73 @@
+flowchart TD
+    %% Nodes
+    Start((Start: Auth Success))
+    
+    subgraph Context_Check [Pre-Condition Check]
+        IsNewUser{Is New User?}
+    end
+
+    subgraph Step_1 [Step 1: Set Yearly Goal]
+        GoalScreen[📱 UI: Set Yearly Goal Screen]
+        GoalDecision{User Action}
+        SaveGoalAction[⚡ System: POST /api/goals]
+        SkipGoalAction[System: Local State Skip]
+    end
+
+    subgraph Step_2 [Step 2: Add First Book]
+        BookScreen[📱 UI: Add 'Currently Reading' Screen]
+        BookSearch[User Searches Book]
+        BookDecision{User Action}
+        SaveBookAction[⚡ System: POST /api/library]
+        SkipBookAction[System: Local State Skip]
+    end
+
+    subgraph Step_3 [Step 3: Feature Tour]
+        TourOverlay[📱 UI: Feature Tour Overlay]
+        TourSteps[Highlights: 1. Current Read<br/>2. Log Session Btn<br/>3. Goals Tab]
+        TourDecision{User Action}
+    end
+
+    subgraph Finalization [Completion]
+        PersistState[💾 System: Update User Profile<br/>onboardingCompleted = true]
+        Dashboard[📱 UI: Main Dashboard]
+    end
+
+    %% Flow Connections
+    Start --> IsNewUser
+    IsNewUser -- No (Returning) --> Dashboard
+    IsNewUser -- Yes --> GoalScreen
+
+    %% Goal Step Flow
+    GoalScreen --> GoalDecision
+    GoalDecision -- "Enter Value & Save" --> SaveGoalAction
+    GoalDecision -- "Tap 'Skip'" --> SkipGoalAction
+    SaveGoalAction -- Success/Fail --> BookScreen
+    SkipGoalAction --> BookScreen
+
+    %% Book Step Flow
+    BookScreen --> BookSearch
+    BookSearch --> BookDecision
+    BookDecision -- "Select Book & Add" --> SaveBookAction
+    BookDecision -- "Tap 'Skip'" --> SkipBookAction
+    SaveBookAction -- Success/Fail --> TourOverlay
+    SkipBookAction --> TourOverlay
+
+    %% Tour Step Flow
+    TourOverlay --> TourSteps
+    TourSteps --> TourDecision
+    TourDecision -- "Next... Finish" --> PersistState
+    TourDecision -- "Dismiss / Skip" --> PersistState
+
+    %% End
+    PersistState --> Dashboard
+
+    %% Styling
+    classDef ui fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1,rx:5,ry:5
+    classDef system fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#4a148c
+    classDef decision fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#f57f17,rhombus
+    classDef terminal fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20,circle
+
+    class GoalScreen,BookScreen,TourOverlay,Dashboard,TourSteps ui
+    class SaveGoalAction,SkipGoalAction,SaveBookAction,SkipBookAction,PersistState system
+    class IsNewUser,GoalDecision,BookDecision,TourDecision decision
+    class Start terminal

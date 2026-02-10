@@ -1,0 +1,2 @@
+"total_stories","total_story_points","must_have_stories","should_have_stories","could_have_stories","epics_identified","estimated_sprints","key_dependencies"
+"7","47","6","1","0","[""Core Features"",""Data Management"",""Integration"",""User Experience"",""Security"",""Performance""]","4","[""Authentication (US-001)"",""Offline Data Layer (US-002)""]"

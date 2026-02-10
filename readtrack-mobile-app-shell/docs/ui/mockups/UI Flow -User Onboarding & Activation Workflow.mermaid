@@ -1,0 +1,83 @@
+flowchart TD
+    %% Nodes
+    Start([User Logs In])
+    CheckState{Is 'hasCompletedOnboarding' \n true?}
+    
+    subgraph UI_Client ["📱 Mobile Client (Flutter)"]
+        NavDash[Navigate to Dashboard]
+        
+        %% Step 1: Goal
+        ScreenGoal[Screen: Set Yearly Goal]
+        InputGoal[/Input: Yearly Book Target/]
+        DecideGoal{User Action}
+        BtnSkipGoal[Click 'Skip']
+        BtnSetGoal[Click 'Set Goal']
+        
+        %% Step 2: Add Book
+        ScreenBook[Screen: Add 'Currently Reading']
+        InputSearch[/Input: Search Query/]
+        CallSearch>API: Search Books]
+        ListResults[Display Results List]
+        DecideBook{User Action}
+        BtnSkipBook[Click 'Skip']
+        BtnSelectBook[Select Book]
+        
+        %% Step 3: Tour
+        ScreenTour[Screen: Feature Tour Overlay]
+        TourSteps[Display: Dashboard -> Log Button -> Goals]
+        DecideTour{User Action}
+        BtnDismissTour[Click 'Finish' / 'Skip']
+    end
+
+    subgraph Backend_System ["☁️ Backend API & DB"]
+        DBCreateGoal[(DB: Create Goal Record)]
+        DBSearch[Google Books API Proxy]
+        DBAddBook[(DB: Create LibraryItem)]
+        DBUpdateProfile[(DB: Update User\nhasCompletedOnboarding=true)]
+    end
+
+    %% Flow
+    Start --> CheckState
+    CheckState -- Yes --> NavDash
+    CheckState -- No --> ScreenGoal
+
+    %% Goal Logic
+    ScreenGoal --> InputGoal
+    InputGoal --> DecideGoal
+    DecideGoal -- Tap Skip --> BtnSkipGoal
+    DecideGoal -- Tap Save --> BtnSetGoal
+    BtnSetGoal --> DBCreateGoal
+    DBCreateGoal --> ScreenBook
+    BtnSkipGoal --> ScreenBook
+
+    %% Book Logic
+    ScreenBook --> InputSearch
+    InputSearch --> CallSearch
+    CallSearch --> DBSearch
+    DBSearch -.-> ListResults
+    ListResults --> DecideBook
+    DecideBook -- Tap Skip --> BtnSkipBook
+    DecideBook -- Select Item --> BtnSelectBook
+    BtnSelectBook --> DBAddBook
+    DBAddBook --> ScreenTour
+    BtnSkipBook --> ScreenTour
+
+    %% Tour Logic
+    ScreenTour --> TourSteps
+    TourSteps --> DecideTour
+    DecideTour --> BtnDismissTour
+    
+    %% Completion
+    BtnDismissTour --> DBUpdateProfile
+    DBUpdateProfile --> NavDash
+
+    %% Styling
+    classDef highlight fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
+    classDef database fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
+    classDef decision fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000
+    classDef screen fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+
+    class Start,NavDash highlight
+    class DBCreateGoal,DBSearch,DBAddBook,DBUpdateProfile database
+    class CheckState,DecideGoal,DecideBook,DecideTour decision
+    class ScreenGoal,ScreenBook,ScreenTour screen
