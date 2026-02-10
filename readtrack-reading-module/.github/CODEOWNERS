@@ -1,0 +1,15 @@
+# Global owners
+* @readtrack/backend-team @readtrack/architects
+
+# Backend
+/backend/ @readtrack/backend-team
+/src/ReadTrack.Reading.Domain/ @readtrack/domain-experts
+
+# Infrastructure
+/infrastructure/ @readtrack/devops
+
+# Mobile
+/mobile/ @readtrack/mobile-team
+
+# CI/CD
+/.github/workflows/ @readtrack/devops

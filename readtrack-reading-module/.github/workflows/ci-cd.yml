@@ -1,0 +1,94 @@
+name: ReadTrack CI/CD
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  pull_request:
+    branches: [ "main", "develop" ]
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  NODE_VERSION: '20.x'
+  CONFIGURATION: Release
+
+jobs:
+  backend-build-and-test:
+    name: Backend Build & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore Dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore --configuration ${{ env.CONFIGURATION }}
+
+    - name: Test
+      run: dotnet test --no-build --configuration ${{ env.CONFIGURATION }} --verbosity normal --collect:"XPlat Code Coverage"
+
+  infrastructure-check:
+    name: Infrastructure Validation
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./infrastructure
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: './infrastructure/package-lock.json'
+
+    - name: Install Dependencies
+      run: npm ci
+
+    - name: Lint CDK
+      run: npm run lint
+
+    - name: Build CDK
+      run: npm run build
+
+    - name: Test CDK
+      run: npm test
+
+  mobile-analysis:
+    name: Mobile Analysis
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./mobile
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        flutter-version: '3.19.0'
+
+    - name: Install Dependencies
+      run: flutter pub get
+
+    - name: Analyze Code
+      run: flutter analyze
+
+    - name: Run Tests
+      run: flutter test

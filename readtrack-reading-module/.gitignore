@@ -1,0 +1,45 @@
+# General
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.user
+*.suo
+*.userprefs
+
+# .NET
+bin/
+obj/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+**/package-lock.json
+**/node_modules/
+TestResults/
+*.trx
+*.coverage
+*.cobertura.xml
+
+# Infrastructure
+cdk.out/
+infrastructure/dist/
+infrastructure/*.js
+!infrastructure/jest.config.js
+infrastructure/*.d.ts
+
+# Mobile
+mobile/.dart_tool/
+mobile/.packages
+mobile/build/
+mobile/ios/Flutter/Generated.xcconfig
+mobile/ios/Flutter/flutter_export_environment.sh
+mobile/android/.gradle
+mobile/android/captures/
+mobile/android/gradlew
+mobile/android/gradlew.bat
+mobile/android/local.properties
+
+# Secrets
+secrets.json
+appsettings.Development.json
+.env
