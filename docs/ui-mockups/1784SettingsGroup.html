@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SettingsGroup Component</title>
+  <style>
+    /* -------------------------------------------------------------------------- */
+    /*                               DESIGN TOKENS                                */
+    /* -------------------------------------------------------------------------- */
+    :root {
+      /* Colors */
+      --color-primary-600: #4F46E5;
+      --color-primary-50: #EEF2FF;
+      --color-gray-50: #F8FAFC;
+      --color-gray-100: #F1F5F9;
+      --color-gray-200: #E2E8F0;
+      --color-gray-300: #CBD5E1;
+      --color-gray-400: #94A3B8;
+      --color-gray-500: #64748B;
+      --color-gray-600: #475569;
+      --color-gray-700: #334155;
+      --color-gray-900: #0F172A;
+      --color-white: #FFFFFF;
+      --color-error: #EF4444;
+      --color-error-bg: #FEE2E2;
+      
+      /* Typography */
+      --font-family-primary: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-weight-regular: 400;
+      --font-weight-medium: 500;
+      --font-weight-semibold: 600;
+      
+      /* Spacing */
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-6: 24px;
+      
+      /* Radius */
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 9999px;
+      
+      /* Shadows */
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                               RESET & BASE                                 */
+    /* -------------------------------------------------------------------------- */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family-primary);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+      line-height: 1.5;
+      padding: var(--space-6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                          COMPONENT IMPLEMENTATION                          */
+    /* -------------------------------------------------------------------------- */
+
+    /* Settings Group Container */
+    .settings-group {
+      margin-bottom: var(--space-6);
+      width: 100%;
+      max-width: 600px; /* Tablet constraint */
+    }
+
+    /* Header / Section Title */
+    .settings-group__header {
+      font-family: var(--font-family-primary);
+      font-size: 0.8125rem; /* 13px */
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: var(--space-2);
+      padding-left: var(--space-2);
+      display: block;
+    }
+
+    /* List Container */
+    .settings-group__list {
+      background-color: var(--color-white);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-gray-200);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Settings Tile (Base) */
+    .settings-tile {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4);
+      background: var(--color-white);
+      border: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      border-bottom: 1px solid var(--color-gray-100);
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      min-height: 56px; /* Touch target size */
+    }
+
+    .settings-tile:last-child {
+      border-bottom: none;
+    }
+
+    .settings-tile:hover {
+      background-color: var(--color-gray-50);
+    }
+
+    /* Focus State */
+    .settings-tile:focus-visible {
+      outline: 2px solid var(--color-primary-600);
+      outline-offset: -2px;
+      z-index: 2; /* Ensure focus ring is on top */
+      background-color: var(--color-gray-50);
+    }
+
+    /* Tile Content (Left Side) */
+    .settings-tile__content {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      flex: 1;
+      min-width: 0; /* Enable text truncation if needed */
+    }
+
+    /* Icon Container */
+    .settings-tile__icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      background-color: var(--color-gray-100);
+      color: var(--color-gray-600);
+      flex-shrink: 0;
+    }
+
+    .settings-tile__icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Text Labels */
+    .settings-tile__text-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .settings-tile__label {
+      font-size: 1rem;
+      font-weight: var(--font-weight-medium);
+      color: var(--color-gray-900);
+      line-height: 1.4;
+    }
+
+    .settings-tile__description {
+      font-size: 0.8125rem;
+      color: var(--color-gray-500);
+      margin-top: 2px;
+    }
+
+    /* Action Area (Right Side) */
+    .settings-tile__action {
+      display: flex;
+      align-items: center;
+      color: var(--color-gray-400);
+      margin-left: var(--space-3);
+      flex-shrink: 0;
+    }
+
+    .settings-tile__value {
+      font-size: 0.875rem;
+      color: var(--color-gray-500);
+      margin-right: var(--space-2);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                 CONTROLS                                   */
+    /* -------------------------------------------------------------------------- */
+
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      border-radius: var(--radius-full);
+      background-color: var(--color-gray-300);
+      transition: background-color 0.3s ease;
+      cursor: pointer;
+      border: none;
+      padding: 0;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: var(--color-white);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+      transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
+
+    .toggle-switch[aria-checked="true"] {
+      background-color: var(--color-primary-600);
+    }
+
+    .toggle-switch[aria-checked="true"]::after {
+      transform: translateX(20px);
+    }
+
+    .toggle-switch:focus-visible {
+      outline: 2px solid var(--color-primary-600);
+      outline-offset: 2px;
+    }
+
+    .toggle-switch:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                VARIANTS                                    */
+    /* -------------------------------------------------------------------------- */
+
+    /* Destructive Variant */
+    .settings-tile--destructive .settings-tile__label {
+      color: var(--color-error);
+    }
+
+    .settings-tile--destructive .settings-tile__icon {
+      background-color: var(--color-error-bg);
+      color: var(--color-error);
+    }
+
+    .settings-tile--destructive:hover {
+      background-color: #FEF2F2; /* Very light red */
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                UTILITIES                                   */
+    /* -------------------------------------------------------------------------- */
+    .showcase-header {
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: var(--space-6);
+      padding-bottom: var(--space-4);
+      border-bottom: 2px solid var(--color-gray-200);
+    }
+    
+    .showcase-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--color-gray-900);
+    }
+
+    /* Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+      .settings-tile,
+      .toggle-switch,
+      .toggle-switch::after {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="showcase-header">
+    <h1 class="showcase-title">SettingsGroup Component</h1>
+    <p style="color: var(--color-gray-500); margin-top: 8px;">Organism demonstrating grouped setting tiles with various interactive states.</p>
+  </div>
+
+  <!-- VARIANT 1: Navigation & Information Group -->
+  <div class="settings-group" role="group" aria-labelledby="header-account">
+    <h2 id="header-account" class="settings-group__header">Account</h2>
+    
+    <div class="settings-group__list">
+      <!-- Item 1: Navigation with Chevron -->
+      <button class="settings-tile" type="button" onclick="console.log('Navigate to Profile')">
+        <div class="settings-tile__content">
+          <div class="settings-tile__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div class="settings-tile__text-group">
+            <span class="settings-tile__label">Profile Information</span>
+            <span class="settings-tile__description">Name, email, and photo</span>
+          </div>
+        </div>
+        <div class="settings-tile__action">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </div>
+      </button>
+
+      <!-- Item 2: Information Display -->
+      <div class="settings-tile" tabindex="0">
+        <div class="settings-tile__content">
+          <div class="settings-tile__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+              <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+          </div>
+          <span class="settings-tile__label">Subscription</span>
+        </div>
+        <div class="settings-tile__action">
+          <span class="settings-tile__value">Premium</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VARIANT 2: Preferences Group with Switches -->
+  <div class="settings-group" role="group" aria-labelledby="header-prefs">
+    <h2 id="header-prefs" class="settings-group__header">Preferences</h2>
+    
+    <div class="settings-group__list">
+      <!-- Item 1: Toggle Switch -->
+      <label class="settings-tile" for="toggle-notifs">
+        <div class="settings-tile__content">
+          <div class="settings-tile__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+          </div>
+          <span class="settings-tile__label">Push Notifications</span>
+        </div>
+        <div class="settings-tile__action">
+          <button id="toggle-notifs" class="toggle-switch" role="switch" aria-checked="true" aria-label="Toggle push notifications" onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked') === 'true' ? 'false' : 'true')"></button>
+        </div>
+      </label>
+
+      <!-- Item 2: Toggle Switch -->
+      <label class="settings-tile" for="toggle-darkmode">
+        <div class="settings-tile__content">
+          <div class="settings-tile__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </div>
+          <span class="settings-tile__label">Dark Mode</span>
+        </div>
+        <div class="settings-tile__action">
+          <button id="toggle-darkmode" class="toggle-switch" role="switch" aria-checked="false" aria-label="Toggle dark mode" onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked') === 'true' ? 'false' : 'true')"></button>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <!-- VARIANT 3: Destructive Actions -->
+  <div class="settings-group" role="group" aria-labelledby="header-danger">
+    <h2 id="header-danger" class="settings-group__header">Danger Zone</h2>
+    
+    <div class="settings-group__list">
+      <button class="settings-tile settings-tile--destructive" type="button" onclick="alert('Action triggered')">
+        <div class="settings-tile__content">
+          <div class="settings-tile__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </div>
+          <div class="settings-tile__text-group">
+            <span class="settings-tile__label">Export Personal Data</span>
+          </div>
+        </div>
+        <div class="settings-tile__action">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </div>
+      </button>
+
+      <button class="settings-tile settings-tile--destructive" type="button" onclick="confirm('Are you sure?')">
+        <div class="settings-tile__content">
+          <div class="settings-tile__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </div>
+          <div class="settings-tile__text-group">
+            <span class="settings-tile__label">Delete Account</span>
+            <span class="settings-tile__description" style="color: var(--color-error); opacity: 0.8;">Permanently delete all data</span>
+          </div>
+        </div>
+        <div class="settings-tile__action">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Simple script to handle switch interactions for the demo
+    // In production, this would be handled by framework logic (e.g., React state)
+    document.querySelectorAll('.toggle-switch').forEach(switchEl => {
+      switchEl.addEventListener('click', (e) => {
+        // Prevent event bubbling to the tile click if the switch is inside a label/button
+        e.stopPropagation(); 
+        const isChecked = switchEl.getAttribute('aria-checked') === 'true';
+        switchEl.setAttribute('aria-checked', !isChecked);
+      });
+    });
+  </script>
+
+</body>
+</html>

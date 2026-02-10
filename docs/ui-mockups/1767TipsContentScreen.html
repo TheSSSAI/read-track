@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reading Tips Library</title>
+  <style>
+    /* 
+      DESIGN SYSTEM TOKENS & RESET 
+    */
+    :root {
+      /* Colors: Indigo Primary */
+      --color-primary-50: #EEF2FF;
+      --color-primary-100: #E0E7FF;
+      --color-primary-200: #C7D2FE;
+      --color-primary-600: #4F46E5;
+      --color-primary-700: #4338CA;
+      --color-primary-800: #3730A3;
+
+      /* Colors: Neutrals */
+      --color-white: #FFFFFF;
+      --color-neutral-50: #F8FAFC;
+      --color-neutral-100: #F1F5F9;
+      --color-neutral-200: #E2E8F0;
+      --color-neutral-300: #CBD5E1;
+      --color-neutral-400: #94A3B8;
+      --color-neutral-500: #64748B;
+      --color-neutral-600: #475569;
+      --color-neutral-800: #1E293B;
+      --color-neutral-900: #0F172A;
+
+      /* Colors: Semantic */
+      --color-success-bg: #D1FAE5;
+      --color-success-text: #065F46;
+      --color-offline-bg: #F1F5F9;
+      --color-offline-text: #64748B;
+
+      /* Typography */
+      --font-primary: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-serif: 'Merriweather', Georgia, serif; /* For reader mode */
+      
+      --text-h1: 700 32px/1.25 var(--font-primary);
+      --text-h2: 600 24px/1.3 var(--font-primary);
+      --text-h3: 600 20px/1.4 var(--font-primary);
+      --text-h4: 500 18px/1.4 var(--font-primary);
+      --text-body-lg: 400 16px/1.6 var(--font-primary);
+      --text-body-md: 400 14px/1.5 var(--font-primary);
+      --text-caption: 500 12px/1.4 var(--font-primary);
+      --text-button: 600 16px/1.0 var(--font-primary);
+
+      /* Spacing */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --space-xxl: 48px;
+
+      /* Layout */
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --container-width-desktop: 1140px;
+      --container-width-reader: 680px; /* Optimal line length */
+      
+      /* Effects */
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --transition: all 0.2s ease-in-out;
+    }
+
+    /* Reset */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--color-neutral-50);
+      color: var(--color-neutral-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { cursor: pointer; font: inherit; border: none; background: none; }
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+
+    /* Screen Layout Structure */
+    .screen {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      max-width: var(--container-width-desktop);
+      margin: 0 auto;
+      background-color: var(--color-white);
+      box-shadow: 0 0 20px rgba(0,0,0,0.05);
+    }
+
+    /* 
+      COMPONENT: Header
+    */
+    .header {
+      padding: var(--space-md) var(--space-lg);
+      background-color: var(--color-white);
+      border-bottom: 1px solid var(--color-neutral-200);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .header__top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-md);
+    }
+    .header__title { font: var(--text-h2); color: var(--color-neutral-900); }
+    
+    /* Search Bar */
+    .search-bar {
+      position: relative;
+      width: 100%;
+    }
+    .search-bar__input {
+      width: 100%;
+      padding: var(--space-md) var(--space-md) var(--space-md) 48px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-neutral-300);
+      background-color: var(--color-neutral-50);
+      font: var(--text-body-md);
+      transition: var(--transition);
+    }
+    .search-bar__input:focus {
+      outline: none;
+      border-color: var(--color-primary-600);
+      box-shadow: 0 0 0 3px var(--color-primary-100);
+      background-color: var(--color-white);
+    }
+    .search-bar__icon {
+      position: absolute;
+      left: var(--space-md);
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-neutral-400);
+    }
+
+    /* 
+      COMPONENT: Category Filter (Chips)
+    */
+    .filters {
+      display: flex;
+      gap: var(--space-sm);
+      overflow-x: auto;
+      padding: var(--space-xs) var(--space-lg) var(--space-md);
+      scrollbar-width: none; /* Hide scrollbar Firefox */
+      -ms-overflow-style: none; /* Hide scrollbar IE */
+    }
+    .filters::-webkit-scrollbar { display: none; } /* Hide scrollbar Chrome */
+    
+    .chip {
+      flex: 0 0 auto;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--color-neutral-200);
+      background-color: var(--color-white);
+      color: var(--color-neutral-600);
+      font: var(--text-button);
+      font-size: 14px;
+      transition: var(--transition);
+    }
+    .chip:hover {
+      background-color: var(--color-neutral-50);
+      border-color: var(--color-neutral-300);
+    }
+    .chip[aria-pressed="true"] {
+      background-color: var(--color-primary-50);
+      border-color: var(--color-primary-200);
+      color: var(--color-primary-700);
+    }
+    .chip:focus-visible {
+      outline: 2px solid var(--color-primary-600);
+      outline-offset: 2px;
+    }
+
+    /* 
+      COMPONENT: Article Card
+    */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-lg);
+      padding: var(--space-lg);
+    }
+    @media (min-width: 600px) {
+      .content-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 1024px) {
+      .content-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .article-card {
+      display: flex;
+      flex-direction: column;
+      background-color: var(--color-white);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-neutral-200);
+      overflow: hidden;
+      transition: var(--transition);
+      cursor: pointer;
+      position: relative;
+    }
+    .article-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--color-primary-200);
+    }
+    .article-card:focus-visible {
+      outline: 2px solid var(--color-primary-600);
+      outline-offset: 2px;
+    }
+    .article-card__image {
+      height: 180px;
+      width: 100%;
+      object-fit: cover;
+      background-color: var(--color-neutral-200);
+    }
+    .article-card__content {
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      flex-grow: 1;
+    }
+    .article-card__meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      font: var(--text-caption);
+      color: var(--color-neutral-500);
+    }
+    .article-card__tag {
+      color: var(--color-primary-700);
+      font-weight: 600;
+    }
+    .article-card__title {
+      font: var(--text-h3);
+      color: var(--color-neutral-900);
+      /* Line clamp */
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .article-card__summary {
+      font: var(--text-body-md);
+      color: var(--color-neutral-500);
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .article-card__footer {
+      margin-top: auto;
+      padding-top: var(--space-sm);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--color-neutral-100);
+    }
+    .offline-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font: var(--text-caption);
+      color: var(--color-neutral-500);
+      background: var(--color-neutral-100);
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+    .offline-badge svg { width: 12px; height: 12px; }
+
+    /* 
+      COMPONENT: Detail View (Reader)
+    */
+    .detail-view {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--color-white);
+      z-index: 100;
+      overflow-y: auto;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+    }
+    .detail-view.is-open {
+      transform: translateX(0);
+    }
+    .detail-nav {
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--color-neutral-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .btn-back {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      color: var(--color-neutral-600);
+      font: var(--text-button);
+    }
+    .btn-back:hover { color: var(--color-primary-600); }
+    
+    .reader-content {
+      max-width: var(--container-width-reader);
+      margin: 0 auto;
+      padding: var(--space-xl) var(--space-lg) 100px;
+    }
+    .reader-hero {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-lg);
+    }
+    .reader-meta {
+      display: flex;
+      gap: var(--space-md);
+      font: var(--text-caption);
+      color: var(--color-neutral-500);
+      margin-bottom: var(--space-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .reader-title {
+      font: var(--text-h1);
+      color: var(--color-neutral-900);
+      margin-bottom: var(--space-lg);
+    }
+    .reader-body {
+      font-family: var(--font-serif); /* Serif for long-form reading */
+      font-size: 18px;
+      line-height: 1.8;
+      color: var(--color-neutral-800);
+    }
+    .reader-body p { margin-bottom: var(--space-lg); }
+    .reader-body h2 {
+      font-family: var(--font-primary);
+      font: var(--text-h2);
+      margin-top: var(--space-xl);
+      margin-bottom: var(--space-md);
+    }
+    .reader-body ul {
+      margin-bottom: var(--space-lg);
+      padding-left: var(--space-lg);
+    }
+    .reader-body li { margin-bottom: var(--space-sm); }
+
+    /* Loading State (Skeleton) */
+    .skeleton {
+      background: linear-gradient(90deg, var(--color-neutral-100) 25%, var(--color-neutral-200) 50%, var(--color-neutral-100) 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+      border-radius: 4px;
+    }
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .card-skeleton { height: 350px; }
+
+    /* Utilities */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Main Screen Container -->
+  <div class="screen" id="mainScreen">
+    
+    <!-- Header Section -->
+    <header class="header">
+      <div class="header__top">
+        <h1 class="header__title">Reading Tips</h1>
+        <!-- Simplified profile/settings icon for context -->
+        <button aria-label="Settings">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-neutral-500)"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </button>
+      </div>
+      
+      <div class="search-bar">
+        <svg class="search-bar__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" class="search-bar__input" placeholder="Search for tips, authors, or topics..." aria-label="Search tips">
+      </div>
+    </header>
+
+    <!-- Category Filters -->
+    <nav class="filters" aria-label="Category filters">
+      <button class="chip" aria-pressed="true">All</button>
+      <button class="chip" aria-pressed="false">Focus & Concentration</button>
+      <button class="chip" aria-pressed="false">Speed Reading</button>
+      <button class="chip" aria-pressed="false">Comprehension</button>
+      <button class="chip" aria-pressed="false">Note Taking</button>
+      <button class="chip" aria-pressed="false">Habit Building</button>
+    </nav>
+
+    <!-- Content Grid -->
+    <main class="content-grid" id="tipsGrid">
+      
+      <!-- Card 1: Standard Article -->
+      <article class="article-card" tabindex="0" onclick="openDetail()">
+        <img src="https://images.unsplash.com/photo-1491841550275-ad7854e35ca6?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Person reading a book in a library" class="article-card__image">
+        <div class="article-card__content">
+          <div class="article-card__meta">
+            <span class="article-card__tag">Focus</span>
+            <span>•</span>
+            <span>5 min read</span>
+          </div>
+          <h3 class="article-card__title">Deep Work: How to Read Without Distractions</h3>
+          <p class="article-card__summary">Learn the techniques to enter a flow state and retain more of what you read by eliminating digital interruptions.</p>
+          <div class="article-card__footer">
+            <span style="font-size: 12px; color: var(--color-neutral-500);">By Sarah Connor</span>
+            <!-- Offline Indicator: Hidden for online -->
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 2: Offline Cached -->
+      <article class="article-card" tabindex="0" onclick="openDetail()">
+        <img src="https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Open book with glasses" class="article-card__image">
+        <div class="article-card__content">
+          <div class="article-card__meta">
+            <span class="article-card__tag">Comprehension</span>
+            <span>•</span>
+            <span>8 min read</span>
+          </div>
+          <h3 class="article-card__title">The Feynman Technique for Reading</h3>
+          <p class="article-card__summary">Applying the famous physicist's learning method to your reading list to ensure you truly understand complex topics.</p>
+          <div class="article-card__footer">
+            <span style="font-size: 12px; color: var(--color-neutral-500);">By James Clear</span>
+            <div class="offline-badge" title="Available offline">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 6 12 6c-4.3 0-8 5-8 5v5c0 .6.4 1 1 1h2m7-10l-4 4m0-4l4 4"/></svg>
+              <span>Offline</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 3 -->
+      <article class="article-card" tabindex="0" onclick="openDetail()">
+        <img src="https://images.unsplash.com/photo-1457369804613-52c61a468e7d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Stack of books" class="article-card__image">
+        <div class="article-card__content">
+          <div class="article-card__meta">
+            <span class="article-card__tag">Speed</span>
+            <span>•</span>
+            <span>4 min read</span>
+          </div>
+          <h3 class="article-card__title">3 Myths About Speed Reading</h3>
+          <p class="article-card__summary">Debunking common misconceptions about speed reading and what science actually says about reading faster.</p>
+          <div class="article-card__footer">
+            <span style="font-size: 12px; color: var(--color-neutral-500);">By Dr. Seuss</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 4: Loading State (Skeleton) -->
+      <div class="article-card card-skeleton skeleton"></div>
+      <div class="article-card card-skeleton skeleton"></div>
+      <div class="article-card card-skeleton skeleton"></div>
+
+    </main>
+  </div>
+
+  <!-- Detail View (Hidden by default, slides in) -->
+  <div class="detail-view" id="detailView" aria-hidden="true">
+    <nav class="detail-nav">
+      <button class="btn-back" onclick="closeDetail()" aria-label="Back to tips list">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Back
+      </button>
+      <div style="display: flex; gap: 16px;">
+        <button aria-label="Share article">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+        </button>
+        <button aria-label="Bookmark article">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+        </button>
+      </div>
+    </nav>
+
+    <div class="reader-content">
+      <div class="reader-meta">
+        <span>Focus & Concentration</span>
+        <span>•</span>
+        <span>Oct 24, 2024</span>
+      </div>
+      <h1 class="reader-title">Deep Work: How to Read Without Distractions in a Digital Age</h1>
+      <img src="https://images.unsplash.com/photo-1491841550275-ad7854e35ca6?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" alt="Library reading environment" class="reader-hero">
+      
+      <div class="reader-body">
+        <p>In an era where our attention is commoditized, the ability to focus deeply on a text has become a rare and valuable skill. Many of us find ourselves re-reading the same paragraph three times because our mind wandered to a notification or a pending email.</p>
+        
+        <p>Deep reading requires a state of cognitive strain that modern technology often discourages. To truly absorb and synthesize information, we must create an environment that fosters sustained attention.</p>
+
+        <h2>The Environment of Attention</h2>
+        <p>Your physical environment dictates your mental state. Consider these steps to optimize your reading space:</p>
+        <ul>
+          <li><strong>Phone Placement:</strong> Put your phone in another room. Research shows that the mere presence of a smartphone reduces available cognitive capacity.</li>
+          <li><strong>Lighting:</strong> Ensure adequate lighting to reduce eye strain, which is a leading cause of reading fatigue.</li>
+          <li><strong>Background Noise:</strong> Use white noise or instrumental music if total silence is distracting.</li>
+        </ul>
+
+        <h2>Active Reading Techniques</h2>
+        <p>Don't just let the words wash over you. Engage with the text.</p>
+        <blockquote>"Reading is an active conversation between the author and the reader, not a passive download of information."</blockquote>
+        <p>Try highlighting key concepts, writing summary notes in the margins (or a separate notebook), and pausing after every chapter to mentally summarize what you just read. This practice of retrieval strengthens the neural pathways associated with the memory of the material.</p>
+        
+        <p>By implementing these strategies, you can reclaim your attention span and turn reading from a chore into a deeply rewarding flow state.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Simple script to handle view toggling for demonstration purposes
+    function openDetail() {
+      const detailView = document.getElementById('detailView');
+      detailView.classList.add('is-open');
+      detailView.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden'; // Prevent scrolling background
+      
+      // Accessibility focus management
+      const backBtn = detailView.querySelector('.btn-back');
+      setTimeout(() => backBtn.focus(), 300);
+    }
+
+    function closeDetail() {
+      const detailView = document.getElementById('detailView');
+      detailView.classList.remove('is-open');
+      detailView.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    // Handle filter chip toggling
+    document.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', function() {
+        // Reset all
+        document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', 'false'));
+        // Set active
+        this.setAttribute('aria-pressed', 'true');
+      });
+    });
+  </script>
+</body>
+</html>

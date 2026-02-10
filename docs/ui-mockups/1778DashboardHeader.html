@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Header Component</title>
+  <style>
+    /* -------------------------------------------------------------------------- */
+    /*                               DESIGN TOKENS                                */
+    /* -------------------------------------------------------------------------- */
+    :root {
+      /* Colors: Primary */
+      --color-primary-50: #EEF2FF;
+      --color-primary-600: #4F46E5;
+      
+      /* Colors: Secondary */
+      --color-secondary-50: #FFF1F2;
+      --color-secondary-500: #F43F5E;
+      --color-secondary-900: #881337;
+      
+      /* Colors: Neutrals */
+      --color-white: #FFFFFF;
+      --color-gray-50: #F8FAFC;
+      --color-gray-100: #F1F5F9;
+      --color-gray-200: #E2E8F0;
+      --color-gray-500: #64748B;
+      --color-gray-900: #0F172A;
+      
+      /* Typography */
+      --font-family-primary: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --h1-size: 32px;
+      --h1-weight: 700;
+      --caption-size: 12px;
+      --caption-weight: 500;
+      
+      /* Spacing */
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-6: 24px;
+      --space-8: 32px;
+      
+      /* Layout & Effects */
+      --header-height-scrolled: 64px;
+      --radius-full: 9999px;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --z-index-sticky: 100;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                 RESET & BASE                               */
+    /* -------------------------------------------------------------------------- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family-primary);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+      line-height: 1.5;
+      padding: 40px;
+    }
+
+    .showcase-section {
+      margin-bottom: 60px;
+      border: 1px dashed var(--color-gray-200);
+      position: relative;
+    }
+    
+    .showcase-section::before {
+      content: attr(data-label);
+      position: absolute;
+      top: -12px;
+      left: 20px;
+      background: var(--color-gray-200);
+      padding: 2px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: var(--color-gray-500);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                 ATOMS                                      */
+    /* -------------------------------------------------------------------------- */
+
+    /* Icon Button Atom */
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--color-gray-200);
+      background: var(--color-white);
+      color: var(--color-gray-500);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      text-decoration: none;
+    }
+
+    .icon-btn:hover {
+      background: var(--color-gray-100);
+      color: var(--color-gray-900);
+      transform: translateY(-1px);
+    }
+
+    .icon-btn:focus-visible {
+      outline: 2px solid var(--color-primary-600);
+      outline-offset: 2px;
+    }
+
+    .icon-btn:active {
+      transform: translateY(0);
+      background: var(--color-gray-200);
+    }
+
+    .icon-btn__badge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 10px;
+      height: 10px;
+      background: var(--color-secondary-500);
+      border: 2px solid var(--color-white);
+      border-radius: var(--radius-full);
+    }
+
+    /* Avatar Atom */
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      border: 2px solid var(--color-white);
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+    }
+
+    .avatar:hover {
+      opacity: 0.9;
+    }
+    
+    .avatar:focus-visible {
+      outline: 2px solid var(--color-primary-600);
+      outline-offset: 2px;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Streak Badge Atom */
+    .streak-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background-color: var(--color-secondary-50);
+      color: var(--color-secondary-900);
+      border-radius: var(--radius-full);
+      font-size: 14px;
+      font-weight: 600;
+      border: 1px solid rgba(244, 63, 94, 0.1);
+      cursor: help;
+      transition: transform 0.2s ease;
+    }
+    
+    .streak-badge:hover {
+      transform: scale(1.05);
+    }
+
+    .streak-badge svg {
+      color: var(--color-secondary-500);
+      width: 16px;
+      height: 16px;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                       ORGANISM: DASHBOARD HEADER                           */
+    /* -------------------------------------------------------------------------- */
+
+    .dashboard-header {
+      width: 100%;
+      background-color: var(--color-gray-50);
+      padding: var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative; /* Sticky in real implementation */
+      z-index: var(--z-index-sticky);
+    }
+
+    /* Top Row Container: Holds Date (Mobile) and Actions */
+    .dashboard-header__top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      min-height: 40px; /* Aligns with button height */
+    }
+
+    /* Date styling (Mobile) */
+    .dashboard-header__date {
+      font-size: var(--caption-size);
+      font-weight: var(--caption-weight);
+      color: var(--color-gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Actions container */
+    .dashboard-header__actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-left: auto; /* Pushes to right */
+    }
+
+    /* Main Content Area: Greeting */
+    .dashboard-header__content {
+      opacity: 1;
+      transform: translateY(0);
+      transform-origin: top left;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .dashboard-header__greeting {
+      font-family: var(--font-family-primary);
+      font-size: var(--h1-size);
+      font-weight: var(--h1-weight);
+      line-height: 1.2;
+      color: var(--color-gray-900);
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                VARIANTS                                    */
+    /* -------------------------------------------------------------------------- */
+
+    /* Variant: Scrolled State */
+    .dashboard-header--scrolled {
+      background-color: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: var(--shadow-sm);
+      padding-top: var(--space-2);
+      padding-bottom: var(--space-2);
+      flex-direction: row;
+      align-items: center;
+      position: sticky;
+      top: 0;
+    }
+
+    /* In scrolled state, hide main greeting, show compact logo/title if needed */
+    .dashboard-header--scrolled .dashboard-header__content {
+      display: none; 
+    }
+    
+    .dashboard-header--scrolled .dashboard-header__date {
+      opacity: 0; /* Hide date on scroll */
+    }
+    
+    /* Add a compact brand element for scrolled state */
+    .dashboard-header__brand-compact {
+      display: none;
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--color-primary-600);
+    }
+    
+    .dashboard-header--scrolled .dashboard-header__brand-compact {
+      display: block;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                           RESPONSIVE BEHAVIOR                              */
+    /* -------------------------------------------------------------------------- */
+
+    @media (min-width: 768px) {
+      .dashboard-header {
+        padding: var(--space-8) var(--space-8);
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+      }
+
+      /* Reorder flex items for tablet/desktop */
+      .dashboard-header__content {
+        order: 1;
+        flex: 1;
+      }
+      
+      .dashboard-header__top {
+        width: auto;
+        order: 2;
+        min-height: auto;
+      }
+      
+      /* Hide mobile date element */
+      .dashboard-header__date {
+        display: none;
+      }
+      
+      /* Inject date via data attribute on desktop for alignment */
+      .dashboard-header__greeting::before {
+        content: attr(data-date);
+        display: block;
+        font-size: var(--caption-size);
+        color: var(--color-gray-500);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: var(--space-2);
+        font-weight: 500;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 
+    ========================================
+    COMPONENT SHOWCASE
+    ========================================
+  -->
+
+  <!-- Variation 1: Standard Default State (Mobile View) -->
+  <div class="showcase-section" data-label="Variant: Standard (Mobile/Default)">
+    <div style="max-width: 375px; border-right: 1px solid #eee; margin: 0 auto; background: #F8FAFC;">
+      <header class="dashboard-header" role="banner">
+        <!-- Top Row: Date & Actions -->
+        <div class="dashboard-header__top">
+          <span class="dashboard-header__date">Monday, Oct 24</span>
+          
+          <div class="dashboard-header__actions">
+            <!-- Notification Icon Atom -->
+            <button class="icon-btn" aria-label="Notifications">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              <span class="icon-btn__badge"></span>
+            </button>
+            
+            <!-- Avatar Atom -->
+            <button class="avatar" aria-label="User Profile">
+              <img src="https://placehold.co/100x100/4F46E5/FFFFFF?text=AJ" alt="Alex Johnson">
+            </button>
+          </div>
+        </div>
+
+        <!-- Greeting -->
+        <div class="dashboard-header__content">
+          <h1 class="dashboard-header__greeting">Good morning,<br>Alex</h1>
+        </div>
+      </header>
+      
+      <!-- Mock Content to show context -->
+      <div style="height: 100px; padding: 16px; color: #94A3B8; font-size: 14px;">
+        Dashboard content continues below...
+      </div>
+    </div>
+  </div>
+
+  <!-- Variation 2: With Active Streak (Tablet/Desktop View) -->
+  <div class="showcase-section" data-label="Variant: With Streak (Desktop Layout)">
+    <div style="width: 100%; background: #F8FAFC;">
+      <header class="dashboard-header" role="banner">
+        
+        <!-- Greeting Content (Order 1 on Desktop) -->
+        <div class="dashboard-header__content">
+          <h1 class="dashboard-header__greeting" data-date="Monday, Oct 24">Good morning, Alex</h1>
+        </div>
+
+        <!-- Actions (Order 2 on Desktop) -->
+        <div class="dashboard-header__top">
+          <span class="dashboard-header__date">Monday, Oct 24</span> <!-- Hidden on desktop via CSS -->
+          
+          <div class="dashboard-header__actions">
+            <!-- Streak Badge Atom -->
+            <div class="streak-badge" role="status" aria-label="Current streak: 12 days">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a5.5 5.5 0 1 1-11-0c0 .5.2 1 .5 1.5z"></path>
+              </svg>
+              <span>12</span>
+            </div>
+
+            <!-- Notification Icon Atom -->
+            <button class="icon-btn" aria-label="Notifications">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+            </button>
+            
+            <!-- Avatar Atom -->
+            <button class="avatar" aria-label="User Profile">
+              <img src="https://placehold.co/100x100/4F46E5/FFFFFF?text=AJ" alt="Alex Johnson">
+            </button>
+          </div>
+        </div>
+      </header>
+    </div>
+  </div>
+
+  <!-- Variation 3: Scrolled / Sticky State -->
+  <div class="showcase-section" data-label="Variant: Scrolled State (Mobile)">
+    <div style="max-width: 375px; height: 150px; overflow-y: scroll; border: 1px solid #ccc; margin: 0 auto; position: relative;">
+      
+      <!-- Header with Scrolled Modifier -->
+      <header class="dashboard-header dashboard-header--scrolled" role="banner">
+        <div class="dashboard-header__top">
+          <!-- Replaces Date/Greeting in scrolled state -->
+          <div class="dashboard-header__brand-compact">ReadTrack</div>
+          
+          <div class="dashboard-header__actions">
+             <!-- Streak Badge (Optional in scrolled) -->
+             <div class="streak-badge" aria-hidden="true" style="padding: 4px 8px; font-size: 12px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a5.5 5.5 0 1 1-11-0c0 .5.2 1 .5 1.5z"></path></svg>
+              <span>12</span>
+            </div>
+
+            <button class="avatar" style="width: 32px; height: 32px;" aria-label="User Profile">
+              <img src="https://placehold.co/100x100/4F46E5/FFFFFF?text=AJ" alt="Alex Johnson">
+            </button>
+          </div>
+        </div>
+        
+        <!-- Content hidden by CSS in this state -->
+        <div class="dashboard-header__content">
+          <h1 class="dashboard-header__greeting">Good morning, Alex</h1>
+        </div>
+      </header>
+
+      <div style="padding: 20px; background: #f0f0f0; min-height: 400px;">
+        <p>Scrollable content area...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Documentation & Notes -->
+  <div style="max-width: 800px; margin: 40px auto; font-family: sans-serif; color: #334;">
+    <h3>Implementation Notes</h3>
+    <ul style="line-height: 1.6;">
+      <li><strong>Responsive Strategy:</strong> Uses a <code>flex-direction: column</code> approach for mobile to stack date and greeting, switching to <code>flex-direction: row</code> on tablets (min-width: 768px).</li>
+      <li><strong>Scrolled State:</strong> The <code>.dashboard-header--scrolled</code> class applies a glassmorphism effect (backdrop-filter) and hides the large greeting to save screen real estate. In a Flutter implementation, this corresponds to a <code>SliverAppBar</code>.</li>
+      <li><strong>Accessibility:</strong> The header uses <code>role="banner"</code>. Interactive elements (Avatar, Icons) use semantic button tags with <code>aria-label</code>. The streak badge uses <code>role="status"</code>.</li>
+      <li><strong>Design System:</strong> Uses <code>--color-primary-600</code> for focus states and <code>--color-secondary-500</code> (Rose) for the streak badge as defined in the atomic design specs.</li>
+    </ul>
+  </div>
+
+</body>
+</html>

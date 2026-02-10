@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Molecular Components Library - ReadTrack</title>
+<style>
+    /* -------------------------------------------------------------------------- */
+    /*                               DESIGN TOKENS                                */
+    /* -------------------------------------------------------------------------- */
+    :root {
+        /* Colors: Primary */
+        --color-primary-50: #EEF2FF;
+        --color-primary-100: #E0E7FF;
+        --color-primary-200: #C7D2FE;
+        --color-primary-500: #6366F1;
+        --color-primary-600: #4F46E5;
+        --color-primary-700: #4338CA;
+        --color-primary-900: #312E81;
+
+        /* Colors: Secondary */
+        --color-secondary-50: #FFF1F2;
+        --color-secondary-500: #F43F5E;
+
+        /* Colors: Neutrals */
+        --color-white: #FFFFFF;
+        --color-gray-50: #F8FAFC;
+        --color-gray-100: #F1F5F9;
+        --color-gray-200: #E2E8F0;
+        --color-gray-300: #CBD5E1;
+        --color-gray-400: #94A3B8;
+        --color-gray-500: #64748B;
+        --color-gray-600: #475569;
+        --color-gray-700: #334155;
+        --color-gray-800: #1E293B;
+        --color-gray-900: #0F172A;
+
+        /* Colors: Semantic */
+        --color-success: #10B981;
+        --color-success-bg: #D1FAE5;
+        --color-warning: #F59E0B;
+        --color-error: #EF4444;
+
+        /* Typography */
+        --font-family-primary: 'Inter', system-ui, -apple-system, sans-serif;
+        --font-family-secondary: 'Merriweather', Georgia, serif;
+        --font-weight-regular: 400;
+        --font-weight-medium: 500;
+        --font-weight-semibold: 600;
+        --font-weight-bold: 700;
+
+        /* Spacing */
+        --space-1: 4px;
+        --space-2: 8px;
+        --space-3: 12px;
+        --space-4: 16px;
+        --space-5: 20px;
+        --space-6: 24px;
+        --space-8: 32px;
+
+        /* Borders & Radius */
+        --radius-sm: 4px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --radius-xl: 16px;
+        --radius-full: 9999px;
+
+        /* Shadows */
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        --shadow-hover: 0 10px 15px -3px rgba(79, 70, 229, 0.15);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                 RESET & BASE                               */
+    /* -------------------------------------------------------------------------- */
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: var(--font-family-primary);
+        background-color: var(--color-gray-50);
+        color: var(--color-gray-900);
+        line-height: 1.5;
+        padding: var(--space-8);
+    }
+
+    h3 {
+        margin-top: var(--space-8);
+        margin-bottom: var(--space-4);
+        color: var(--color-gray-700);
+        font-size: 1.25rem;
+        border-bottom: 1px solid var(--color-gray-200);
+        padding-bottom: var(--space-2);
+    }
+
+    .showcase-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .component-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: var(--space-6);
+        margin-bottom: var(--space-8);
+    }
+
+    .component-wrapper {
+        background: var(--color-white);
+        padding: var(--space-6);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--color-gray-200);
+    }
+
+    .variant-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-gray-500);
+        margin-bottom: var(--space-3);
+        display: block;
+        font-weight: var(--font-weight-semibold);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                           MOLECULAR COMPONENTS                             */
+    /* -------------------------------------------------------------------------- */
+
+    /* --- 1. BookListTile --- */
+    .book-tile {
+        display: flex;
+        gap: var(--space-4);
+        padding: var(--space-4);
+        background: var(--color-white);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--color-gray-200);
+        transition: all 0.2s ease;
+        text-decoration: none;
+        color: inherit;
+        position: relative;
+    }
+
+    .book-tile:hover {
+        border-color: var(--color-primary-200);
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
+    }
+
+    .book-tile:focus-visible {
+        outline: 2px solid var(--color-primary-500);
+        outline-offset: 2px;
+    }
+
+    /* Cover Image */
+    .book-tile__cover {
+        width: 60px;
+        height: 90px;
+        flex-shrink: 0;
+        border-radius: var(--radius-sm);
+        background-color: var(--color-gray-200);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .book-tile__cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Content Area */
+    .book-tile__content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-width: 0; /* Enables truncation */
+    }
+
+    .book-tile__title {
+        font-size: 1rem;
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-900);
+        margin-bottom: var(--space-1);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .book-tile__author {
+        font-size: 0.875rem;
+        color: var(--color-gray-500);
+        margin-bottom: var(--space-2);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Metadata / Progress */
+    .book-tile__meta {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        font-size: 0.75rem;
+        color: var(--color-gray-500);
+    }
+
+    /* Progress Bar */
+    .progress-bar {
+        height: 4px;
+        background-color: var(--color-gray-200);
+        border-radius: var(--radius-full);
+        width: 100%;
+        overflow: hidden;
+        margin-top: var(--space-1);
+    }
+
+    .progress-bar__fill {
+        height: 100%;
+        background-color: var(--color-success);
+        border-radius: var(--radius-full);
+        transition: width 0.3s ease;
+    }
+
+    /* Variant: Compact */
+    .book-tile--compact {
+        padding: var(--space-2);
+        border: none;
+        background: transparent;
+    }
+    .book-tile--compact .book-tile__cover {
+        width: 40px;
+        height: 60px;
+    }
+
+    /* State: Loading Skeleton */
+    .book-tile--loading {
+        pointer-events: none;
+    }
+    .skeleton {
+        background: linear-gradient(90deg, var(--color-gray-100) 25%, var(--color-gray-200) 50%, var(--color-gray-100) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: var(--radius-sm);
+    }
+    @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    /* --- 2. BookGridCard --- */
+    .book-card {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: 160px; /* Constraint for grid */
+        text-decoration: none;
+        color: inherit;
+        group: book-card;
+    }
+
+    .book-card:focus-visible {
+        outline: 2px solid var(--color-primary-500);
+        border-radius: var(--radius-md);
+    }
+
+    .book-card__cover-wrapper {
+        position: relative;
+        aspect-ratio: 2/3;
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        margin-bottom: var(--space-2);
+    }
+
+    .book-card:hover .book-card__cover-wrapper {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .book-card__cover {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        background-color: var(--color-gray-200);
+    }
+
+    .book-card__details {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .book-card__title {
+        font-size: 0.9375rem; /* 15px */
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-900);
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        margin-bottom: 2px;
+    }
+
+    .book-card__author {
+        font-size: 0.8125rem; /* 13px */
+        color: var(--color-gray-500);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Variant: With Progress Overlay */
+    .book-card__progress-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.6);
+        padding: 4px 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .book-card__progress-text {
+        color: var(--color-white);
+        font-size: 10px;
+        font-weight: var(--font-weight-medium);
+    }
+
+    .book-card__mini-bar {
+        flex: 1;
+        height: 3px;
+        background: rgba(255,255,255,0.3);
+        border-radius: 2px;
+    }
+    .book-card__mini-bar-fill {
+        height: 100%;
+        background: var(--color-success);
+        border-radius: 2px;
+    }
+
+    /* --- 3. GoalProgressCard --- */
+    .goal-card {
+        background: var(--color-white);
+        border-radius: var(--radius-lg);
+        padding: var(--space-4);
+        border: 1px solid var(--color-gray-200);
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .goal-card__chart {
+        position: relative;
+        width: 64px;
+        height: 64px;
+        flex-shrink: 0;
+    }
+
+    /* CSS-only Circular Progress using conic-gradient */
+    .circular-progress {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: conic-gradient(var(--color-primary-500) var(--progress), var(--color-primary-100) 0deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .circular-progress::after {
+        content: "";
+        width: 80%; /* Thickness control */
+        height: 80%;
+        background: var(--color-white);
+        border-radius: 50%;
+    }
+
+    .goal-card__icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: var(--color-primary-600);
+        z-index: 1;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .goal-card__content {
+        flex: 1;
+    }
+
+    .goal-card__label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-gray-500);
+        font-weight: var(--font-weight-semibold);
+        margin-bottom: var(--space-1);
+    }
+
+    .goal-card__value {
+        font-size: 1.125rem;
+        font-weight: var(--font-weight-bold);
+        color: var(--color-gray-900);
+    }
+
+    .goal-card__target {
+        font-size: 0.875rem;
+        color: var(--color-gray-500);
+        font-weight: var(--font-weight-regular);
+    }
+
+    /* --- 4. SocialSignInButton --- */
+    .social-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-3);
+        width: 100%;
+        padding: var(--space-3) var(--space-6);
+        border-radius: var(--radius-lg);
+        font-family: var(--font-family-primary);
+        font-size: 1rem;
+        font-weight: var(--font-weight-medium);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        border: 1px solid transparent;
+        min-height: 52px; /* Touch target */
+    }
+
+    .social-btn:focus-visible {
+        outline: 2px solid var(--color-primary-500);
+        outline-offset: 2px;
+    }
+
+    .social-btn--google {
+        background-color: var(--color-white);
+        color: var(--color-gray-700);
+        border-color: var(--color-gray-300);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .social-btn--google:hover {
+        background-color: var(--color-gray-50);
+        border-color: var(--color-gray-400);
+    }
+
+    .social-btn--apple {
+        background-color: var(--color-gray-900);
+        color: var(--color-white);
+    }
+
+    .social-btn--apple:hover {
+        background-color: #000000;
+        box-shadow: var(--shadow-md);
+    }
+
+    .social-btn__icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* --- 5. DailyTaskTile --- */
+    .task-tile {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        padding: var(--space-3) var(--space-4);
+        background: var(--color-white);
+        border-bottom: 1px solid var(--color-gray-100);
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+    }
+
+    .task-tile:hover {
+        background-color: var(--color-gray-50);
+    }
+
+    /* Custom Checkbox */
+    .task-checkbox {
+        width: 24px;
+        height: 24px;
+        border: 2px solid var(--color-gray-300);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+    }
+
+    .task-tile--completed .task-checkbox {
+        background-color: var(--color-success);
+        border-color: var(--color-success);
+    }
+
+    .task-checkbox svg {
+        color: var(--color-white);
+        width: 16px;
+        height: 16px;
+        opacity: 0;
+        transform: scale(0.5);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .task-tile--completed .task-checkbox svg {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    .task-tile__text {
+        font-size: 1rem;
+        color: var(--color-gray-900);
+        transition: color 0.2s ease;
+    }
+
+    .task-tile--completed .task-tile__text {
+        color: var(--color-gray-400);
+        text-decoration: line-through;
+    }
+
+    .task-tile__streak {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.75rem;
+        color: var(--color-warning);
+        font-weight: var(--font-weight-bold);
+    }
+
+    /* --- 6. FilterChipGroup --- */
+    .chip-group {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: var(--space-2);
+        padding: 4px; /* Space for focus rings */
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
+    }
+    
+    .chip-group::-webkit-scrollbar {
+        display: none; /* Chrome/Safari */
+    }
+
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px;
+        border-radius: var(--radius-full);
+        font-size: 0.875rem;
+        font-weight: var(--font-weight-medium);
+        color: var(--color-gray-600);
+        background-color: var(--color-gray-100);
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .chip:hover {
+        background-color: var(--color-gray-200);
+    }
+
+    .chip:focus-visible {
+        outline: 2px solid var(--color-primary-500);
+        outline-offset: 2px;
+    }
+
+    .chip[aria-pressed="true"],
+    .chip--active {
+        background-color: var(--color-primary-50);
+        color: var(--color-primary-700);
+        border-color: var(--color-primary-200);
+    }
+
+    /* --- 7. RecommendationCard --- */
+    .rec-card {
+        background: var(--color-white);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        border: 1px solid var(--color-gray-200);
+        display: flex;
+        flex-direction: column;
+        max-width: 320px;
+    }
+
+    .rec-card__body {
+        padding: var(--space-4);
+        display: flex;
+        gap: var(--space-4);
+    }
+
+    .rec-card__cover {
+        width: 80px;
+        height: 120px;
+        border-radius: var(--radius-sm);
+        object-fit: cover;
+        box-shadow: var(--shadow-sm);
+        flex-shrink: 0;
+    }
+
+    .rec-card__info {
+        flex: 1;
+    }
+
+    .rec-card__reason {
+        font-size: 0.75rem;
+        color: var(--color-primary-600);
+        font-weight: var(--font-weight-semibold);
+        text-transform: uppercase;
+        margin-bottom: var(--space-1);
+    }
+
+    .rec-card__title {
+        font-family: var(--font-family-secondary);
+        font-size: 1.125rem;
+        font-weight: var(--font-weight-bold);
+        color: var(--color-gray-900);
+        line-height: 1.3;
+        margin-bottom: var(--space-1);
+    }
+
+    .rec-card__author {
+        font-size: 0.875rem;
+        color: var(--color-gray-500);
+    }
+
+    .rec-card__actions {
+        border-top: 1px solid var(--color-gray-100);
+        padding: var(--space-2) var(--space-4);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--color-gray-50);
+    }
+
+    .rec-feedback {
+        display: flex;
+        gap: var(--space-2);
+    }
+
+    .icon-btn {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: var(--radius-full);
+        color: var(--color-gray-400);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .icon-btn:hover {
+        background-color: var(--color-gray-200);
+        color: var(--color-gray-600);
+    }
+
+    .icon-btn--active-up { color: var(--color-success); }
+    .icon-btn--active-down { color: var(--color-error); }
+
+    .rec-save-btn {
+        font-size: 0.875rem;
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-primary-600);
+        background: none;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .rec-save-btn:hover {
+        text-decoration: underline;
+    }
+
+</style>
+</head>
+<body>
+
+<div class="showcase-container">
+    <h1>Molecular Components</h1>
+    <p>Reusable combinations of atoms forming functional UI units.</p>
+
+    <!-- 1. BookListTile -->
+    <h3>1. BookListTile</h3>
+    <div class="component-grid">
+        <div class="component-wrapper">
+            <span class="variant-label">Library View (With Progress)</span>
+            
+            <a href="#" class="book-tile">
+                <div class="book-tile__cover">
+                    <img src="https://placehold.co/60x90/e2e8f0/64748b?text=Cover" alt="Cover of The Martian">
+                </div>
+                <div class="book-tile__content">
+                    <h4 class="book-tile__title">The Martian</h4>
+                    <span class="book-tile__author">Andy Weir</span>
+                    <div class="book-tile__meta">
+                        <span>Page 142 of 369</span>
+                        <span>•</span>
+                        <span>38%</span>
+                    </div>
+                    <div class="progress-bar" role="progressbar" aria-valuenow="38" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar__fill" style="width: 38%;"></div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="component-wrapper">
+            <span class="variant-label">Search Result</span>
+            
+            <a href="#" class="book-tile">
+                <div class="book-tile__cover">
+                    <img src="https://placehold.co/60x90/e2e8f0/64748b?text=Cover" alt="Cover of Project Hail Mary">
+                </div>
+                <div class="book-tile__content">
+                    <h4 class="book-tile__title">Project Hail Mary</h4>
+                    <span class="book-tile__author">Andy Weir</span>
+                    <div class="book-tile__meta">
+                        <span>Sci-Fi</span>
+                        <span>•</span>
+                        <span>2021</span>
+                    </div>
+                </div>
+                <!-- Action slot -->
+                <div style="align-self: center;">
+                    <button class="icon-btn" aria-label="Add to Library">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    </button>
+                </div>
+            </a>
+        </div>
+
+        <div class="component-wrapper">
+            <span class="variant-label">Loading Skeleton</span>
+            
+            <div class="book-tile book-tile--loading">
+                <div class="book-tile__cover skeleton"></div>
+                <div class="book-tile__content">
+                    <div class="skeleton" style="height: 1rem; width: 80%; margin-bottom: 8px;"></div>
+                    <div class="skeleton" style="height: 0.875rem; width: 50%; margin-bottom: 12px;"></div>
+                    <div class="skeleton" style="height: 4px; width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. BookGridCard -->
+    <h3>2. BookGridCard</h3>
+    <div class="component-grid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
+        <div class="component-wrapper">
+            <span class="variant-label">Default</span>
+            <a href="#" class="book-card">
+                <div class="book-card__cover-wrapper">
+                    <img class="book-card__cover" src="https://placehold.co/200x300/e2e8f0/64748b?text=Dune" alt="Dune Book Cover">
+                </div>
+                <div class="book-card__details">
+                    <span class="book-card__title">Dune</span>
+                    <span class="book-card__author">Frank Herbert</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="component-wrapper">
+            <span class="variant-label">With Progress Overlay</span>
+            <a href="#" class="book-card">
+                <div class="book-card__cover-wrapper">
+                    <img class="book-card__cover" src="https://placehold.co/200x300/e2e8f0/64748b?text=1984" alt="1984 Book Cover">
+                    <div class="book-card__progress-overlay">
+                        <span class="book-card__progress-text">65%</span>
+                        <div class="book-card__mini-bar">
+                            <div class="book-card__mini-bar-fill" style="width: 65%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="book-card__details">
+                    <span class="book-card__title">1984</span>
+                    <span class="book-card__author">George Orwell</span>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- 3. GoalProgressCard -->
+    <h3>3. GoalProgressCard</h3>
+    <div class="component-grid">
+        <div class="component-wrapper">
+            <span class="variant-label">Weekly Goal (In Progress)</span>
+            <div class="goal-card">
+                <div class="goal-card__chart">
+                    <div class="circular-progress" style="--progress: 270deg;">
+                        <!-- 75% = 270deg -->
+                        <div class="goal-card__icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="goal-card__content">
+                    <div class="goal-card__label">Weekly Goal</div>
+                    <div class="goal-card__value">150 Pages</div>
+                    <div class="goal-card__target">of 200 pages</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="component-wrapper">
+            <span class="variant-label">Daily Goal (Completed)</span>
+            <div class="goal-card">
+                <div class="goal-card__chart">
+                    <!-- 100% = 360deg -->
+                    <div class="circular-progress" style="--progress: 360deg; --color-primary-500: var(--color-success);">
+                        <div class="goal-card__icon" style="color: var(--color-success);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="goal-card__content">
+                    <div class="goal-card__label">Daily Goal</div>
+                    <div class="goal-card__value" style="color: var(--color-success);">30 Mins</div>
+                    <div class="goal-card__target">Goal Met!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. SocialSignInButton -->
+    <h3>4. SocialSignInButton</h3>
+    <div class="component-grid">
+        <div class="component-wrapper" style="display: flex; flex-direction: column; gap: 16px;">
+            <span class="variant-label">Google</span>
+            <button class="social-btn social-btn--google" type="button">
+                <svg class="social-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Sign in with Google
+            </button>
+
+            <span class="variant-label">Apple</span>
+            <button class="social-btn social-btn--apple" type="button">
+                <svg class="social-btn__icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24.02-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.74 1.18 0 2.21-1.23 3.69-.65.29.14.54.29.76.44-1.72.95-1.41 3.75.29 4.71-.34 1.35-1.12 3.54-2.21 5.31l-.22.36-.2.32c-.37.56-.71 1.09-1.14 1.73zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.16 2.39-2.11 4.21-3.74 4.25z"/>
+                </svg>
+                Sign in with Apple
+            </button>
+        </div>
+    </div>
+
+    <!-- 5. DailyTaskTile -->
+    <h3>5. DailyTaskTile</h3>
+    <div class="component-grid">
+        <div class="component-wrapper">
+            <span class="variant-label">Incomplete</span>
+            <div class="task-tile" role="checkbox" aria-checked="false" tabindex="0">
+                <div class="task-checkbox">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <span class="task-tile__text">Read for 20 minutes</span>
+                <div class="task-tile__streak">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a5.5 5.5 0 11-11 0c0 .5.2 1 .5 1.5z"></path></svg>
+                    3
+                </div>
+            </div>
+        </div>
+
+        <div class="component-wrapper">
+            <span class="variant-label">Completed</span>
+            <div class="task-tile task-tile--completed" role="checkbox" aria-checked="true" tabindex="0">
+                <div class="task-checkbox">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <span class="task-tile__text">Read 5 pages</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. FilterChipGroup -->
+    <h3>6. FilterChipGroup</h3>
+    <div class="component-grid">
+        <div class="component-wrapper">
+            <span class="variant-label">Scrollable Row</span>
+            <div class="chip-group" role="radiogroup" aria-label="Library Shelves">
+                <button class="chip chip--active" role="radio" aria-checked="true">All</button>
+                <button class="chip" role="radio" aria-checked="false">Currently Reading</button>
+                <button class="chip" role="radio" aria-checked="false">Want to Read</button>
+                <button class="chip" role="radio" aria-checked="false">Read</button>
+                <button class="chip" role="radio" aria-checked="false">DNF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. RecommendationCard -->
+    <h3>7. RecommendationCard</h3>
+    <div class="component-grid">
+        <div class="component-wrapper">
+            <span class="variant-label">Default</span>
+            <div class="rec-card">
+                <div class="rec-card__body">
+                    <img class="rec-card__cover" src="https://placehold.co/80x120/e2e8f0/64748b?text=Thinking" alt="Thinking, Fast and Slow Cover">
+                    <div class="rec-card__info">
+                        <div class="rec-card__reason">Because you read "Nudge"</div>
+                        <h4 class="rec-card__title">Thinking, Fast and Slow</h4>
+                        <span class="rec-card__author">Daniel Kahneman</span>
+                    </div>
+                </div>
+                <div class="rec-card__actions">
+                    <div class="rec-feedback">
+                        <button class="icon-btn" aria-label="Thumbs Down">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>
+                        </button>
+                        <button class="icon-btn" aria-label="Thumbs Up">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                        </button>
+                    </div>
+                    <button class="rec-save-btn">Save to Library</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

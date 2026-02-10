@@ -1,0 +1,276 @@
+
+{
+  "visual_foundation": {
+    "typography": {
+      "font_families": {
+        "primary": "Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+        "secondary": "Merriweather, Georgia, serif",
+        "monospace": "JetBrains Mono, monospace"
+      },
+      "font_scale": {
+        "h1": {
+          "size": "32px",
+          "weight": "700",
+          "line_height": "1.2",
+          "letter_spacing": "-0.02em",
+          "usage": "Screen Titles, Hero Stats"
+        },
+        "h2": {
+          "size": "24px",
+          "weight": "600",
+          "line_height": "1.3",
+          "letter_spacing": "-0.01em",
+          "usage": "Section Headers, Card Titles"
+        },
+        "h3": {
+          "size": "20px",
+          "weight": "600",
+          "line_height": "1.4",
+          "letter_spacing": "0",
+          "usage": "Subsection Headers, Modal Titles"
+        },
+        "h4": {
+          "size": "18px",
+          "weight": "500",
+          "line_height": "1.4",
+          "letter_spacing": "0",
+          "usage": "Book Titles in Lists, Component Headers"
+        },
+        "body": {
+          "size": "16px",
+          "weight": "400",
+          "line_height": "1.6",
+          "letter_spacing": "0",
+          "usage": "Primary Content, Form Inputs"
+        },
+        "caption": {
+          "size": "12px",
+          "weight": "500",
+          "line_height": "1.4",
+          "letter_spacing": "0.02em",
+          "usage": "Metadata, Labels, Axis Labels"
+        }
+      },
+      "responsive_scaling": "Fluid scaling using Flutter textScaleFactor. On Tablet/Desktop breakpoints (>600px), base body size increases to 18px, and headers scale up by 1.2x ratio."
+    },
+    "color_palette": {
+      "primary": {
+        "50": "#EEF2FF",
+        "100": "#E0E7FF",
+        "200": "#C7D2FE",
+        "300": "#A5B4FC",
+        "400": "#818CF8",
+        "500": "#6366F1",
+        "600": "#4F46E5",
+        "700": "#4338CA",
+        "800": "#3730A3",
+        "900": "#312E81"
+      },
+      "secondary": {
+        "50": "#FFF1F2",
+        "500": "#F43F5E",
+        "900": "#881337"
+      },
+      "neutrals": {
+        "white": "#FFFFFF",
+        "gray_50": "#F8FAFC",
+        "gray_100": "#F1F5F9",
+        "gray_500": "#64748B",
+        "gray_900": "#0F172A",
+        "black": "#020617"
+      },
+      "semantic": {
+        "success": "#10B981",
+        "warning": "#F59E0B",
+        "error": "#EF4444",
+        "info": "#3B82F6"
+      }
+    },
+    "spacing_system": {
+      "scale": [
+        "4px",
+        "8px",
+        "12px",
+        "16px",
+        "24px",
+        "32px",
+        "48px",
+        "64px"
+      ],
+      "grid_system": "Mobile: 4 columns, 16px margins, 16px gutters. Tablet: 8 columns, 32px margins, 24px gutters. Desktop: 12 columns, max-width 1140px.",
+      "container_widths": {
+        "mobile": "100%",
+        "tablet": "600px",
+        "desktop": "1140px"
+      },
+      "responsive_spacing": "Base spacing unit (1rem/16px) remains constant, but layout containers increase padding from 16px (Mobile) to 32px (Tablet) to 64px (Desktop)."
+    }
+  },
+  "component_specifications": {
+    "buttons": {
+      "primary": {
+        "default_state": {
+          "background": "#4F46E5",
+          "text": "#FFFFFF",
+          "padding": "16px 24px",
+          "border_radius": "12px"
+        },
+        "hover_state": {
+          "background": "#4338CA",
+          "text": "#FFFFFF",
+          "elevation": "0px 4px 12px rgba(79, 70, 229, 0.3)"
+        },
+        "active_state": {
+          "background": "#3730A3",
+          "transform": "scale(0.98)"
+        },
+        "disabled_state": {
+          "background": "#E2E8F0",
+          "text": "#94A3B8",
+          "cursor": "not-allowed"
+        },
+        "focus_state": {
+          "outline": "3px solid #A5B4FC",
+          "outline_offset": "2px"
+        }
+      },
+      "secondary": {
+        "default_state": {
+          "background": "transparent",
+          "border": "2px solid #4F46E5",
+          "text": "#4F46E5",
+          "padding": "14px 22px"
+        },
+        "hover_state": {
+          "background": "#EEF2FF"
+        },
+        "active_state": {
+          "background": "#E0E7FF"
+        },
+        "disabled_state": {
+          "border": "2px solid #E2E8F0",
+          "text": "#94A3B8"
+        }
+      },
+      "accessibility": "Minimum touch target 48x48px. ARIA labels required for icon-only buttons. Text contrast ratio > 4.5:1."
+    },
+    "form_inputs": {
+      "text_input": {
+        "default_state": {
+          "border": "1px solid #CBD5E1",
+          "padding": "14px 16px",
+          "background": "#FFFFFF",
+          "border_radius": "8px",
+          "text": "#0F172A"
+        },
+        "focus_state": {
+          "border": "2px solid #4F46E5",
+          "box_shadow": "0 0 0 4px #E0E7FF"
+        },
+        "error_state": {
+          "border": "2px solid #EF4444",
+          "icon": "alert-circle"
+        },
+        "disabled_state": {
+          "background": "#F1F5F9",
+          "cursor": "not-allowed",
+          "text": "#94A3B8"
+        },
+        "accessibility": "Visible labels are mandatory. Error messages linked via aria-describedby. Placeholder text must meet 4.5:1 contrast."
+      }
+    },
+    "navigation": {
+      "header": {
+        "desktop_layout": "Top bar with logo left, navigation links center, user profile/actions right.",
+        "mobile_layout": "SliverAppBar with collapsing title. Hamburger menu or Bottom Navigation Bar for primary sections.",
+        "active_states": "Bottom Nav: Icon filled + Label colored Primary-600. Rail: Background pill indicator Primary-100.",
+        "accessibility": "Skip-to-content link. Logical tab order. Current page indicated via aria-current='page'."
+      }
+    },
+    "data_display": {
+      "cards": {
+        "default_card": {
+          "padding": "16px",
+          "border_radius": "12px",
+          "shadow": "0px 1px 3px rgba(0,0,0,0.1)",
+          "background": "#FFFFFF"
+        },
+        "hover_state": {
+          "elevation": "0px 4px 6px -1px rgba(0,0,0,0.1)",
+          "transform": "translateY(-2px)"
+        },
+        "content_structure": "Vertical stack: Cover Image (2:3 ratio) -> Title (H4) -> Author (Body Medium) -> Progress Bar -> Action Row."
+      }
+    },
+    "feedback": {
+      "alerts": {
+        "success": {
+          "background": "#D1FAE5",
+          "icon": "check-circle",
+          "text": "#064E3B",
+          "border_left": "4px solid #10B981"
+        },
+        "error": {
+          "background": "#FEE2E2",
+          "icon": "alert-circle",
+          "text": "#7F1D1D",
+          "border_left": "4px solid #EF4444"
+        },
+        "accessibility": "Role='alert'. Aria-live='polite' for success, 'assertive' for errors. Close button must be accessible."
+      }
+    }
+  },
+  "interaction_patterns": {
+    "micro_interactions": [
+      {
+        "pattern_name": "Button Press Feedback",
+        "trigger": "User clicks/taps button",
+        "animation": "Scale down to 0.96 for 100ms",
+        "accessibility": "Disable scaling if prefers-reduced-motion is true; maintain color change."
+      },
+      {
+        "pattern_name": "Goal Completion Celebration",
+        "trigger": "Progress bar reaches 100%",
+        "animation": "Confetti particle explosion + Haptic success feedback",
+        "accessibility": "Respects reduced motion; Haptics optional."
+      }
+    ],
+    "loading_states": [
+      {
+        "pattern_name": "Content Loading",
+        "visual": "Shimmer/Skeleton effect matching the shape of the content (e.g., book cover rectangle, text lines)",
+        "duration": "1.5s infinite pulse",
+        "accessibility": "Container marked aria-busy='true'. Screen reader announces 'Loading library content'."
+      }
+    ]
+  },
+  "implementation_guidelines": {
+    "css_architecture": {
+      "custom_properties": {
+        "--color-primary-500": "#6366F1",
+        "--color-primary-600": "#4F46E5",
+        "--spacing-md": "16px",
+        "--font-size-body": "16px",
+        "--radius-lg": "12px"
+      },
+      "naming_conventions": "Flutter Widgets: PascalCase (e.g., PrimaryButton). Design Tokens: kebab-case (e.g., color-primary-500).",
+      "component_organization": "Atomic structure: atoms/ (buttons, inputs), molecules/ (cards, list tiles), organisms/ (sections, headers), templates/ (screens).",
+      "utility_classes": "Use Flutter Theme extensions for consistent spacing and typography application."
+    },
+    "responsive_strategy": {
+      "breakpoints": {
+        "mobile": "0px - 599px",
+        "tablet": "600px - 1239px",
+        "desktop": "1240px+"
+      },
+      "approach": "Mobile-first. Layouts use Flex/Column for mobile and switch to Grid/Row for tablet/desktop.",
+      "component_adaptations": "Bottom Navigation Bar transforms to Navigation Rail on Tablet. Lists transform to Grids (2 col -> 4 col)."
+    },
+    "accessibility_implementation": {
+      "focus_management": "Visible focus rings (3px solid #A5B4FC) for keyboard/controller navigation. Focus trapping in Modals.",
+      "color_contrast": "All text/background pairs tested to meet 4.5:1 (AA). Large text (18pt+) meets 3:1.",
+      "screen_reader_support": "Semantics widgets in Flutter. Images require 'semanticLabel'. Interactive elements must have 'label' describing action.",
+      "keyboard_navigation": "Logical tab order top-left to bottom-right. Enter/Space to activate. Esc to close modals."
+    }
+  }
+}

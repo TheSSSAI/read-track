@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Screen - ReadTrack</title>
+  <style>
+    /* 
+      DESIGN SYSTEM TOKENS 
+      Based on provided Design System JSON
+    */
+    :root {
+      /* Color Palette */
+      --primary-50: #EEF2FF;
+      --primary-100: #E0E7FF;
+      --primary-500: #6366F1;
+      --primary-600: #4F46E5;
+      --primary-700: #4338CA;
+      --primary-900: #312E81;
+      
+      --neutral-white: #FFFFFF;
+      --neutral-50: #F8FAFC;
+      --neutral-100: #F1F5F9;
+      --neutral-200: #E2E8F0;
+      --neutral-300: #CBD5E1;
+      --neutral-400: #94A3B8;
+      --neutral-500: #64748B;
+      --neutral-700: #334155;
+      --neutral-900: #0F172A;
+      --neutral-black: #020617;
+
+      --semantic-error: #EF4444;
+      --semantic-error-bg: #FEE2E2;
+
+      /* Typography Scale */
+      --font-family-primary: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      
+      --h1-size: 32px;
+      --h1-weight: 700;
+      --h1-line-height: 1.2;
+      
+      --body-size: 16px;
+      --body-weight: 400;
+      --body-line-height: 1.6;
+      
+      --caption-size: 12px;
+      --caption-weight: 500;
+
+      /* Spacing */
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      --spacing-2xl: 48px;
+
+      /* Components */
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --btn-height: 56px;
+      
+      /* Animation */
+      --transition-fast: 0.2s ease;
+    }
+
+    /* CSS Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family-primary);
+      background-color: var(--neutral-50);
+      color: var(--neutral-900);
+      line-height: var(--body-line-height);
+      -webkit-font-smoothing: antialiased;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Screen Layout */
+    .screen-container {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: center;
+      align-items: center;
+      padding: var(--spacing-md);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Background decoration for visual interest */
+    .screen-background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .bg-circle {
+      position: absolute;
+      border-radius: 50%;
+      background: var(--primary-100);
+      opacity: 0.5;
+      filter: blur(60px);
+    }
+
+    .bg-circle--1 {
+      top: -10%;
+      right: -10%;
+      width: 300px;
+      height: 300px;
+    }
+
+    .bg-circle--2 {
+      bottom: -10%;
+      left: -5%;
+      width: 250px;
+      height: 250px;
+      background: var(--primary-50);
+    }
+
+    /* Login Card Component */
+    .login-card {
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--spacing-xl);
+      /* Mobile: transparent/minimal, Desktop: Card style */
+    }
+
+    @media (min-width: 600px) {
+      .login-card {
+        background: var(--neutral-white);
+        padding: var(--spacing-2xl);
+        border-radius: 24px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+        border: 1px solid var(--neutral-100);
+      }
+    }
+
+    /* Hero Section */
+    .hero-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: var(--spacing-md);
+    }
+
+    .app-logo {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, var(--primary-600), var(--primary-900));
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .app-logo svg {
+      width: 40px;
+      height: 40px;
+      fill: var(--neutral-white);
+    }
+
+    .hero-title {
+      font-size: var(--h1-size);
+      font-weight: var(--h1-weight);
+      letter-spacing: -0.02em;
+      color: var(--neutral-900);
+    }
+
+    .hero-subtitle {
+      font-size: var(--body-size);
+      color: var(--neutral-500);
+      max-width: 280px;
+    }
+
+    /* Actions Section */
+    .actions-section {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+
+    .social-btn {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: var(--btn-height);
+      border-radius: var(--radius-lg);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all var(--transition-fast);
+      text-decoration: none;
+      gap: 12px;
+    }
+
+    .social-btn:focus-visible {
+      outline: 3px solid var(--primary-100);
+      outline-offset: 2px;
+    }
+
+    .social-btn:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    .social-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    /* Google Button */
+    .btn-google {
+      background-color: var(--neutral-white);
+      color: var(--neutral-700);
+      border: 1px solid var(--neutral-200);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-google:hover:not(:disabled) {
+      background-color: var(--neutral-50);
+      border-color: var(--neutral-300);
+    }
+
+    /* Apple Button */
+    .btn-apple {
+      background-color: var(--neutral-black);
+      color: var(--neutral-white);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-apple:hover:not(:disabled) {
+      background-color: #1a1a1a;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Platform visibility utility */
+    .platform-hidden {
+      display: none;
+    }
+
+    /* Loading State */
+    .spinner {
+      display: none; /* Hidden by default */
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: currentColor;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .btn-google .spinner {
+      border-color: rgba(0, 0, 0, 0.1);
+      border-top-color: var(--neutral-700);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Loading modifier for buttons */
+    .social-btn.is-loading .btn-text,
+    .social-btn.is-loading .btn-icon {
+      opacity: 0; /* Hide text/icon but keep layout size */
+    }
+    
+    .social-btn.is-loading .spinner {
+      display: block;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* Footer Section */
+    .legal-footer {
+      margin-top: auto;
+      text-align: center;
+      font-size: var(--caption-size);
+      color: var(--neutral-500);
+      line-height: 1.5;
+      padding: var(--spacing-lg) 0;
+    }
+
+    .legal-link {
+      color: var(--neutral-700);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color var(--transition-fast);
+    }
+
+    .legal-link:hover {
+      color: var(--primary-600);
+      text-decoration: underline;
+    }
+
+    /* Error Toast */
+    .error-toast {
+      position: absolute;
+      bottom: var(--spacing-xl);
+      left: 50%;
+      transform: translateX(-50%) translateY(150%); /* Start hidden below */
+      background-color: var(--semantic-error-bg);
+      color: var(--semantic-error);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 90%;
+      max-width: 400px;
+      z-index: 100;
+    }
+
+    .error-toast.is-visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .error-icon {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+    }
+
+    /* DEMO CONTROLS - For preview purposes only */
+    .demo-controls {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.8);
+      padding: 10px;
+      border-radius: 8px;
+      color: white;
+      font-size: 12px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .demo-controls button {
+      padding: 4px 8px;
+      cursor: pointer;
+      background: #444;
+      border: 1px solid #666;
+      color: white;
+      border-radius: 4px;
+    }
+
+    .demo-controls button:hover {
+      background: #555;
+    }
+
+    @media (min-width: 600px) {
+      .legal-footer {
+        margin-top: 0; /* Inside card on desktop, removed fixed bottom */
+        padding-top: var(--spacing-sm);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Demo Controls for Visualization -->
+  <div class="demo-controls">
+    <strong>Screen States</strong>
+    <button onclick="setPlatform('android')">Platform: Android</button>
+    <button onclick="setPlatform('ios')">Platform: iOS</button>
+    <button onclick="toggleLoading()">Toggle Loading</button>
+    <button onclick="showError()">Trigger Error</button>
+  </div>
+
+  <div class="screen-background">
+    <div class="bg-circle bg-circle--1"></div>
+    <div class="bg-circle bg-circle--2"></div>
+  </div>
+
+  <div class="screen-container">
+    <main class="login-card">
+      
+      <!-- Hero Section -->
+      <section class="hero-section">
+        <div class="app-logo" aria-label="ReadTrack Logo">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM19.07 13.88L13 13V18C13 18.55 12.55 19 12 19C11.45 19 11 18.55 11 18V13H4.93C4.45 13 4.02 12.67 3.96 12.18C3.89 11.59 4.34 11 4.93 11H11V5C11 4.45 11.45 4 12 4C12.55 4 13 4.45 13 5V11H19.07C19.55 11 19.98 11.33 20.04 11.82C20.11 12.41 19.66 13 19.07 13.88Z" />
+          </svg>
+        </div>
+        <h1 class="hero-title">Welcome to ReadTrack</h1>
+        <p class="hero-subtitle">Track your reading journey, set goals, and build lasting habits.</p>
+      </section>
+
+      <!-- Actions Section -->
+      <section class="actions-section">
+        
+        <!-- Google Sign In -->
+        <button class="social-btn btn-google" id="btn-google" onclick="handleAuth('google')" aria-label="Sign in with Google">
+          <span class="btn-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+          </span>
+          <span class="btn-text">Sign in with Google</span>
+          <div class="spinner"></div>
+        </button>
+
+        <!-- Apple Sign In (Conditional) -->
+        <button class="social-btn btn-apple platform-hidden" id="btn-apple" onclick="handleAuth('apple')" aria-label="Sign in with Apple">
+          <span class="btn-icon">
+            <svg width="20" height="20" viewBox="0 0 384 512" fill="white" xmlns="http://www.w3.org/2000/svg">
+              <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 43.7-24.9 70.2 26.7.6 52-12.2 68.8-32.6z"/>
+            </svg>
+          </span>
+          <span class="btn-text">Sign in with Apple</span>
+          <div class="spinner"></div>
+        </button>
+
+      </section>
+
+      <!-- Legal Footer -->
+      <footer class="legal-footer">
+        <p>By continuing, you agree to our <a href="#" class="legal-link">Terms of Service</a> and <a href="#" class="legal-link">Privacy Policy</a>.</p>
+      </footer>
+
+    </main>
+
+    <!-- Error Toast Notification -->
+    <div class="error-toast" id="error-toast" role="alert" aria-live="assertive">
+      <svg class="error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <span id="error-message">Unable to connect. Please check your internet connection.</span>
+    </div>
+
+  </div>
+
+  <script>
+    /* 
+      Interactive Demo Script 
+      Simulates state changes and platform detection 
+    */
+
+    const googleBtn = document.getElementById('btn-google');
+    const appleBtn = document.getElementById('btn-apple');
+    const errorToast = document.getElementById('error-toast');
+    const errorMessage = document.getElementById('error-message');
+
+    // Default Platform State: Android (Google Only)
+    // In a real app, this would be determined by the build context
+    let currentPlatform = 'android'; 
+
+    function setPlatform(platform) {
+      currentPlatform = platform;
+      if (platform === 'ios') {
+        appleBtn.classList.remove('platform-hidden');
+      } else {
+        appleBtn.classList.add('platform-hidden');
+      }
+      console.log(`Platform switched to: ${platform}`);
+    }
+
+    function toggleLoading() {
+      const isGoogleLoading = googleBtn.classList.contains('is-loading');
+      
+      if (isGoogleLoading) {
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
+    }
+
+    function setLoading(isLoading, provider = 'google') {
+      const btn = provider === 'apple' ? appleBtn : googleBtn;
+      const otherBtn = provider === 'apple' ? googleBtn : appleBtn;
+
+      if (isLoading) {
+        btn.classList.add('is-loading');
+        btn.disabled = true;
+        otherBtn.disabled = true; // Disable interaction during load
+      } else {
+        btn.classList.remove('is-loading');
+        btn.disabled = false;
+        otherBtn.disabled = false;
+      }
+    }
+
+    function showError(message = 'Login failed. Please check your connection.') {
+      // Ensure loading is off
+      setLoading(false);
+      
+      // Update text
+      errorMessage.textContent = message;
+      
+      // Show toast
+      errorToast.classList.add('is-visible');
+      
+      // Auto hide after 4 seconds
+      setTimeout(() => {
+        errorToast.classList.remove('is-visible');
+      }, 4000);
+    }
+
+    function handleAuth(provider) {
+      console.log(`Auth requested for: ${provider}`);
+      
+      // Reset any errors
+      errorToast.classList.remove('is-visible');
+      
+      // Start Loading State
+      setLoading(true, provider);
+
+      // Simulate Network Request
+      setTimeout(() => {
+        // Randomly succeed or fail for demo purposes
+        const success = Math.random() > 0.3;
+        
+        if (success) {
+          setLoading(false, provider);
+          alert(`Successfully authenticated with ${provider}! Redirecting to dashboard...`);
+        } else {
+          showError(`Could not authenticate with ${provider}. Please try again.`);
+        }
+      }, 2000);
+    }
+
+    // Initialize default state
+    setPlatform('android');
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vocabulary Practice - ReadTrack</title>
+  <style>
+    /* 
+      DESIGN SYSTEM TOKENS 
+      Based on input specifications
+    */
+    :root {
+      /* Colors - Primary (Indigo) */
+      --primary-50: #EEF2FF;
+      --primary-100: #E0E7FF;
+      --primary-200: #C7D2FE;
+      --primary-500: #6366F1;
+      --primary-600: #4F46E5;
+      --primary-700: #4338CA;
+      --primary-900: #312E81;
+
+      /* Colors - Neutrals */
+      --surface: #FFFFFF;
+      --background: #F8FAFC;
+      --text-primary: #0F172A;
+      --text-secondary: #64748B;
+      --border-color: #E2E8F0;
+      --divider: #CBD5E1;
+
+      /* Colors - Semantic */
+      --success: #10B981;
+      --success-bg: #D1FAE5;
+      --error: #EF4444;
+      --error-bg: #FEE2E2;
+      --warning: #F59E0B;
+
+      /* Typography */
+      --font-family-primary: 'Inter', system-ui, sans-serif;
+      --font-family-serif: 'Merriweather', Georgia, serif;
+
+      /* Spacing */
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      --spacing-xxl: 48px;
+
+      /* Radius */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+
+      /* Shadows */
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      
+      /* Transitions */
+      --transition-fast: 200ms ease;
+      --transition-medium: 300ms ease;
+    }
+
+    /* CSS Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family-primary);
+      background-color: var(--background);
+      color: var(--text-primary);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* 
+      SCREEN LAYOUT STRUCTURE 
+      Simulating a mobile app view centered on desktop
+    */
+    .screen-container {
+      width: 100%;
+      height: 100%;
+      max-width: 600px; /* Tablet/Desktop constraint */
+      background-color: var(--surface);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px var(--border-color);
+    }
+
+    @media (min-width: 601px) {
+      .screen-container {
+        height: 90vh;
+        max-height: 900px;
+        border-radius: 24px;
+        box-shadow: var(--shadow-lg);
+      }
+    }
+
+    /* HEADER COMPONENT */
+    .game-header {
+      padding: var(--spacing-lg) var(--spacing-md) var(--spacing-sm);
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border-color);
+      z-index: 10;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: var(--spacing-sm);
+      cursor: pointer;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background var(--transition-fast);
+    }
+
+    .close-btn:hover {
+      background-color: var(--primary-50);
+      color: var(--primary-600);
+    }
+
+    .header-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background-color: var(--primary-100);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background-color: var(--primary-500);
+      width: 0%;
+      transition: width var(--transition-medium);
+    }
+
+    /* MAIN CONTENT AREA */
+    .game-content {
+      flex: 1;
+      padding: var(--spacing-lg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    /* 
+      STATE: INTRO (Mode Selection) 
+    */
+    .mode-selection {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-lg);
+      width: 100%;
+    }
+
+    .mode-card {
+      background: var(--surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      text-align: left;
+    }
+
+    .mode-card:hover {
+      border-color: var(--primary-400);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .mode-card:focus-visible {
+      outline: 3px solid var(--primary-200);
+    }
+
+    .mode-icon {
+      width: 40px;
+      height: 40px;
+      background-color: var(--primary-50);
+      color: var(--primary-600);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .mode-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .mode-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    /* 
+      STATE: PLAYING FLASHCARD 
+    */
+    .flashcard-scene {
+      width: 100%;
+      max-width: 400px;
+      aspect-ratio: 3/4;
+      perspective: 1000px;
+      cursor: pointer;
+    }
+
+    .flashcard {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+    }
+
+    .flashcard.is-flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      background-color: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-xl);
+      text-align: center;
+    }
+
+    .card-front {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--primary-50) 100%);
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+      background-color: var(--surface);
+      justify-content: flex-start;
+      padding-top: var(--spacing-xxl);
+    }
+
+    .word-text {
+      font-family: var(--font-family-serif);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .pronunciation {
+      font-family: var(--font-family-primary);
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+
+    .card-hint {
+      position: absolute;
+      bottom: var(--spacing-lg);
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.7;
+    }
+
+    .definition-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--primary-600);
+      margin-bottom: var(--spacing-xs);
+      letter-spacing: 0.05em;
+    }
+
+    .definition-text {
+      font-size: 18px;
+      line-height: 1.5;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .example-box {
+      background-color: var(--background);
+      padding: var(--spacing-md);
+      border-radius: var(--radius-md);
+      border-left: 3px solid var(--primary-300);
+      text-align: left;
+      width: 100%;
+    }
+
+    .example-text {
+      font-style: italic;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    /* 
+      STATE: PLAYING QUIZ 
+    */
+    .quiz-container {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-xl);
+    }
+
+    .quiz-question {
+      text-align: center;
+    }
+
+    .question-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .question-word {
+      font-family: var(--font-family-serif);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .quiz-options {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--spacing-md);
+    }
+
+    @media (min-width: 600px) {
+      .quiz-options {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .quiz-option-btn {
+      background: var(--surface);
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-md);
+      text-align: left;
+      font-size: 14px;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      position: relative;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+    }
+
+    .quiz-option-btn:hover:not(:disabled) {
+      border-color: var(--primary-300);
+      background-color: var(--primary-50);
+    }
+
+    .quiz-option-btn.correct {
+      border-color: var(--success);
+      background-color: var(--success-bg);
+      color: var(--primary-900);
+    }
+
+    .quiz-option-btn.wrong {
+      border-color: var(--error);
+      background-color: var(--error-bg);
+      opacity: 0.7;
+    }
+
+    .feedback-icon {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+    }
+
+    /* 
+      STATE: RESULTS 
+    */
+    .results-container {
+      text-align: center;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--spacing-lg);
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .score-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: conic-gradient(var(--primary-500) 0% 80%, var(--primary-100) 80% 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .score-circle::after {
+      content: '';
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background: var(--surface);
+      border-radius: 50%;
+    }
+
+    .score-text {
+      position: relative;
+      z-index: 1;
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--primary-700);
+    }
+
+    .score-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: -10px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--spacing-md);
+      width: 100%;
+    }
+
+    .stat-card {
+      background: var(--background);
+      padding: var(--spacing-md);
+      border-radius: var(--radius-md);
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* CONTROL BAR */
+    .game-controls {
+      padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg);
+      background: var(--surface);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: var(--spacing-md);
+      justify-content: center;
+    }
+
+    .btn {
+      height: 56px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+      flex: 1;
+      border: none;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-600);
+      color: var(--surface);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-700);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      border: 2px solid var(--primary-600);
+      color: var(--primary-600);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--primary-50);
+    }
+
+    .btn-text {
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .btn-text:hover {
+      color: var(--text-primary);
+    }
+
+    /* UTILITIES */
+    .hidden {
+      display: none !important;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Accessibility Focus Styles */
+    :focus-visible {
+      outline: 3px solid var(--primary-200);
+      outline-offset: 2px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="screen-container">
+    <!-- Header: Always visible during game -->
+    <header class="game-header">
+      <div class="header-top">
+        <button class="close-btn" aria-label="Exit Game" onclick="resetGame()">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+        <span class="header-title" id="screen-title">Vocabulary Practice</span>
+        <div style="width: 24px;"></div> <!-- Spacer for balance -->
+      </div>
+      <div class="progress-track hidden" id="progress-bar-container" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+        <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="game-content">
+      
+      <!-- VIEW: Mode Selection (Intro) -->
+      <div id="intro-view" class="mode-selection">
+        <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">Choose a Mode</h1>
+        <p style="color: var(--text-secondary); margin-bottom: 24px;">Select how you want to review your words today.</p>
+        
+        <button class="mode-card" onclick="startGame('flashcards')">
+          <div class="mode-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+          </div>
+          <div class="mode-title">Flashcards</div>
+          <div class="mode-desc">Flip cards to reveal definitions. Best for memorization.</div>
+        </button>
+
+        <button class="mode-card" onclick="startGame('quiz')">
+          <div class="mode-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+            </svg>
+          </div>
+          <div class="mode-title">Multiple Choice Quiz</div>
+          <div class="mode-desc">Test your knowledge against distractor definitions.</div>
+        </button>
+      </div>
+
+      <!-- VIEW: Flashcards -->
+      <div id="flashcard-view" class="flashcard-scene hidden" onclick="flipCard()">
+        <div class="flashcard" id="active-card">
+          <div class="card-face card-front">
+            <div class="word-text">Ephemeral</div>
+            <div class="pronunciation">/əˈfem(ə)rəl/</div>
+            <div class="card-hint">Tap to flip</div>
+          </div>
+          <div class="card-face card-back">
+            <div class="definition-label">Definition</div>
+            <div class="definition-text">Lasting for a very short time.</div>
+            <div class="example-box">
+              <div class="example-text">"Fashions are ephemeral, changing with every season."</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: Quiz -->
+      <div id="quiz-view" class="quiz-container hidden">
+        <div class="quiz-question">
+          <div class="question-label">Select the correct definition for:</div>
+          <div class="question-word">Serendipity</div>
+        </div>
+        
+        <div class="quiz-options" id="quiz-options">
+          <!-- Options injected via JS -->
+          <button class="quiz-option-btn">
+            The occurrence of events by chance in a happy or beneficial way.
+          </button>
+          <button class="quiz-option-btn">
+            A feeling of pensive sadness, typically with no obvious cause.
+          </button>
+          <button class="quiz-option-btn">
+            The quality of being logical and consistent.
+          </button>
+          <button class="quiz-option-btn">
+            A state of being pleasantly lost in one's thoughts.
+          </button>
+        </div>
+      </div>
+
+      <!-- VIEW: Results -->
+      <div id="results-view" class="results-container hidden">
+        <div class="score-circle">
+          <span class="score-text">80%</span>
+        </div>
+        <h2 style="margin-top: -16px;">Session Complete!</h2>
+        
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" style="color: var(--success);">8</div>
+            <div class="stat-label">Correct</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color: var(--error);">2</div>
+            <div class="stat-label">Review</div>
+          </div>
+        </div>
+
+        <p style="color: var(--text-secondary); font-size: 14px; max-width: 300px;">
+          Great job! You've reinforced your vocabulary. Words marked for review will appear sooner in your next session.
+        </p>
+      </div>
+
+    </main>
+
+    <!-- Footer: Controls (Context Sensitive) -->
+    <footer class="game-controls hidden" id="game-controls">
+      <!-- Flashcard Controls -->
+      <div id="flashcard-controls" class="hidden" style="width: 100%; display: flex; gap: 16px;">
+        <button class="btn btn-secondary" onclick="rateWord('review')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+            <path d="M1 4v6h6"></path>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+          Review Again
+        </button>
+        <button class="btn btn-primary" onclick="rateWord('got_it')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          Got It
+        </button>
+      </div>
+
+      <!-- Results Controls -->
+      <div id="result-controls" class="hidden" style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
+        <button class="btn btn-primary" onclick="resetGame()">Start New Session</button>
+        <button class="btn btn-text">Return to Library</button>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // MOCK DATA
+    const words = [
+      { word: "Ephemeral", definition: "Lasting for a very short time." },
+      { word: "Serendipity", definition: "The occurrence of events by chance in a happy or beneficial way." },
+      { word: "Melancholy", definition: "A feeling of pensive sadness, typically with no obvious cause." },
+      { word: "Luminous", definition: "Full of or shedding light; bright or shining." },
+      { word: "Petrichor", definition: "A pleasant smell that frequently accompanies the first rain after a long period of warm, dry weather." }
+    ];
+
+    let currentMode = '';
+    let currentIndex = 0;
+    let progress = 0;
+    let score = 0;
+
+    // ELEMENT REFS
+    const els = {
+      intro: document.getElementById('intro-view'),
+      flashcardView: document.getElementById('flashcard-view'),
+      quizView: document.getElementById('quiz-view'),
+      resultsView: document.getElementById('results-view'),
+      controls: document.getElementById('game-controls'),
+      flashcardControls: document.getElementById('flashcard-controls'),
+      resultControls: document.getElementById('result-controls'),
+      progressBar: document.getElementById('progress-bar-container'),
+      progressFill: document.getElementById('progress-fill'),
+      title: document.getElementById('screen-title'),
+      card: document.getElementById('active-card')
+    };
+
+    function resetGame() {
+      // Reset State
+      currentIndex = 0;
+      progress = 0;
+      score = 0;
+      
+      // Reset UI
+      hideAllViews();
+      els.intro.classList.remove('hidden');
+      els.progressBar.classList.add('hidden');
+      els.controls.classList.add('hidden');
+      els.title.innerText = "Vocabulary Practice";
+      
+      // Reset Card
+      if(els.card.classList.contains('is-flipped')) {
+        els.card.classList.remove('is-flipped');
+      }
+    }
+
+    function hideAllViews() {
+      els.intro.classList.add('hidden');
+      els.flashcardView.classList.add('hidden');
+      els.quizView.classList.add('hidden');
+      els.resultsView.classList.add('hidden');
+      els.flashcardControls.classList.add('hidden');
+      els.resultControls.classList.add('hidden');
+    }
+
+    function startGame(mode) {
+      currentMode = mode;
+      hideAllViews();
+      els.progressBar.classList.remove('hidden');
+      els.controls.classList.remove('hidden');
+      updateProgress();
+
+      if (mode === 'flashcards') {
+        els.flashcardView.classList.remove('hidden');
+        els.flashcardControls.classList.remove('hidden');
+        els.title.innerText = "Flashcards";
+        loadFlashcard(currentIndex);
+      } else {
+        els.quizView.classList.remove('hidden');
+        els.title.innerText = "Quiz";
+        loadQuiz(currentIndex);
+      }
+    }
+
+    function updateProgress() {
+      const pct = ((currentIndex) / words.length) * 100;
+      els.progressFill.style.width = `${pct}%`;
+    }
+
+    /* FLASHCARD LOGIC */
+    function loadFlashcard(index) {
+      // Reset flip
+      els.card.classList.remove('is-flipped');
+      
+      // Simulate data binding delay for smoother transition
+      setTimeout(() => {
+        // In a real app, bind data here
+        const w = words[index % words.length]; // Cycle for demo
+        document.querySelector('.word-text').innerText = w.word;
+        document.querySelector('.definition-text').innerText = w.definition;
+      }, 200);
+    }
+
+    function flipCard() {
+      els.card.classList.toggle('is-flipped');
+    }
+
+    function rateWord(rating) {
+      if (currentIndex < words.length - 1) {
+        currentIndex++;
+        updateProgress();
+        loadFlashcard(currentIndex);
+      } else {
+        showResults();
+      }
+    }
+
+    /* QUIZ LOGIC */
+    function loadQuiz(index) {
+      const container = document.getElementById('quiz-options');
+      container.innerHTML = ''; // Clear previous
+      
+      const w = words[index % words.length];
+      document.querySelector('.question-word').innerText = w.word;
+
+      // Mock options generation
+      const options = [
+        { text: w.definition, correct: true },
+        { text: "A random incorrect definition here.", correct: false },
+        { text: "Another plausible but wrong answer.", correct: false },
+        { text: "Totally unrelated meaning.", correct: false }
+      ].sort(() => Math.random() - 0.5); // Shuffle
+
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'quiz-option-btn';
+        btn.innerText = opt.text;
+        btn.onclick = (e) => handleQuizAnswer(e.currentTarget, opt.correct);
+        container.appendChild(btn);
+      });
+    }
+
+    function handleQuizAnswer(btn, isCorrect) {
+      // Disable all buttons
+      const allBtns = document.querySelectorAll('.quiz-option-btn');
+      allBtns.forEach(b => b.disabled = true);
+
+      // Show Feedback
+      if (isCorrect) {
+        btn.classList.add('correct');
+        btn.innerHTML += '<span class="feedback-icon">✓</span>';
+        score++;
+      } else {
+        btn.classList.add('wrong');
+        btn.innerHTML += '<span class="feedback-icon">✕</span>';
+        // Highlight correct one
+        // (Simplified for demo)
+      }
+
+      // Advance
+      setTimeout(() => {
+        if (currentIndex < words.length - 1) {
+          currentIndex++;
+          updateProgress();
+          loadQuiz(currentIndex);
+        } else {
+          showResults();
+        }
+      }, 1500);
+    }
+
+    /* RESULTS */
+    function showResults() {
+      hideAllViews();
+      els.progressFill.style.width = '100%';
+      els.resultsView.classList.remove('hidden');
+      els.controls.classList.remove('hidden');
+      els.resultControls.classList.remove('hidden');
+      els.title.innerText = "Summary";
+    }
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Onboarding Carousel - ReadTrack</title>
+  <style>
+    /* 
+      DESIGN SYSTEM TOKENS 
+      Based on provided Design System.md
+    */
+    :root {
+      /* Typography */
+      --font-family-primary: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-family-mono: 'JetBrains Mono', monospace;
+      
+      /* Colors: Primary (Indigo) */
+      --color-primary-50: #EEF2FF;
+      --color-primary-100: #E0E7FF;
+      --color-primary-200: #C7D2FE;
+      --color-primary-500: #6366F1;
+      --color-primary-600: #4F46E5;
+      --color-primary-700: #4338CA;
+      --color-primary-800: #3730A3;
+      
+      /* Colors: Secondary (Rose) */
+      --color-secondary-500: #F43F5E;
+      
+      /* Colors: Neutrals */
+      --color-white: #FFFFFF;
+      --color-gray-50: #F8FAFC;
+      --color-gray-100: #F1F5F9;
+      --color-gray-200: #E2E8F0;
+      --color-gray-300: #CBD5E1;
+      --color-gray-400: #94A3B8;
+      --color-gray-500: #64748B;
+      --color-gray-700: #334155;
+      --color-gray-900: #0F172A;
+      
+      /* Colors: Semantic */
+      --color-success: #10B981;
+      --color-error: #EF4444;
+      
+      /* Spacing */
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      --spacing-2xl: 48px;
+      
+      /* Radius */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      
+      /* Shadow */
+      --shadow-sm: 0px 1px 3px rgba(0,0,0,0.1);
+      --shadow-md: 0px 4px 6px -1px rgba(0,0,0,0.1);
+      --shadow-lg: 0px 10px 15px -3px rgba(0,0,0,0.1);
+      --shadow-primary: 0px 4px 12px rgba(79, 70, 229, 0.3);
+      
+      /* Transitions */
+      --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* CSS Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family-primary);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+      line-height: 1.6;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* Layout Containers */
+    .screen-wrapper {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: var(--color-white);
+      overflow: hidden;
+    }
+
+    @media (min-width: 768px) {
+      .screen-wrapper {
+        width: 100%;
+        max-width: 600px;
+        height: auto;
+        min-height: 650px;
+        max-height: 90vh;
+        border-radius: 24px;
+        box-shadow: var(--shadow-lg);
+      }
+      
+      body {
+        padding: var(--spacing-lg);
+      }
+    }
+
+    /* Component: Progress Stepper */
+    .stepper {
+      display: flex;
+      justify-content: center;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-lg) var(--spacing-lg) 0;
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .stepper-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--color-gray-200);
+      transition: var(--transition-base);
+    }
+
+    .stepper-dot.active {
+      width: 32px;
+      border-radius: 4px;
+      background-color: var(--color-primary-600);
+    }
+
+    .stepper-dot.completed {
+      background-color: var(--color-primary-600);
+    }
+
+    /* Carousel Content Area */
+    .carousel-container {
+      flex: 1;
+      display: flex;
+      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 300%; /* 3 Steps */
+    }
+
+    .step-slide {
+      width: 33.333%;
+      padding: 0 var(--spacing-lg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      /* opacity: 0;
+      transition: opacity 0.3s ease; */
+    }
+
+    .step-slide.active {
+      opacity: 1;
+    }
+
+    /* Typography Utilities */
+    .heading-1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-gray-900);
+      text-align: center;
+      margin-bottom: var(--spacing-sm);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .body-text {
+      font-size: 16px;
+      color: var(--color-gray-500);
+      text-align: center;
+      margin-bottom: var(--spacing-xl);
+      max-width: 400px;
+    }
+
+    /* Component: Goal Input (Step 1) */
+    .goal-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+      margin-bottom: var(--spacing-2xl);
+    }
+
+    .goal-input-field {
+      width: 120px;
+      height: 80px;
+      background: var(--color-gray-50);
+      border: 2px solid var(--color-gray-200);
+      border-radius: var(--radius-md);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--color-primary-600);
+      text-align: center;
+      transition: var(--transition-base);
+    }
+
+    .goal-input-field:focus {
+      outline: none;
+      border-color: var(--color-primary-600);
+      box-shadow: 0 0 0 4px var(--color-primary-100);
+      background: var(--color-white);
+    }
+
+    .goal-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-xs);
+    }
+
+    .goal-stepper-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-gray-300);
+      background: var(--color-white);
+      color: var(--color-gray-700);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .goal-stepper-btn:hover {
+      background: var(--color-gray-50);
+      border-color: var(--color-gray-400);
+    }
+
+    .goal-stepper-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Component: Book Search (Step 2) */
+    .search-container {
+      width: 100%;
+      position: relative;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 16px 16px 16px 48px;
+      border: 1px solid var(--color-gray-300);
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      background: var(--color-white);
+      transition: var(--transition-base);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--color-primary-600);
+      box-shadow: 0 0 0 4px var(--color-primary-100);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-gray-400);
+    }
+
+    .book-results {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+      max-height: 280px;
+      overflow-y: auto;
+      padding-right: 4px; /* Space for scrollbar */
+    }
+
+    .book-card {
+      display: flex;
+      padding: var(--spacing-md);
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-md);
+      gap: var(--spacing-md);
+      cursor: pointer;
+      transition: var(--transition-base);
+    }
+
+    .book-card:hover, .book-card.selected {
+      border-color: var(--color-primary-500);
+      background-color: var(--color-primary-50);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .book-cover {
+      width: 48px;
+      height: 72px;
+      background-color: var(--color-gray-300);
+      border-radius: 4px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .book-info h4 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-gray-900);
+      margin-bottom: 4px;
+    }
+
+    .book-info p {
+      font-size: 14px;
+      color: var(--color-gray-500);
+    }
+
+    /* Component: Feature Tour (Step 3) */
+    .tour-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--spacing-lg);
+      width: 100%;
+      text-align: left;
+    }
+
+    .tour-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-md);
+      padding: var(--spacing-md);
+      background: var(--color-gray-50);
+      border-radius: var(--radius-md);
+    }
+
+    .tour-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--color-primary-100);
+      color: var(--color-primary-600);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .tour-content h4 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--color-gray-900);
+    }
+
+    .tour-content p {
+      font-size: 14px;
+      color: var(--color-gray-500);
+      line-height: 1.4;
+    }
+
+    /* Action Footer */
+    .footer {
+      padding: var(--spacing-lg);
+      background: var(--color-white);
+      border-top: 1px solid var(--color-gray-100);
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+      z-index: 10;
+    }
+
+    .btn-primary {
+      width: 100%;
+      height: 56px;
+      background: var(--color-primary-600);
+      color: var(--color-white);
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition-base);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-primary:hover {
+      background: var(--color-primary-700);
+      box-shadow: var(--shadow-primary);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+      background: var(--color-primary-800);
+    }
+
+    .btn-secondary {
+      width: 100%;
+      height: 48px;
+      background: transparent;
+      color: var(--color-gray-500);
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition-base);
+    }
+
+    .btn-secondary:hover {
+      color: var(--color-primary-600);
+      background: var(--color-gray-50);
+    }
+
+    /* Animation Utilities */
+    .fade-in-up {
+      animation: fadeInUp 0.5s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Screen Reader Only */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="screen-wrapper" role="main" aria-label="Onboarding Wizard">
+    
+    <!-- Progress Stepper -->
+    <div class="stepper" role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="3">
+      <div class="stepper-dot active" id="dot-1"></div>
+      <div class="stepper-dot" id="dot-2"></div>
+      <div class="stepper-dot" id="dot-3"></div>
+    </div>
+
+    <!-- Carousel Body -->
+    <div class="carousel-container" id="carousel">
+      
+      <!-- STEP 1: SET GOAL -->
+      <section class="step-slide active" id="step-1" aria-labelledby="step-1-title">
+        <div class="fade-in-up" style="animation-delay: 0.1s;">
+          <h1 id="step-1-title" class="heading-1">Set your yearly reading goal</h1>
+          <p class="body-text">Challenge yourself! How many books do you want to read this year?</p>
+          
+          <div class="goal-input-wrapper">
+            <input 
+              type="number" 
+              class="goal-input-field" 
+              value="12" 
+              min="1" 
+              max="999"
+              aria-label="Number of books"
+              id="goalInput"
+            >
+            <div class="goal-buttons">
+              <button class="goal-stepper-btn" onclick="adjustGoal(1)" aria-label="Increase goal">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                </svg>
+              </button>
+              <button class="goal-stepper-btn" onclick="adjustGoal(-1)" aria-label="Decrease goal">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <p class="body-text" style="font-size: 14px; margin-top: -32px;">books per year</p>
+        </div>
+      </section>
+
+      <!-- STEP 2: ADD BOOK -->
+      <section class="step-slide" id="step-2" aria-labelledby="step-2-title" aria-hidden="true">
+        <h1 id="step-2-title" class="heading-1">What are you reading right now?</h1>
+        <p class="body-text">Add your current read to start tracking your progress immediately.</p>
+
+        <div class="search-container">
+          <svg class="search-icon" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" class="search-input" placeholder="Search by title, author, or ISBN" aria-label="Search for a book">
+        </div>
+
+        <div class="book-results" role="listbox" aria-label="Search results">
+          <!-- Mock Result 1 -->
+          <div class="book-card selected" role="option" aria-selected="true" tabindex="0">
+            <img src="https://placehold.co/48x72/e2e8f0/94a3b8?text=Book" alt="Cover of Atomic Habits" class="book-cover">
+            <div class="book-info">
+              <h4>Atomic Habits</h4>
+              <p>James Clear</p>
+            </div>
+            <div style="margin-left: auto; color: var(--color-primary-600);">
+              <svg width="24" height="24" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Mock Result 2 -->
+          <div class="book-card" role="option" aria-selected="false" tabindex="0">
+            <img src="https://placehold.co/48x72/e2e8f0/94a3b8?text=Book" alt="Cover of Project Hail Mary" class="book-cover">
+            <div class="book-info">
+              <h4>Project Hail Mary</h4>
+              <p>Andy Weir</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 3: TOUR -->
+      <section class="step-slide" id="step-3" aria-labelledby="step-3-title" aria-hidden="true">
+        <h1 id="step-3-title" class="heading-1">You're all set!</h1>
+        <p class="body-text">Here's a quick look at what you can do with ReadTrack.</p>
+
+        <div class="tour-grid">
+          <div class="tour-item fade-in-up" style="animation-delay: 0.1s;">
+            <div class="tour-icon">
+              <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+            </div>
+            <div class="tour-content">
+              <h4>Track Progress</h4>
+              <p>Log your daily reading and see stats grow in real-time.</p>
+            </div>
+          </div>
+
+          <div class="tour-item fade-in-up" style="animation-delay: 0.2s;">
+            <div class="tour-icon">
+              <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+              </svg>
+            </div>
+            <div class="tour-content">
+              <h4>Build Your Library</h4>
+              <p>Organize books into shelves like 'Want to Read' and 'Finished'.</p>
+            </div>
+          </div>
+
+          <div class="tour-item fade-in-up" style="animation-delay: 0.3s;">
+            <div class="tour-icon">
+              <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+            </div>
+            <div class="tour-content">
+              <h4>Stay Motivated</h4>
+              <p>Maintain your reading streak and unlock achievements.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Footer Actions -->
+    <footer class="footer">
+      <button class="btn-primary" id="btn-next" onclick="nextStep()">
+        Next Step
+      </button>
+      <button class="btn-secondary" id="btn-skip" onclick="nextStep()">
+        Skip for now
+      </button>
+    </footer>
+
+  </div>
+
+  <script>
+    /*
+      Simple JS for Wizard Logic Demonstration
+      In a real app, this would be handled by a framework like React/Flutter state.
+    */
+    let currentStep = 1;
+    const totalSteps = 3;
+    const carousel = document.getElementById('carousel');
+    const dots = [
+      document.getElementById('dot-1'),
+      document.getElementById('dot-2'),
+      document.getElementById('dot-3')
+    ];
+    const nextBtn = document.getElementById('btn-next');
+    const skipBtn = document.getElementById('btn-skip');
+    const step1 = document.getElementById('step-1');
+    const step2 = document.getElementById('step-2');
+    const step3 = document.getElementById('step-3');
+
+    // Goal Input Logic
+    const goalInput = document.getElementById('goalInput');
+    function adjustGoal(amount) {
+      let val = parseInt(goalInput.value);
+      if (val + amount > 0) {
+        goalInput.value = val + amount;
+      }
+    }
+
+    function updateStepVisibility() {
+      // 1. Move Carousel
+      carousel.style.transform = `translateX(-${(currentStep - 1) * 33.333}%)`;
+
+      // 2. Update Stepper Dots
+      dots.forEach((dot, index) => {
+        if (index + 1 === currentStep) {
+          dot.className = 'stepper-dot active';
+        } else if (index + 1 < currentStep) {
+          dot.className = 'stepper-dot completed';
+        } else {
+          dot.className = 'stepper-dot';
+        }
+      });
+
+      // 3. Update Accessibility Attributes
+      const stepper = document.querySelector('.stepper');
+      stepper.setAttribute('aria-valuenow', currentStep);
+      
+      step1.setAttribute('aria-hidden', currentStep !== 1);
+      step2.setAttribute('aria-hidden', currentStep !== 2);
+      step3.setAttribute('aria-hidden', currentStep !== 3);
+
+      // 4. Update Button State
+      if (currentStep === 1) {
+        nextBtn.innerText = 'Set Goal';
+        skipBtn.style.visibility = 'visible';
+        skipBtn.innerText = 'Skip for now';
+      } else if (currentStep === 2) {
+        nextBtn.innerText = 'Add Book';
+        skipBtn.style.visibility = 'visible';
+        skipBtn.innerText = 'Skip adding book';
+      } else if (currentStep === 3) {
+        nextBtn.innerText = 'Get Started';
+        skipBtn.style.visibility = 'hidden';
+      }
+    }
+
+    function nextStep() {
+      if (currentStep < totalSteps) {
+        currentStep++;
+        updateStepVisibility();
+      } else {
+        // Final Step Action (Mock Navigation)
+        alert('Onboarding Complete! Navigating to Dashboard...');
+      }
+    }
+
+    // Initialize
+    updateStepVisibility();
+
+    // Select Book Logic (Mock)
+    const bookCards = document.querySelectorAll('.book-card');
+    bookCards.forEach(card => {
+      card.addEventListener('click', () => {
+        bookCards.forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        card.setAttribute('aria-selected', 'true');
+        // In real app, this would enable the 'Add Book' button
+      });
+    });
+
+  </script>
+</body>
+</html>

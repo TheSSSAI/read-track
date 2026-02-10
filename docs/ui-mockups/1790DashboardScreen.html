@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReadTrack Dashboard</title>
+  <style>
+    /* 
+      DESIGN SYSTEM TOKENS & RESET 
+    */
+    :root {
+      /* Colors: Indigo Primary */
+      --primary-50: #EEF2FF;
+      --primary-100: #E0E7FF;
+      --primary-200: #C7D2FE;
+      --primary-300: #A5B4FC;
+      --primary-400: #818CF8;
+      --primary-500: #6366F1;
+      --primary-600: #4F46E5;
+      --primary-700: #4338CA;
+      --primary-800: #3730A3;
+      --primary-900: #312E81;
+
+      /* Colors: Neutrals */
+      --white: #FFFFFF;
+      --gray-50: #F8FAFC;
+      --gray-100: #F1F5F9;
+      --gray-200: #E2E8F0;
+      --gray-300: #CBD5E1;
+      --gray-400: #94A3B8;
+      --gray-500: #64748B;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1E293B;
+      --gray-900: #0F172A;
+
+      /* Colors: Semantic */
+      --success: #10B981;
+      --success-bg: #D1FAE5;
+      --warning: #F59E0B;
+      --error: #EF4444;
+      
+      /* Colors: Premium */
+      --premium-gold: #F59E0B;
+      --premium-gradient: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+
+      /* Typography */
+      --font-primary: 'Inter', system-ui, -apple-system, sans-serif;
+      
+      /* Spacing */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --space-2xl: 48px;
+
+      /* Layout */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+      --max-width: 1140px;
+      --header-height: 64px;
+      --bottom-nav-height: 80px;
+
+      /* Shadows */
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-focus: 0 0 0 3px var(--primary-300);
+    }
+
+    /* Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--gray-50);
+      color: var(--gray-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: calc(var(--bottom-nav-height) + var(--space-xl)); /* Space for bottom nav */
+    }
+
+    /* Typography Classes */
+    .h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+    .h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; color: var(--gray-800); }
+    .h3 { font-size: 18px; font-weight: 600; color: var(--gray-900); }
+    .h4 { font-size: 16px; font-weight: 600; }
+    .body-sm { font-size: 14px; color: var(--gray-500); }
+    .body-md { font-size: 16px; color: var(--gray-600); }
+    .caption { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gray-500); }
+
+    /* Layout Utility */
+    .container {
+      width: 100%;
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 var(--space-md);
+    }
+
+    .section {
+      margin-bottom: var(--space-xl);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-md);
+    }
+
+    .link-action {
+      color: var(--primary-600);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .link-action:hover { text-decoration: underline; }
+
+    /* 
+      COMPONENTS 
+    */
+
+    /* Header */
+    .dashboard-header {
+      padding: var(--space-lg) 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-full);
+      background-color: var(--primary-100);
+      color: var(--primary-700);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+      border: 2px solid var(--white);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .greeting h1 { margin-bottom: 2px; }
+    .greeting p { color: var(--gray-500); font-size: 14px; }
+
+    .header-actions {
+      display: flex;
+      gap: var(--space-sm);
+    }
+
+    .icon-btn {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--gray-600);
+      transition: all 0.2s ease;
+    }
+    .icon-btn:hover { background: var(--gray-50); color: var(--primary-600); border-color: var(--primary-200); }
+    .icon-btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+    /* Carousel (Currently Reading) */
+    .carousel-container {
+      display: flex;
+      gap: var(--space-md);
+      overflow-x: auto;
+      padding-bottom: var(--space-md); /* Space for shadow */
+      margin: 0 calc(var(--space-md) * -1); /* Negative margin for full bleed */
+      padding-left: var(--space-md);
+      padding-right: var(--space-md);
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Hide Scrollbar */
+    .carousel-container::-webkit-scrollbar { display: none; }
+    .carousel-container { -ms-overflow-style: none; scrollbar-width: none; }
+
+    .book-card {
+      min-width: 280px;
+      max-width: 280px;
+      background: var(--white);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      box-shadow: var(--shadow-sm);
+      scroll-snap-align: center;
+      display: flex;
+      gap: var(--space-md);
+      border: 1px solid var(--gray-100);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+    }
+
+    .book-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .book-cover {
+      width: 80px;
+      height: 120px;
+      background-color: var(--gray-200);
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .book-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .progress-container {
+      margin-top: var(--space-sm);
+    }
+
+    .progress-bar-bg {
+      height: 6px;
+      width: 100%;
+      background-color: var(--gray-100);
+      border-radius: var(--radius-full);
+      margin-bottom: var(--space-xs);
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background-color: var(--success);
+      border-radius: var(--radius-full);
+      width: 0%; /* Set via inline style */
+      transition: width 0.5s ease-out;
+    }
+
+    /* Goals Section (Grid) */
+    .goals-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: var(--space-md);
+    }
+
+    .goal-card {
+      background: var(--white);
+      padding: var(--space-md);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-100);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-sm);
+    }
+
+    .goal-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--primary-50);
+      color: var(--primary-600);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .goal-stat {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--gray-900);
+    }
+    .goal-stat span {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-500);
+    }
+
+    /* Daily Tasks */
+    .task-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .task-item {
+      background: var(--white);
+      padding: var(--space-md);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      border: 1px solid var(--gray-200);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .task-item:hover { border-color: var(--primary-300); }
+
+    .checkbox {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--gray-300);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      transition: all 0.2s;
+    }
+
+    .task-item.completed .checkbox {
+      background-color: var(--primary-600);
+      border-color: var(--primary-600);
+    }
+
+    .task-item.completed .task-text {
+      text-decoration: line-through;
+      color: var(--gray-400);
+    }
+
+    .task-item.completed:hover {
+      opacity: 0.8;
+    }
+
+    /* Floating Action Button (FAB) */
+    .fab {
+      position: fixed;
+      bottom: calc(var(--bottom-nav-height) + 16px);
+      right: 16px;
+      width: 56px;
+      height: 56px;
+      background-color: var(--primary-600);
+      color: var(--white);
+      border-radius: var(--radius-full);
+      border: none;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 100;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .fab:hover { background-color: var(--primary-700); transform: scale(1.05); }
+    .fab:active { transform: scale(0.95); }
+    .fab svg { width: 24px; height: 24px; }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--bottom-nav-height);
+      background: var(--white);
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding-bottom: env(safe-area-inset-bottom);
+      z-index: 90;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--gray-400);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 8px;
+      border-radius: 8px;
+      transition: color 0.2s;
+    }
+
+    .nav-item.active { color: var(--primary-600); }
+    .nav-item svg { width: 24px; height: 24px; stroke-width: 2; }
+
+    /* Ad Banner (Free Tier) */
+    .ad-banner-container {
+      display: none; /* Hidden by default */
+      background: var(--gray-100);
+      border-top: 1px solid var(--gray-200);
+      padding: 10px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--gray-500);
+      height: 60px;
+      margin-top: var(--space-lg);
+    }
+    
+    /* Loading Skeleton State */
+    .skeleton {
+      background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius-sm);
+      color: transparent !important;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* State Modifiers */
+    body.is-loading .content-real { display: none; }
+    body.is-loading .content-skeleton { display: block; }
+    
+    body:not(.is-loading) .content-real { display: block; }
+    body:not(.is-loading) .content-skeleton { display: none; }
+
+    body.tier-free .ad-banner-container { display: flex; align-items: center; justify-content: center; }
+    body.tier-premium .ad-banner-container { display: none; }
+    
+    body.tier-premium .avatar::after {
+      content: '★';
+      position: absolute;
+      bottom: -4px;
+      right: -4px;
+      background: var(--premium-gradient);
+      color: white;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--white);
+    }
+    body.tier-premium .avatar { position: relative; }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-xl) var(--space-md);
+      background: var(--white);
+      border-radius: var(--radius-md);
+      border: 1px dashed var(--gray-300);
+    }
+    .empty-state h4 { color: var(--gray-700); margin-bottom: var(--space-xs); }
+    .empty-state p { color: var(--gray-500); font-size: 14px; margin-bottom: var(--space-md); }
+
+    /* RESPONSIVE */
+    @media (min-width: 600px) {
+      .container {
+        padding: 0 var(--space-xl);
+      }
+      
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: var(--space-xl);
+        align-items: start;
+      }
+
+      .carousel-container {
+        flex-wrap: wrap;
+        overflow: visible;
+        margin: 0;
+        padding: 0;
+      }
+      
+      .book-card {
+        max-width: 100%;
+        width: 100%;
+        flex: 1 1 calc(50% - var(--space-md));
+      }
+
+      /* Move nav to side or top - for this demo keeping bottom but adjusting width */
+      .bottom-nav {
+        max-width: 400px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: var(--radius-full) var(--radius-full) 0 0;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+        border: none;
+      }
+      
+      .fab {
+        right: calc(50% - 300px); /* Center relative to content */
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .dashboard-grid {
+        grid-template-columns: 3fr 1fr;
+      }
+      
+      .goals-grid {
+        grid-template-columns: 1fr; /* Stack goals vertically in sidebar */
+      }
+      
+      .fab {
+        position: absolute;
+        top: 100px;
+        right: 0;
+        bottom: auto;
+      }
+      
+      /* Desktop Layout Shifts */
+      .main-column { grid-column: 1 / 2; }
+      .side-column { grid-column: 2 / 3; }
+      
+      .dashboard-content {
+        position: relative;
+      }
+    }
+
+    /* Demo Controls */
+    .demo-controls {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+      z-index: 9999;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .demo-controls button {
+      padding: 4px 8px;
+      cursor: pointer;
+      background: #444;
+      border: 1px solid #666;
+      color: white;
+      border-radius: 4px;
+    }
+    .demo-controls button:hover { background: #666; }
+
+  </style>
+</head>
+<body class="tier-free"> <!-- Default State -->
+
+  <!-- DEMO CONTROLS (For visualization purposes) -->
+  <div class="demo-controls">
+    <strong>Demo State</strong>
+    <button onclick="toggleState('is-loading')">Toggle Loading</button>
+    <button onclick="toggleTier()">Toggle Premium/Free</button>
+    <button onclick="toggleEmpty()">Toggle Empty State</button>
+  </div>
+
+  <!-- MAIN APP CONTAINER -->
+  <div class="container">
+    
+    <!-- HEADER -->
+    <header class="dashboard-header">
+      <div class="user-profile">
+        <div class="avatar skeleton-target">JM</div>
+        <div class="greeting skeleton-target">
+          <h1 class="h2">Good Morning, John</h1>
+          <p class="body-sm">Ready to continue your streak?</p>
+        </div>
+      </div>
+      <div class="header-actions skeleton-target">
+        <button class="icon-btn" aria-label="Notifications">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+        </button>
+        <button class="icon-btn" aria-label="Settings">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="dashboard-content dashboard-grid">
+      
+      <!-- SKELETON LOADING STATE -->
+      <div class="content-skeleton">
+        <div class="section">
+          <div class="skeleton" style="height: 24px; width: 150px; margin-bottom: 16px;"></div>
+          <div class="carousel-container" style="overflow: hidden;">
+            <div class="skeleton" style="width: 280px; height: 160px; flex-shrink:0;"></div>
+            <div class="skeleton" style="width: 280px; height: 160px; flex-shrink:0;"></div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="skeleton" style="height: 24px; width: 100px; margin-bottom: 16px;"></div>
+          <div class="goals-grid">
+            <div class="skeleton" style="height: 100px; width: 100%;"></div>
+            <div class="skeleton" style="height: 100px; width: 100%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REAL CONTENT STATE -->
+      <div class="content-real">
+        
+        <!-- COLUMN 1: READING & TASKS -->
+        <div class="main-column">
+          
+          <!-- CURRENTLY READING -->
+          <section class="section" id="reading-section">
+            <div class="section-header">
+              <h2 class="h2">Currently Reading</h2>
+              <a href="#" class="link-action">View All</a>
+            </div>
+            
+            <div class="carousel-container" id="book-list">
+              <!-- Book 1 -->
+              <article class="book-card" onclick="alert('Navigating to Dune details...')">
+                <img src="https://placehold.co/80x120/4F46E5/FFFFFF?text=Dune" alt="Cover of Dune" class="book-cover">
+                <div class="book-info">
+                  <div>
+                    <h4 class="h4">Dune</h4>
+                    <p class="body-sm">Frank Herbert</p>
+                  </div>
+                  <div class="progress-container">
+                    <div class="progress-bar-bg">
+                      <div class="progress-bar-fill" style="width: 45%" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" aria-label="45% complete"></div>
+                    </div>
+                    <span class="caption">Page 188 of 412</span>
+                  </div>
+                </div>
+              </article>
+
+              <!-- Book 2 -->
+              <article class="book-card">
+                <img src="https://placehold.co/80x120/10B981/FFFFFF?text=Habits" alt="Cover of Atomic Habits" class="book-cover">
+                <div class="book-info">
+                  <div>
+                    <h4 class="h4">Atomic Habits</h4>
+                    <p class="body-sm">James Clear</p>
+                  </div>
+                  <div class="progress-container">
+                    <div class="progress-bar-bg">
+                      <div class="progress-bar-fill" style="width: 12%" role="progressbar" aria-valuenow="12" aria-valuemin="0" aria-valuemax="100" aria-label="12% complete"></div>
+                    </div>
+                    <span class="caption">Page 32 of 320</span>
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            <!-- Empty State for Reading (Hidden by default) -->
+            <div class="empty-state" id="reading-empty" style="display: none;">
+              <h4>Nothing here yet</h4>
+              <p>Start a new book to begin tracking your progress.</p>
+              <button class="link-action">Browse Library</button>
+            </div>
+          </section>
+
+          <!-- DAILY TASKS -->
+          <section class="section">
+            <div class="section-header">
+              <h2 class="h2">Today's Tasks</h2>
+            </div>
+            <ul class="task-list">
+              <li class="task-item" onclick="toggleTask(this)">
+                <div class="checkbox" role="checkbox" aria-checked="false"></div>
+                <span class="task-text body-md">Read for 20 minutes</span>
+              </li>
+              <li class="task-item completed" onclick="toggleTask(this)">
+                <div class="checkbox" role="checkbox" aria-checked="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span class="task-text body-md">Update vocabulary list</span>
+              </li>
+            </ul>
+          </section>
+        </div>
+
+        <!-- COLUMN 2: GOALS & STATS -->
+        <div class="side-column">
+          <section class="section">
+            <div class="section-header">
+              <h2 class="h2">Goals</h2>
+              <a href="#" class="link-action">Edit</a>
+            </div>
+            <div class="goals-grid">
+              <!-- Yearly Goal -->
+              <div class="goal-card">
+                <div style="display: flex; justify-content: space-between; width: 100%;">
+                  <div class="goal-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </div>
+                  <span class="caption" style="color: var(--primary-600)">On Track</span>
+                </div>
+                <div>
+                  <div class="goal-stat">12<span>/24</span></div>
+                  <p class="body-sm">Books this year</p>
+                </div>
+                <div class="progress-bar-bg" style="width: 100%; height: 4px;">
+                  <div class="progress-bar-fill" style="width: 50%"></div>
+                </div>
+              </div>
+
+              <!-- Streak Goal -->
+              <div class="goal-card">
+                <div class="goal-icon" style="background: var(--secondary-50); color: var(--secondary-500);">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
+                  </svg>
+                </div>
+                <div>
+                  <div class="goal-stat">5<span> days</span></div>
+                  <p class="body-sm">Current streak</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- AD BANNER (Free Tier Only) -->
+    <div class="ad-banner-container">
+      <p>Advertisement Space (AdMob Banner)</p>
+    </div>
+
+    <!-- LOG SESSION FAB -->
+    <button class="fab" aria-label="Log Reading Session" onclick="alert('Opening Log Session Modal...')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+    </button>
+
+    <!-- BOTTOM NAVIGATION -->
+    <nav class="bottom-nav" role="navigation">
+      <a href="#" class="nav-item active" aria-current="page">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+        Home
+      </a>
+      <a href="#" class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+        Library
+      </a>
+      <a href="#" class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
+        </svg>
+        Stats
+      </a>
+      <a href="#" class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        Settings
+      </a>
+    </nav>
+
+  </div>
+
+  <script>
+    // State Toggling Logic for Demo
+    function toggleState(className) {
+      document.body.classList.toggle(className);
+    }
+
+    function toggleTier() {
+      const body = document.body;
+      if (body.classList.contains('tier-free')) {
+        body.classList.replace('tier-free', 'tier-premium');
+      } else {
+        body.classList.replace('tier-premium', 'tier-free');
+      }
+    }
+
+    function toggleEmpty() {
+      const list = document.getElementById('book-list');
+      const empty = document.getElementById('reading-empty');
+      if (list.style.display === 'none') {
+        list.style.display = 'flex';
+        empty.style.display = 'none';
+      } else {
+        list.style.display = 'none';
+        empty.style.display = 'block';
+      }
+    }
+
+    // Task Item Logic
+    function toggleTask(element) {
+      element.classList.toggle('completed');
+      const checkbox = element.querySelector('.checkbox');
+      const isChecked = element.classList.contains('completed');
+      
+      checkbox.setAttribute('aria-checked', isChecked);
+      
+      if (isChecked) {
+        checkbox.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+          </svg>`;
+      } else {
+        checkbox.innerHTML = '';
+      }
+    }
+  </script>
+</body>
+</html>

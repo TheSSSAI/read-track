@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendar Heatmap Component</title>
+  <style>
+    /* -------------------------------------------------------------------------- */
+    /*                               DESIGN TOKENS                                */
+    /* -------------------------------------------------------------------------- */
+    :root {
+      /* Typography */
+      --font-family-primary: 'Inter', system-ui, -apple-system, sans-serif;
+      
+      /* Colors */
+      --color-surface: #FFFFFF;
+      --color-text-primary: #0F172A;
+      --color-text-secondary: #64748B;
+      --color-border: #E2E8F0;
+      --color-gray-50: #F8FAFC;
+      
+      /* Heatmap Intensity Scale (Indigo) */
+      --heatmap-level-0: #F1F5F9; /* gray-100 */
+      --heatmap-level-1: #C7D2FE; /* primary-200 */
+      --heatmap-level-2: #818CF8; /* primary-400 */
+      --heatmap-level-3: #4F46E5; /* primary-600 */
+      --heatmap-level-4: #312E81; /* primary-900 */
+      
+      /* Dimensions */
+      --cell-size: 12px;
+      --cell-gap: 4px;
+      --radius-card: 12px;
+      --radius-cell: 2px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                 RESET & BASE                               */
+    /* -------------------------------------------------------------------------- */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family-primary);
+      background-color: #F8FAFC;
+      color: var(--color-text-primary);
+      padding: 24px;
+      line-height: 1.5;
+    }
+
+    .showcase-wrapper {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .variant-section h2 {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-text-secondary);
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: 8px;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                        COMPONENT IMPLEMENTATION                            */
+    /* -------------------------------------------------------------------------- */
+    
+    .heatmap-card {
+      background-color: var(--color-surface);
+      border-radius: var(--radius-card);
+      border: 1px solid var(--color-border);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Header */
+    .heatmap-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .heatmap-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .heatmap-meta {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    /* Legend */
+    .heatmap-legend {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      font-weight: 500;
+    }
+
+    .legend-scale {
+      display: flex;
+      gap: 3px;
+    }
+
+    .legend-item {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+    }
+
+    /* Layout Wrapper */
+    .heatmap-body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .month-labels {
+      display: flex;
+      margin-bottom: 6px;
+      padding-left: 30px; /* Offset for day labels */
+      font-size: 11px;
+      color: var(--color-text-secondary);
+      font-weight: 500;
+    }
+
+    .month-label {
+      /* Roughly 4 weeks + gaps width */
+      width: calc((var(--cell-size) + var(--cell-gap)) * 4.34); 
+    }
+
+    .heatmap-grid-container {
+      display: flex;
+      gap: 8px;
+    }
+
+    .day-labels {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding-top: 1px;
+      /* Height calculation: 7 cells + 6 gaps */
+      height: calc((var(--cell-size) * 7) + (var(--cell-gap) * 6));
+      font-size: 10px;
+      color: var(--color-text-secondary);
+      line-height: 1;
+      font-weight: 500;
+    }
+
+    /* Scroll Wrapper for Grid */
+    .heatmap-scroll-area {
+      flex: 1;
+      overflow-x: auto;
+      padding-bottom: 8px; /* For scrollbar */
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-border) transparent;
+    }
+
+    .heatmap-scroll-area::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .heatmap-scroll-area::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .heatmap-scroll-area::-webkit-scrollbar-thumb {
+      background-color: var(--color-border);
+      border-radius: 4px;
+    }
+
+    /* Grid */
+    .heatmap-grid {
+      display: grid;
+      /* 7 rows */
+      grid-template-rows: repeat(7, var(--cell-size));
+      /* Auto columns flow */
+      grid-auto-flow: column;
+      gap: var(--cell-gap);
+      width: max-content;
+    }
+
+    /* Cells */
+    .heatmap-cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      border-radius: var(--radius-cell);
+      background-color: var(--heatmap-level-0);
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.1s ease, border-color 0.1s ease;
+      box-sizing: border-box;
+      border: 1px solid transparent;
+    }
+
+    .heatmap-cell:hover {
+      transform: scale(1.3);
+      z-index: 10;
+      border-color: rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .heatmap-cell:focus-visible {
+      outline: 2px solid var(--heatmap-level-3);
+      outline-offset: 1px;
+      z-index: 20;
+    }
+
+    /* Intensity Levels */
+    .level-0 { background-color: var(--heatmap-level-0); }
+    .level-1 { background-color: var(--heatmap-level-1); }
+    .level-2 { background-color: var(--heatmap-level-2); }
+    .level-3 { background-color: var(--heatmap-level-3); }
+    .level-4 { background-color: var(--heatmap-level-4); }
+
+    /* CSS Tooltip */
+    .heatmap-cell[data-tooltip]::before {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-8px);
+      background-color: #1E293B;
+      color: #FFFFFF;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.15s ease;
+      pointer-events: none;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
+    }
+
+    /* Tooltip Arrow */
+    .heatmap-cell[data-tooltip]::after {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(0px);
+      border-width: 4px;
+      border-style: solid;
+      border-color: #1E293B transparent transparent transparent;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.15s ease;
+      pointer-events: none;
+    }
+
+    .heatmap-cell:hover::before,
+    .heatmap-cell:hover::after,
+    .heatmap-cell:focus::before,
+    .heatmap-cell:focus::after {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Loading State */
+    .heatmap-grid.loading .heatmap-cell {
+      background-color: var(--color-gray-50);
+      animation: skeleton-pulse 1.5s infinite ease-in-out;
+    }
+
+    /* Stagger animations for loading effect */
+    .heatmap-grid.loading .heatmap-cell:nth-child(2n) { animation-delay: 0.1s; }
+    .heatmap-grid.loading .heatmap-cell:nth-child(3n) { animation-delay: 0.2s; }
+    .heatmap-grid.loading .heatmap-cell:nth-child(5n) { animation-delay: 0.3s; }
+
+    @keyframes skeleton-pulse {
+      0% { background-color: var(--color-gray-50); }
+      50% { background-color: var(--color-border); }
+      100% { background-color: var(--color-gray-50); }
+    }
+
+    /* Empty State */
+    .heatmap-empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      background-color: var(--color-gray-50);
+      border-radius: 8px;
+      text-align: center;
+      color: var(--color-text-secondary);
+    }
+
+    .empty-icon {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 12px;
+      color: #94A3B8;
+    }
+
+    .empty-text {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 600px) {
+      .heatmap-card {
+        padding: 16px;
+      }
+      .day-labels {
+        display: none; /* Hide labels on mobile to save space */
+      }
+      .month-labels {
+        padding-left: 0;
+      }
+      .heatmap-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .heatmap-meta {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="showcase-wrapper">
+    
+    <!-- VARIANT 1: Populated Heatmap (Default) -->
+    <div class="variant-section">
+      <h2>Variant 1: Populated (Last 12 Months)</h2>
+      <article class="heatmap-card" aria-label="Reading activity heatmap">
+        <header class="heatmap-header">
+          <h3 class="heatmap-title">Reading Activity</h3>
+          <div class="heatmap-meta">
+            <div class="heatmap-legend" aria-hidden="true">
+              <span>Less</span>
+              <div class="legend-scale">
+                <div class="legend-item level-0"></div>
+                <div class="legend-item level-1"></div>
+                <div class="legend-item level-2"></div>
+                <div class="legend-item level-3"></div>
+                <div class="legend-item level-4"></div>
+              </div>
+              <span>More</span>
+            </div>
+          </div>
+        </header>
+
+        <div class="heatmap-body">
+          <div class="month-labels" aria-hidden="true">
+            <div class="month-label">Jan</div>
+            <div class="month-label">Feb</div>
+            <div class="month-label">Mar</div>
+            <div class="month-label">Apr</div>
+            <div class="month-label">May</div>
+            <div class="month-label">Jun</div>
+            <div class="month-label">Jul</div>
+            <div class="month-label">Aug</div>
+            <div class="month-label">Sep</div>
+            <div class="month-label">Oct</div>
+            <div class="month-label">Nov</div>
+            <div class="month-label">Dec</div>
+          </div>
+
+          <div class="heatmap-grid-container">
+            <div class="day-labels" aria-hidden="true">
+              <span>Mon</span>
+              <span>Wed</span>
+              <span>Fri</span>
+            </div>
+
+            <div class="heatmap-scroll-area">
+              <div class="heatmap-grid" role="grid" aria-readonly="true">
+                <!-- Generating simplified grid cells for demo purposes. In production this would be looped. -->
+                <!-- Week 1 -->
+                <div class="heatmap-cell level-0" role="gridcell" data-tooltip="Jan 1: No reading" tabindex="0" aria-label="Jan 1, 0 pages"></div>
+                <div class="heatmap-cell level-1" role="gridcell" data-tooltip="Jan 2: 15 pages" tabindex="0" aria-label="Jan 2, 15 pages"></div>
+                <div class="heatmap-cell level-0" role="gridcell" data-tooltip="Jan 3: No reading" tabindex="0"></div>
+                <div class="heatmap-cell level-2" role="gridcell" data-tooltip="Jan 4: 45 pages" tabindex="0"></div>
+                <div class="heatmap-cell level-3" role="gridcell" data-tooltip="Jan 5: 80 pages" tabindex="0"></div>
+                <div class="heatmap-cell level-1" role="gridcell" data-tooltip="Jan 6: 20 pages" tabindex="0"></div>
+                <div class="heatmap-cell level-0" role="gridcell" data-tooltip="Jan 7: No reading" tabindex="0"></div>
+                <!-- Week 2 -->
+                <div class="heatmap-cell level-4" role="gridcell" data-tooltip="Jan 8: 120 pages" tabindex="0"></div>
+                <div class="heatmap-cell level-3" role="gridcell" data-tooltip="Jan 9: 90 pages" tabindex="0"></div>
+                <div class="heatmap-cell level-2" role="gridcell" data-tooltip="Jan 10: 50 pages" tabindex="0"></div>
+                <div class="heatmap-cell level-0" role="gridcell" data-tooltip="Jan 11: No reading" tabindex="0"></div>
+                <div class="heatmap-cell level-0" role="gridcell" data-tooltip="Jan 12: No reading" tabindex="0"></div>
+                <div class="heatmap-cell level-1" role="gridcell" data-tooltip="Jan 13: 10 pages" tabindex="0"></div>
+                <div class="heatmap-cell level-2" role="gridcell" data-tooltip="Jan 14: 40 pages" tabindex="0"></div>
+                <!-- Week 3 -->
+                <div class="heatmap-cell level-2" role="gridcell" tabindex="0"></div>
+                <div class="heatmap-cell level-1" role="gridcell" tabindex="0"></div>
+                <div class="heatmap-cell level-3" role="gridcell" tabindex="0"></div>
+                <div class="heatmap-cell level-4" role="gridcell" tabindex="0"></div>
+                <div class="heatmap-cell level-4" role="gridcell" tabindex="0"></div>
+                <div class="heatmap-cell level-2" role="gridcell" tabindex="0"></div>
+                <div class="heatmap-cell level-1" role="gridcell" tabindex="0"></div>
+                <!-- Week 4 -->
+                <div class="heatmap-cell level-0" role="gridcell" tabindex="0"></div>
+                <div class="heatmap-cell level-0" role="gridcell" tabindex="0"></div>
+                <div class="heatmap-cell level-1" role="gridcell" tabindex="0"></div>
+                <div class="heatmap-cell level-2" role="gridcell" tabindex="0"></div>
+                <div class="heatmap-cell level-0" role="gridcell" tabindex="0"></div>
+                <div class="heatmap-cell level-1" role="gridcell" tabindex="0"></div>
+                <div class="heatmap-cell level-2" role="gridcell" tabindex="0"></div>
+                <!-- Week 5 to 10 (Simplified Block) -->
+                <!-- Repeating generic pattern to simulate width -->
+                <div style="display:contents" class="simulation-pattern">
+                   <!-- Using a small script or just manually copying blocks to fill space visually -->
+                   <div class="heatmap-cell level-3"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-4"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-1"></div>
+                   <div class="heatmap-cell level-2"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-3"></div>
+                   <div class="heatmap-cell level-1"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-4"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-0"></div>
+                   <div class="heatmap-cell level-0"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-1"></div>
+                   <div class="heatmap-cell level-4"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-1"></div>
+                   <div class="heatmap-cell level-2"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-4"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-0"></div>
+                   <div class="heatmap-cell level-1"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-4"></div><div class="heatmap-cell level-2"></div>
+                   <div class="heatmap-cell level-3"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-3"></div>
+                   <div class="heatmap-cell level-2"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-4"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-1"></div>
+                   <div class="heatmap-cell level-0"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-4"></div>
+                   <div class="heatmap-cell level-1"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-3"></div>
+                   <div class="heatmap-cell level-2"></div><div class="heatmap-cell level-4"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-1"></div>
+                   <div class="heatmap-cell level-3"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-4"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-1"></div>
+                   <div class="heatmap-cell level-0"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-4"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-0"></div>
+                   <div class="heatmap-cell level-1"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-4"></div>
+                   <div class="heatmap-cell level-2"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-3"></div>
+                   <div class="heatmap-cell level-4"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-1"></div>
+                   <div class="heatmap-cell level-1"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-4"></div><div class="heatmap-cell level-2"></div>
+                   <div class="heatmap-cell level-3"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-0"></div>
+                   <div class="heatmap-cell level-2"></div><div class="heatmap-cell level-4"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-0"></div><div class="heatmap-cell level-1"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <!-- VARIANT 2: Loading State -->
+    <div class="variant-section">
+      <h2>Variant 2: Loading State</h2>
+      <article class="heatmap-card" aria-busy="true" aria-label="Loading heatmap">
+        <header class="heatmap-header">
+          <h3 class="heatmap-title">Reading Activity</h3>
+        </header>
+        <div class="heatmap-body">
+          <div class="heatmap-grid-container">
+            <div class="heatmap-scroll-area">
+              <div class="heatmap-grid loading">
+                <!-- Creating a block of skeleton cells -->
+                <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <!-- VARIANT 3: Empty State -->
+    <div class="variant-section">
+      <h2>Variant 3: Empty State</h2>
+      <article class="heatmap-card">
+        <header class="heatmap-header">
+          <h3 class="heatmap-title">Reading Activity</h3>
+        </header>
+        <div class="heatmap-body">
+          <div class="heatmap-empty-state">
+            <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <p class="empty-text">No reading activity recorded yet.</p>
+          </div>
+        </div>
+      </article>
+    </div>
+
+  </div>
+</body>
+</html>

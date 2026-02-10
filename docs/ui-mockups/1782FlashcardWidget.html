@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlashcardWidget - ReadTrack Design System</title>
+  <style>
+    /* -------------------------------------------------------------------------- */
+    /*                               DESIGN TOKENS                                */
+    /* -------------------------------------------------------------------------- */
+    :root {
+      /* Colors: Primary (Indigo) */
+      --color-primary-50: #EEF2FF;
+      --color-primary-100: #E0E7FF;
+      --color-primary-500: #6366F1;
+      --color-primary-600: #4F46E5;
+      
+      /* Colors: Neutrals */
+      --color-white: #FFFFFF;
+      --color-gray-50: #F8FAFC;
+      --color-gray-100: #F1F5F9;
+      --color-gray-200: #E2E8F0;
+      --color-gray-400: #94A3B8;
+      --color-gray-500: #64748B;
+      --color-gray-700: #334155;
+      --color-gray-900: #0F172A;
+      
+      /* Colors: Semantic */
+      --color-success: #10B981;
+      --color-error: #EF4444;
+
+      /* Typography */
+      --font-primary: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-secondary: 'Merriweather', Georgia, serif;
+      
+      /* Spacing */
+      --space-2: 8px;
+      --space-4: 16px;
+      --space-6: 24px;
+      --space-8: 32px;
+      
+      /* Radius */
+      --radius-md: 8px;
+      --radius-xl: 16px;
+      
+      /* Shadows */
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+      --shadow-hover: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                               RESET & BASE                                 */
+    /* -------------------------------------------------------------------------- */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: var(--space-8);
+      min-height: 100vh;
+    }
+
+    h2 {
+      margin-bottom: var(--space-6);
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--color-gray-700);
+      width: 100%;
+      max-width: 800px;
+      padding-bottom: var(--space-2);
+      border-bottom: 2px solid var(--color-gray-200);
+    }
+
+    .showcase-section {
+      width: 100%;
+      max-width: 800px;
+      margin-bottom: 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .description {
+      margin-bottom: var(--space-6);
+      color: var(--color-gray-500);
+      text-align: center;
+      max-width: 600px;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                           COMPONENT: FLASHCARD                             */
+    /* -------------------------------------------------------------------------- */
+    
+    /* Layout Container for the card */
+    .flashcard-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 340px;
+      /* Enforce Aspect Ratio: 4/5 */
+      aspect-ratio: 4/5;
+      perspective: 1200px; /* Essential for 3D effect */
+    }
+
+    /* 
+       INTERACTION LOGIC (CSS-ONLY) 
+       Uses a hidden checkbox to toggle the flip state.
+       In production, this might be handled via React state or Flutter GestureDetectors.
+    */
+    .flashcard-checkbox {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    /* The flippable card container */
+    .flashcard {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+      cursor: pointer;
+      border-radius: var(--radius-xl);
+    }
+
+    /* Rotate the card when checkbox is checked */
+    .flashcard-checkbox:checked + .flashcard-label .flashcard {
+      transform: rotateY(180deg);
+    }
+
+    /* Focus State Accessibility: When checkbox has focus, highlight the card */
+    .flashcard-checkbox:focus-visible + .flashcard-label .flashcard {
+      outline: 3px solid var(--color-primary-600);
+      outline-offset: 8px;
+    }
+
+    /* Label wrapper acts as the click target */
+    .flashcard-label {
+      display: block;
+      width: 100%;
+      height: 100%;
+      user-select: none; /* Prevent text selection during rapid clicking */
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                CARD FACES                                  */
+    /* -------------------------------------------------------------------------- */
+    
+    .flashcard__face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden; /* Safari support */
+      border-radius: var(--radius-xl);
+      background-color: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+      box-shadow: var(--shadow-lg);
+      padding: var(--space-8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      overflow: hidden;
+      transition: box-shadow 0.3s ease;
+    }
+
+    /* Hover effect to encourage interaction */
+    .flashcard:hover .flashcard__face {
+      box-shadow: var(--shadow-hover);
+    }
+
+    /* FRONT FACE STYLING */
+    .flashcard__face--front {
+      z-index: 2;
+      background: linear-gradient(135deg, #FFFFFF 0%, var(--color-gray-50) 100%);
+    }
+
+    /* BACK FACE STYLING */
+    .flashcard__face--back {
+      transform: rotateY(180deg);
+      background-color: var(--color-primary-50);
+      border-color: var(--color-primary-100);
+      justify-content: flex-start; /* Top align content on back */
+      padding-top: 48px;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                             CONTENT STYLING                                */
+    /* -------------------------------------------------------------------------- */
+
+    /* The main vocabulary word */
+    .flashcard__word {
+      font-family: var(--font-secondary);
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: var(--color-gray-900);
+      line-height: 1.2;
+      margin-bottom: var(--space-4);
+    }
+
+    /* Hint text on front (e.g., "Tap to flip") */
+    .flashcard__hint {
+      font-family: var(--font-primary);
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--color-gray-400);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: auto; /* Push to bottom */
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      opacity: 0.8;
+    }
+
+    .flashcard__hint svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Labels on the back card (e.g. "DEFINITION") */
+    .flashcard__label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-primary-600);
+      margin-bottom: var(--space-2);
+      align-self: flex-start;
+      width: 100%;
+      text-align: left;
+    }
+
+    /* Definition text */
+    .flashcard__definition {
+      font-size: 1.125rem;
+      font-weight: 400;
+      color: var(--color-gray-900);
+      line-height: 1.6;
+      margin-bottom: var(--space-6);
+      width: 100%;
+      text-align: left;
+    }
+
+    /* Example sentence container */
+    .flashcard__example-box {
+      background-color: rgba(255, 255, 255, 0.6);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      width: 100%;
+      text-align: left;
+      border-left: 3px solid var(--color-primary-500);
+    }
+
+    .flashcard__example {
+      font-size: 1rem;
+      font-style: italic;
+      color: var(--color-gray-700);
+      line-height: 1.5;
+    }
+
+    /* Flip icon indicator for back */
+    .flashcard__flip-icon {
+      position: absolute;
+      top: var(--space-4);
+      right: var(--space-4);
+      color: var(--color-gray-400);
+      opacity: 0.5;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                ANIMATIONS                                  */
+    /* -------------------------------------------------------------------------- */
+    
+    @keyframes bounce-hint {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+
+    .flashcard:hover .flashcard__hint {
+      animation: bounce-hint 1.5s infinite ease-in-out;
+      color: var(--color-primary-600);
+      opacity: 1;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                RESPONSIVE                                  */
+    /* -------------------------------------------------------------------------- */
+    
+    @media (max-width: 600px) {
+      .flashcard-wrapper {
+        max-width: 100%;
+        aspect-ratio: 3/4; /* Taller on mobile */
+      }
+      .flashcard__word {
+        font-size: 1.75rem;
+      }
+      .flashcard__definition {
+        font-size: 1rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .flashcard {
+        transition: transform 0s;
+      }
+      .flashcard:hover .flashcard__hint {
+        animation: none;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- --------------------------------------------------------------------- -->
+  <!-- VARIANT 1: STUDY MODE (Standard interaction)                          -->
+  <!-- --------------------------------------------------------------------- -->
+  <section class="showcase-section">
+    <h2>Variant 1: Study Mode</h2>
+    <p class="description">
+      The standard flashcard experience used for active recall. Tap anywhere to flip the card and reveal the definition. 
+      Supports keyboard navigation (Tab + Space).
+    </p>
+
+    <!-- Component Instance ID: card-001 -->
+    <div class="flashcard-wrapper">
+      <input type="checkbox" id="card-001" class="flashcard-checkbox" autocomplete="off">
+      <label class="flashcard-label" for="card-001">
+        <div class="flashcard">
+          
+          <!-- FRONT FACE -->
+          <div class="flashcard__face flashcard__face--front">
+            <div class="flashcard__word">Serendipity</div>
+            <div class="flashcard__hint">
+              Tap to flip
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- BACK FACE -->
+          <div class="flashcard__face flashcard__face--back">
+            <div class="flashcard__flip-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+            </div>
+
+            <div class="flashcard__label">Definition</div>
+            <p class="flashcard__definition">
+              The occurrence and development of events by chance in a happy or beneficial way.
+            </p>
+
+            <div class="flashcard__label">Example</div>
+            <div class="flashcard__example-box">
+              <p class="flashcard__example">
+                "It was pure serendipity that we met at the coffee shop right before the rain started."
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </label>
+    </div>
+  </section>
+
+  <!-- --------------------------------------------------------------------- -->
+  <!-- VARIANT 2: QUIZ / PREVIEW MODE (Visual demo of different content)     -->
+  <!-- --------------------------------------------------------------------- -->
+  <section class="showcase-section">
+    <h2>Variant 2: Complex Content</h2>
+    <p class="description">
+      Demonstrating the layout robustness with longer text content on the front and back faces.
+    </p>
+
+    <!-- Component Instance ID: card-002 -->
+    <div class="flashcard-wrapper">
+      <input type="checkbox" id="card-002" class="flashcard-checkbox" autocomplete="off">
+      <label class="flashcard-label" for="card-002">
+        <div class="flashcard">
+          
+          <!-- FRONT FACE -->
+          <div class="flashcard__face flashcard__face--front">
+            <!-- Longer word scaling -->
+            <div class="flashcard__word" style="font-size: 1.75rem;">Ephemeral</div>
+            <div class="flashcard__hint">
+              Tap to reveal
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- BACK FACE -->
+          <div class="flashcard__face flashcard__face--back">
+            <div class="flashcard__label">Definition</div>
+            <p class="flashcard__definition">
+              Lasting for a very short time; transient; short-lived.
+            </p>
+
+            <div class="flashcard__label">Example</div>
+            <div class="flashcard__example-box">
+              <p class="flashcard__example">
+                "Fashions are ephemeral, changing with every season, while true style tends to persist through the years."
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </label>
+    </div>
+  </section>
+
+</body>
+</html>
