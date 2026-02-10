@@ -1,0 +1,72 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+    paths:
+      - 'backend/**'
+      - 'src/**'
+  pull_request:
+    branches: [ "main", "develop" ]
+    paths:
+      - 'backend/**'
+      - 'src/**'
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build and Test .NET
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Cache NuGet Packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Restore Dependencies
+      run: dotnet restore ReadTrack.sln
+
+    - name: Build (Debug)
+      run: dotnet build ReadTrack.sln --no-restore --configuration Debug
+
+    - name: Build (Release)
+      run: dotnet build ReadTrack.sln --no-restore --configuration Release
+
+    - name: Run Tests
+      run: |
+        dotnet test ReadTrack.sln \
+        --no-build \
+        --configuration Release \
+        --verbosity normal \
+        --collect:"XPlat Code Coverage" \
+        --results-directory ./coverage
+
+    - name: Upload Test Coverage
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report
+        path: ./backend/coverage/**/coverage.cobertura.xml
+        retention-days: 5
+
+    - name: Docker Build Verify
+      run: |
+        docker build -f src/ReadTrack.Host/Dockerfile . -t readtrack-api:latest

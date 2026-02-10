@@ -1,0 +1,36 @@
+<Project>
+  <PropertyGroup>
+    <!-- Framework and Language Standards -->
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Code Quality and Analysis -->
+    <AnalysisLevel>latest-all</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+
+    <!-- Build Configuration -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Deterministic>true</Deterministic>
+    <Features>strict</Features>
+    
+    <!-- Warning Suppressions -->
+    <!-- CS1591: Missing XML comment for publicly visible type or member. 
+         We generate doc files for Swagger, but suppress the warning to avoid build failures for internal libs. -->
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+
+  <!-- Assembly Metadata -->
+  <PropertyGroup>
+    <Company>ReadTrack</Company>
+    <Authors>ReadTrack Engineering</Authors>
+    <Product>ReadTrack Enterprise Platform</Product>
+    <Copyright>Copyright © 2025 ReadTrack</Copyright>
+    <RepositoryUrl>https://github.com/readtrack/backend</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+</Project>

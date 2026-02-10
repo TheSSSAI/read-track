@@ -1,0 +1,81 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D9E2F1A0-5C8B-4D3E-9F7A-2B1C4E6D8F0A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{E8F1D2C3-4B5A-6978-8D9E-0F1A2B3C4D5E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{A1B2C3D4-E5F6-7890-1234-567890ABCDEF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{12345678-90AB-CDEF-1234-567890ABCDEF}"
+	ProjectSection(SolutionItems) = preProject
+		.dockerignore = .dockerignore
+		.editorconfig = .editorconfig
+		coverage.runsettings = coverage.runsettings
+		Directory.Build.props = Directory.Build.props
+		docker-compose.dev.yml = docker-compose.dev.yml
+		global.json = global.json
+		xunit.runner.json = xunit.runner.json
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReadTrack.Shared.Contracts", "src\ReadTrack.Shared.Contracts\ReadTrack.Shared.Contracts.csproj", "{B7D8E9F0-1A2C-3B4D-5E6F-7A8B9C0D1E2F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReadTrack.Host", "src\ReadTrack.Host\ReadTrack.Host.csproj", "{C8E9F0A1-2B3C-4D5E-6F7A-8B9C0D1E2F3A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReadTrack.Modules.Users", "src\Modules\ReadTrack.Modules.Users\ReadTrack.Modules.Users.csproj", "{D9F0A1B2-3C4D-5E6F-7A8B-9C0D1E2F3A4B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReadTrack.Modules.Reading", "src\Modules\ReadTrack.Modules.Reading\ReadTrack.Modules.Reading.csproj", "{E0A1B2C3-4D5E-6F7A-8B9C-0D1E2F3A4B5C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReadTrack.Modules.Engagement", "src\Modules\ReadTrack.Modules.Engagement\ReadTrack.Modules.Engagement.csproj", "{F1B2C3D4-5E6F-7A8B-9C0D-1E2F3A4B5C6D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReadTrack.Modules.Monetization", "src\Modules\ReadTrack.Modules.Monetization\ReadTrack.Modules.Monetization.csproj", "{02C3D4E5-6F7A-8B9C-0D1E-2F3A4B5C6D7E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReadTrack.Modules.AI", "src\Modules\ReadTrack.Modules.AI\ReadTrack.Modules.AI.csproj", "{13D4E5F6-7A8B-9C0D-1E2F-3A4B5C6D7E8F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B7D8E9F0-1A2C-3B4D-5E6F-7A8B9C0D1E2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7D8E9F0-1A2C-3B4D-5E6F-7A8B9C0D1E2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7D8E9F0-1A2C-3B4D-5E6F-7A8B9C0D1E2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7D8E9F0-1A2C-3B4D-5E6F-7A8B9C0D1E2F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8E9F0A1-2B3C-4D5E-6F7A-8B9C0D1E2F3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8E9F0A1-2B3C-4D5E-6F7A-8B9C0D1E2F3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8E9F0A1-2B3C-4D5E-6F7A-8B9C0D1E2F3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8E9F0A1-2B3C-4D5E-6F7A-8B9C0D1E2F3A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D9F0A1B2-3C4D-5E6F-7A8B-9C0D1E2F3A4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9F0A1B2-3C4D-5E6F-7A8B-9C0D1E2F3A4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9F0A1B2-3C4D-5E6F-7A8B-9C0D1E2F3A4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9F0A1B2-3C4D-5E6F-7A8B-9C0D1E2F3A4B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0A1B2C3-4D5E-6F7A-8B9C-0D1E2F3A4B5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0A1B2C3-4D5E-6F7A-8B9C-0D1E2F3A4B5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0A1B2C3-4D5E-6F7A-8B9C-0D1E2F3A4B5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0A1B2C3-4D5E-6F7A-8B9C-0D1E2F3A4B5C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1B2C3D4-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1B2C3D4-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1B2C3D4-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1B2C3D4-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02C3D4E5-6F7A-8B9C-0D1E-2F3A4B5C6D7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02C3D4E5-6F7A-8B9C-0D1E-2F3A4B5C6D7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02C3D4E5-6F7A-8B9C-0D1E-2F3A4B5C6D7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02C3D4E5-6F7A-8B9C-0D1E-2F3A4B5C6D7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13D4E5F6-7A8B-9C0D-1E2F-3A4B5C6D7E8F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13D4E5F6-7A8B-9C0D-1E2F-3A4B5C6D7E8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13D4E5F6-7A8B-9C0D-1E2F-3A4B5C6D7E8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13D4E5F6-7A8B-9C0D-1E2F-3A4B5C6D7E8F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B7D8E9F0-1A2C-3B4D-5E6F-7A8B9C0D1E2F} = {D9E2F1A0-5C8B-4D3E-9F7A-2B1C4E6D8F0A}
+		{C8E9F0A1-2B3C-4D5E-6F7A-8B9C0D1E2F3A} = {D9E2F1A0-5C8B-4D3E-9F7A-2B1C4E6D8F0A}
+		{E8F1D2C3-4B5A-6978-8D9E-0F1A2B3C4D5E} = {D9E2F1A0-5C8B-4D3E-9F7A-2B1C4E6D8F0A}
+		{D9F0A1B2-3C4D-5E6F-7A8B-9C0D1E2F3A4B} = {E8F1D2C3-4B5A-6978-8D9E-0F1A2B3C4D5E}
+		{E0A1B2C3-4D5E-6F7A-8B9C-0D1E2F3A4B5C} = {E8F1D2C3-4B5A-6978-8D9E-0F1A2B3C4D5E}
+		{F1B2C3D4-5E6F-7A8B-9C0D-1E2F3A4B5C6D} = {E8F1D2C3-4B5A-6978-8D9E-0F1A2B3C4D5E}
+		{02C3D4E5-6F7A-8B9C-0D1E-2F3A4B5C6D7E} = {E8F1D2C3-4B5A-6978-8D9E-0F1A2B3C4D5E}
+		{13D4E5F6-7A8B-9C0D-1E2F-3A4B5C6D7E8F} = {E8F1D2C3-4B5A-6978-8D9E-0F1A2B3C4D5E}
+	EndGlobalSection
+EndGlobal

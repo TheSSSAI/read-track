@@ -1,0 +1,33 @@
+# Configuration for the build_runner and code generation packages
+targets:
+  $default:
+    builders:
+      # Configuration for json_serializable
+      # Ensures that toToJson() calls are recursive (explicit_to_json: true)
+      # and that field names are converted to snake_case for API compatibility
+      json_serializable:
+        options:
+          explicit_to_json: true
+          field_rename: snake
+          any_map: true
+          checked: true
+
+      # Configuration for Riverpod generator
+      # Ensures providers are generated with keepAlive: false by default for better memory management
+      # unless specified otherwise in the code
+      riverpod_generator:
+        options:
+          keep_alive: false
+          
+      # Configuration for Isar database generator
+      # No specific options required for standard usage, but defined here for extensibility
+      isar_generator:
+        options: {}
+
+      # Configuration for Freezed (if used for DTOs/State)
+      freezed:
+        options:
+          # Disable union/sealed class generation if we prefer simple data classes
+          # But generally enabled for robust state management
+          union_key: 'type'
+          union_value_case: 'snake'

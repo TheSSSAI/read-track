@@ -1,0 +1,100 @@
+name: readtrack_mobile
+description: A comprehensive reading tracking application focusing on habit formation and extensive statistics.
+publish_to: 'none' # Prevent accidental publishing to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # --- Architecture & State Management ---
+  # Riverpod for robust, compile-safe state management and dependency injection
+  flutter_riverpod: ^2.4.9
+  riverpod_annotation: ^2.3.3
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.8.1
+  equatable: ^2.0.5
+
+  # --- Networking & API ---
+  # Dio for advanced HTTP requests (interceptors, cancellation, etc.)
+  dio: ^5.4.0
+  # Connectivity plus for checking network state (REQ-OFF-001)
+  connectivity_plus: ^5.0.2
+
+  # --- Local Storage & Database (REQ-OFF-001) ---
+  # Isar for high-performance, offline-first local database
+  isar: ^3.1.0
+  isar_flutter_libs: ^3.1.0
+  path_provider: ^2.1.2
+  flutter_secure_storage: ^9.0.0 # For secure token storage (JWTs)
+
+  # --- Authentication (REQ-USR-001) ---
+  # Native SDKs for social authentication
+  google_sign_in: ^6.1.6
+  sign_in_with_apple: ^5.0.0
+  
+  # --- Monetization (REQ-FRE-001, REQ-ADS-001) ---
+  # Official plugins for IAP and Ads
+  in_app_purchase: ^3.1.13
+  google_mobile_ads: ^4.0.0
+
+  # --- UI Components & Utilities ---
+  # SVG support for high-quality assets
+  flutter_svg: ^2.0.9
+  # Cached network image for efficient image loading (book covers)
+  cached_network_image: ^3.3.1
+  # Intl for date formatting and localization
+  intl: ^0.19.0
+  # URL launcher for opening external links (e.g. privacy policy)
+  url_launcher: ^6.2.4
+  # FL Chart for Statistics visualizations (REQ-STA-001)
+  fl_chart: ^0.66.0
+  # Shimmer for loading states
+  shimmer: ^3.0.0
+  # Carousel slider for "Currently Reading" dashboard widget
+  carousel_slider: ^4.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  
+  # --- Testing ---
+  # Integration testing framework
+  integration_test:
+    sdk: flutter
+  # Mocking for unit tests
+  mockito: ^5.4.4
+  
+  # --- Code Generation ---
+  build_runner: ^2.4.8
+  riverpod_generator: ^2.3.9
+  freezed: ^2.4.6
+  json_serializable: ^6.7.1
+  isar_generator: ^3.1.0
+  
+  # --- Linting ---
+  flutter_lints: ^3.0.1
+
+# Configuration for Isar binaries (if specific arch needed, usually handled by libs)
+# flutter_gen for asset generation could be added here if used
+
+flutter:
+  uses-material-design: true
+
+  # Assets configuration
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/config/ # For environment-specific configs
+
+  # Font configuration (Google Fonts or custom)
+  # fonts:
+  #   - family: OpenSans
+  #     fonts:
+  #       - asset: assets/fonts/OpenSans-Regular.ttf
+  #       - asset: assets/fonts/OpenSans-Bold.ttf
+  #         weight: 700

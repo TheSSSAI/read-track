@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  readtrack-api:
+    image: readtrack-api:dev
+    build:
+      context: .
+      dockerfile: src/ReadTrack.Host/Dockerfile
+    ports:
+      - "5080:8080"
+      - "5443:8443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=readtrack_dev;Username=postgres;Password=postgres_dev_pwd
+      - ConnectionStrings__Redis=redis:6379
+      - Serilog__MinimumLevel=Debug
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=readtrack_dev
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres_dev_pwd
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
