@@ -1,0 +1,562 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-UJ-002
+
+## 1.2 Name
+
+Premium User Views Advanced Statistics Dashboard
+
+## 1.3 Description
+
+A user with a 'Premium' subscription navigates to the 'Insights' section of the application. The client requests advanced statistical data, which the backend computes or retrieves from pre-aggregated tables to ensure a fast response.
+
+## 1.4 Type
+
+🔹 UserJourney
+
+## 1.5 Purpose
+
+To deliver the 'Advanced Statistics and Insights' feature exclusive to Premium Users, as per REQ-STA-001.
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🔴 High
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-FE-MOBILE
+- REPO-BE-HOST
+
+## 1.10 Key Interactions
+
+- A 'Premium User' taps on the 'Insights' tab in the mobile client.
+- The client sends a GET /api/v1/statistics/advanced request to the backend.
+- The backend API authorizes the request, ensuring the user has the 'premium_user' role from their JWT.
+- The MOD-ENGAGEMENT service queries the database for aggregated data, such as reading streaks, pace trends, and activity by time of day.
+- The backend returns a comprehensive DTO containing all the calculated statistics.
+- The client receives the data and renders it using charts and other visual components.
+- The client ensures the charts use color-blind accessible palettes.
+
+## 1.11 Triggers
+
+- A Premium User navigates to the statistics/insights screen.
+
+## 1.12 Outcomes
+
+- The user can view their detailed reading habits and trends.
+- The value of the premium subscription is demonstrated to the user.
+
+## 1.13 Business Rules
+
+- This endpoint must be accessible only to users with a Premium subscription.
+- Data should be retrieved from pre-calculated or efficiently indexed tables to meet performance NFRs.
+
+## 1.14 Error Scenarios
+
+- A 'Free User' attempts to access the endpoint and receives a 403 Forbidden error.
+- The data aggregation query is slow, causing the request to time out.
+
+## 1.15 Integration Points
+
+*No items available*
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-UJ-002
+
+## 2.2 Name
+
+Implementation Sequence: Premium User Views Advanced Statistics Dashboard
+
+## 2.3 Description
+
+Provides a detailed technical specification for the user journey where a Premium User accesses the advanced statistics dashboard. The sequence details client-side state management (loading, success, error), backend API interaction, mandatory security authorization checks, performance-optimized data retrieval from pre-aggregated tables, and final UI rendering with accessibility considerations.
+
+## 2.4 Participants
+
+### 2.4.1 Client Application
+
+#### 2.4.1.1 Repository Id
+
+REPO-FE-MOBILE
+
+#### 2.4.1.2 Display Name
+
+Flutter Mobile Client
+
+#### 2.4.1.3 Type
+
+🔹 Client Application
+
+#### 2.4.1.4 Technology
+
+Flutter with Riverpod & Dio
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #4285F4 |
+| Stereotype | Client |
+
+### 2.4.2.0 Application Service
+
+#### 2.4.2.1 Repository Id
+
+REPO-BE-HOST
+
+#### 2.4.2.2 Display Name
+
+Backend API Host
+
+#### 2.4.2.3 Type
+
+🔹 Application Service
+
+#### 2.4.2.4 Technology
+
+ASP.NET Core 8 Modular Monolith
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | participant |
+| Color | #34A853 |
+| Stereotype | Server |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 State Transition
+
+#### 2.5.1.1 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.1.2 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.1.3 Message
+
+User taps 'Insights' tab. InsightsBloc receives `FetchAdvancedStatsEvent` and transitions state to `AdvancedStatsLoading`. UI displays a loading indicator.
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 State Transition
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+
+
+#### 2.5.1.8 Has Return
+
+❌ No
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal Event Bus |
+| Method | InsightsBloc.add(FetchAdvancedStatsEvent) |
+| Parameters | None |
+| Authentication | N/A |
+| Error Handling | Bloc `onError` handler catches state transition fa... |
+| Performance | State transition must be immediate (<16ms). |
+
+### 2.5.2.0 API Request
+
+#### 2.5.2.1 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.2.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.2.3 Message
+
+Sends request to fetch advanced statistics data for the authenticated user.
+
+#### 2.5.2.4 Sequence Number
+
+2
+
+#### 2.5.2.5 Type
+
+🔹 API Request
+
+#### 2.5.2.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7 Return Message
+
+Returns `200 OK` with `AdvancedStatisticsDto` on success, or an error status code (401, 403, 5xx) on failure.
+
+#### 2.5.2.8 Has Return
+
+✅ Yes
+
+#### 2.5.2.9 Is Activation
+
+✅ Yes
+
+#### 2.5.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS/1.1 |
+| Method | GET /api/v1/statistics/advanced |
+| Parameters | User context is derived from the JWT. |
+| Authentication | Requires a valid JWT Bearer Token in the 'Authoriz... |
+| Error Handling | Client must handle 401 Unauthorized (redirect to l... |
+| Performance | End-to-end P95 latency target is < 200ms as per RE... |
+
+#### 2.5.2.11 Nested Interactions
+
+##### 2.5.2.11.1 Security Check
+
+###### 2.5.2.11.1.1 Source Id
+
+REPO-BE-HOST
+
+###### 2.5.2.11.1.2 Target Id
+
+REPO-BE-HOST
+
+###### 2.5.2.11.1.3 Message
+
+ASP.NET Core Authorization Middleware intercepts the request, validates the JWT, and verifies the 'role' claim equals 'premium_user'. Rejects with 403 Forbidden if check fails.
+
+###### 2.5.2.11.1.4 Sequence Number
+
+2.1
+
+###### 2.5.2.11.1.5 Type
+
+🔹 Security Check
+
+###### 2.5.2.11.1.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.2.11.1.7 Return Message
+
+Proceeds to controller if authorized, otherwise terminates with 403.
+
+###### 2.5.2.11.1.8 Has Return
+
+✅ Yes
+
+###### 2.5.2.11.1.9 Is Activation
+
+❌ No
+
+###### 2.5.2.11.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process Middleware |
+| Method | AuthorizationPolicy.RequireRole("premium_user") |
+| Parameters | ClaimsPrincipal from HttpContext |
+| Authentication | JWT Signature and Expiry Validation |
+| Error Handling | If role check fails, the middleware short-circuits... |
+| Performance | Must complete in < 5ms. |
+
+##### 2.5.2.11.2.0 CQRS Query Dispatch
+
+###### 2.5.2.11.2.1 Source Id
+
+REPO-BE-HOST
+
+###### 2.5.2.11.2.2 Target Id
+
+REPO-BE-HOST
+
+###### 2.5.2.11.2.3 Message
+
+Controller sends `GetAdvancedStatisticsQuery` via MediatR to the Application layer within the MOD-ENGAGEMENT module.
+
+###### 2.5.2.11.2.4 Sequence Number
+
+2.2
+
+###### 2.5.2.11.2.5 Type
+
+🔹 CQRS Query Dispatch
+
+###### 2.5.2.11.2.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.2.11.2.7 Return Message
+
+Returns the query result DTO.
+
+###### 2.5.2.11.2.8 Has Return
+
+✅ Yes
+
+###### 2.5.2.11.2.9 Is Activation
+
+❌ No
+
+###### 2.5.2.11.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process Messaging |
+| Method | IMediator.Send(GetAdvancedStatisticsQuery) |
+| Parameters | `GetAdvancedStatisticsQuery` object containing Use... |
+| Authentication | N/A |
+| Error Handling | Exceptions are caught by global exception handling... |
+| Performance | Dispatch overhead should be negligible (<1ms). |
+
+##### 2.5.2.11.3.0 Data Retrieval
+
+###### 2.5.2.11.3.1 Source Id
+
+REPO-BE-HOST
+
+###### 2.5.2.11.3.2 Target Id
+
+REPO-BE-HOST
+
+###### 2.5.2.11.3.3 Message
+
+Query Handler executes logic, fetching data from pre-aggregated tables (e.g., `UserReadingStats`) in the PostgreSQL database via EF Core.
+
+###### 2.5.2.11.3.4 Sequence Number
+
+2.3
+
+###### 2.5.2.11.3.5 Type
+
+🔹 Data Retrieval
+
+###### 2.5.2.11.3.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.2.11.3.7 Return Message
+
+Aggregated statistics data.
+
+###### 2.5.2.11.3.8 Has Return
+
+✅ Yes
+
+###### 2.5.2.11.3.9 Is Activation
+
+❌ No
+
+###### 2.5.2.11.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Database Connection (Npgsql) |
+| Method | DbContext.UserReadingStats.Where(...).ToListAsync(... |
+| Parameters | UserId |
+| Authentication | Database connection string credentials. |
+| Error Handling | EF Core exceptions (e.g., timeout, connection fail... |
+| Performance | Database query must be highly optimized with prope... |
+
+### 2.5.3.0.0.0 State Transition
+
+#### 2.5.3.1.0.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.3.2.0.0 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.3.3.0.0 Message
+
+On successful API response, Bloc receives `AdvancedStatsLoadedEvent` with the DTO. State transitions to `AdvancedStatsSuccess`. UI layer is notified to re-render.
+
+#### 2.5.3.4.0.0 Sequence Number
+
+3
+
+#### 2.5.3.5.0.0 Type
+
+🔹 State Transition
+
+#### 2.5.3.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7.0.0 Return Message
+
+
+
+#### 2.5.3.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.3.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.3.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal Event Bus |
+| Method | InsightsBloc.add(AdvancedStatsLoadedEvent) |
+| Parameters | `AdvancedStatisticsDto` payload. |
+| Authentication | N/A |
+| Error Handling | Handles potential data parsing/mapping errors from... |
+| Performance | Data mapping and state update should complete with... |
+
+### 2.5.4.0.0.0 UI Render
+
+#### 2.5.4.1.0.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.4.2.0.0 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.4.3.0.0 Message
+
+UI components consume the `AdvancedStatsSuccess` state and render the data using charts and lists, ensuring color-blind accessible palettes are used.
+
+#### 2.5.4.4.0.0 Sequence Number
+
+4
+
+#### 2.5.4.5.0.0 Type
+
+🔹 UI Render
+
+#### 2.5.4.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7.0.0 Return Message
+
+
+
+#### 2.5.4.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.4.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.4.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Flutter Widget Build |
+| Method | Widget.build(BuildContext) |
+| Parameters | New state data. |
+| Authentication | N/A |
+| Error Handling | Flutter's build process handles rendering errors. ... |
+| Performance | The rendering of the statistics screen must be smo... |
+
+## 2.6.0.0.0.0 Notes
+
+### 2.6.1.0.0.0 Content
+
+#### 2.6.1.1.0.0 Content
+
+State Management: The client application manages UI state via a Riverpod provider or BLoC, transitioning between `Loading`, `Success`, and `Error` states to provide clear user feedback.
+
+#### 2.6.1.2.0.0 Position
+
+top
+
+#### 2.6.1.3.0.0 Participant Id
+
+REPO-FE-MOBILE
+
+#### 2.6.1.4.0.0 Sequence Number
+
+1
+
+### 2.6.2.0.0.0 Content
+
+#### 2.6.2.1.0.0 Content
+
+Performance Optimization: The backend query handler is designed to read from pre-calculated, aggregated data tables (e.g., `UserDailyStats`) to satisfy the stringent P95 < 200ms latency requirement (REQ-PERF-001).
+
+#### 2.6.2.2.0.0 Position
+
+middle
+
+#### 2.6.2.3.0.0 Participant Id
+
+REPO-BE-HOST
+
+#### 2.6.2.4.0.0 Sequence Number
+
+2.3
+
+### 2.6.3.0.0.0 Content
+
+#### 2.6.3.1.0.0 Content
+
+Accessibility Compliance: The UI chart components are responsible for using a predefined, color-blind accessible palette to meet the WCAG 2.1 Level AA standard specified in REQ-STA-001.
+
+#### 2.6.3.2.0.0 Position
+
+bottom
+
+#### 2.6.3.3.0.0 Participant Id
+
+REPO-FE-MOBILE
+
+#### 2.6.3.4.0.0 Sequence Number
+
+4
+
+## 2.7.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | Backend authorization is critical. The `/api/v1/st... |
+| Performance Targets | Backend API endpoint P95 latency must remain below... |
+| Error Handling Strategy | Client must gracefully handle API failures. A 403 ... |
+| Testing Considerations | Integration tests are required to validate the aut... |
+| Monitoring Requirements | Backend APM (OpenTelemetry) must monitor the laten... |
+| Deployment Considerations | If the schema of the pre-aggregated statistics tab... |
+

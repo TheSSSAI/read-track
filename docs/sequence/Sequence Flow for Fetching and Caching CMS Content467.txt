@@ -1,0 +1,1092 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-SI-001
+
+## 1.2 Name
+
+Fetching and Caching CMS Content
+
+## 1.3 Description
+
+The application fetches curated content (e.g., reading tips) from a headless CMS (Contentful). This content is cached at two levels: on the backend in Redis to reduce API calls to the CMS, and on the client in Isar to provide offline access.
+
+## 1.4 Type
+
+🔹 ServiceInteraction
+
+## 1.5 Purpose
+
+To decouple curated content from application code and deliver it efficiently, as per REQ-TIP-001 and REQ-VOC-001.
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🟡 Medium
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-FE-MOBILE
+- REPO-BE-HOST
+- Amazon ElastiCache for Redis
+- Contentful
+
+## 1.10 Key Interactions
+
+- User navigates to the 'Tips' section.
+- Client requests GET /api/v1/tips from the backend.
+- Backend service first checks its Redis cache.
+- On a cache hit, cached data is returned immediately.
+- On a cache miss, the backend calls the Contentful API to fetch the content.
+- The backend receives the content, stores it in Redis with a TTL, and returns it to the client.
+- The client receives the data, displays it, and stores it in its local Isar database for offline viewing.
+
+## 1.11 Triggers
+
+- User accesses a feature that relies on CMS content.
+- The cache for the CMS content expires.
+
+## 1.12 Outcomes
+
+- Curated content is displayed to the user quickly.
+- Previously viewed content is available offline.
+- The number of direct calls to the CMS API is minimized.
+
+## 1.13 Business Rules
+
+- A fallback behavior should serve stale content from the cache if the CMS is unavailable.
+- Cache must be properly invalidated when content is updated in the CMS (e.g., via webhooks).
+
+## 1.14 Error Scenarios
+
+- The Contentful API is down, and the cache is empty.
+- The Redis cache is unavailable.
+
+## 1.15 Integration Points
+
+- Contentful REST API (SI-004)
+- Amazon ElastiCache for Redis
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-SI-001-IMPL
+
+## 2.2 Name
+
+Implementation Sequence: Fetching and Caching CMS Content
+
+## 2.3 Description
+
+Provides a comprehensive technical specification for the dual-layer caching mechanism for fetching content from a headless CMS (Contentful). This sequence details the backend's cache-aside pattern using Redis, the client's local persistence using Isar for offline support, and the resilient integration with the external Contentful API, including error handling and performance considerations.
+
+## 2.4 Participants
+
+### 2.4.1 Client Application
+
+#### 2.4.1.1 Repository Id
+
+REPO-FE-MOBILE
+
+#### 2.4.1.2 Display Name
+
+Flutter Mobile Client
+
+#### 2.4.1.3 Type
+
+🔹 Client Application
+
+#### 2.4.1.4 Technology
+
+Flutter 3.22+ / Dart 3.4+
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #4CAF50 |
+| Stereotype | <<Mobile Client>> |
+
+### 2.4.2.0 Application Service
+
+#### 2.4.2.1 Repository Id
+
+REPO-BE-HOST
+
+#### 2.4.2.2 Display Name
+
+Backend API Host
+
+#### 2.4.2.3 Type
+
+🔹 Application Service
+
+#### 2.4.2.4 Technology
+
+ASP.NET Core 8 / .NET 8
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | participant |
+| Color | #2196F3 |
+| Stereotype | <<Modular Monolith>> |
+
+### 2.4.3.0 Cache
+
+#### 2.4.3.1 Repository Id
+
+Amazon ElastiCache for Redis
+
+#### 2.4.3.2 Display Name
+
+Redis Cache
+
+#### 2.4.3.3 Type
+
+🔹 Cache
+
+#### 2.4.3.4 Technology
+
+Redis 7.2+
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #FFC107 |
+| Stereotype | <<Distributed Cache>> |
+
+### 2.4.4.0 External Service
+
+#### 2.4.4.1 Repository Id
+
+Contentful
+
+#### 2.4.4.2 Display Name
+
+Contentful CMS API
+
+#### 2.4.4.3 Type
+
+🔹 External Service
+
+#### 2.4.4.4 Technology
+
+Contentful Delivery REST API
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | boundary |
+| Color | #9C27B0 |
+| Stereotype | <<External API>> |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 HTTP Request
+
+#### 2.5.1.1 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.1.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.1.3 Message
+
+GET /api/v1/tips
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 HTTP Request
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+Returns `200 OK` with TipDto[] on success, or `503 Service Unavailable` on critical failure.
+
+#### 2.5.1.8 Has Return
+
+✅ Yes
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS/1.1 |
+| Method | GET |
+| Parameters | Headers: { Authorization: 'Bearer <JWT>', Accept: ... |
+| Authentication | JWT Bearer token is validated by ASP.NET Core auth... |
+| Error Handling | Client (Dio) should handle non-200 status codes. O... |
+| Performance | Client-side timeout should be configured to 15 sec... |
+
+### 2.5.2.0 Cache Read
+
+#### 2.5.2.1 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.2.2 Target Id
+
+Amazon ElastiCache for Redis
+
+#### 2.5.2.3 Message
+
+Attempt to retrieve cached content
+
+#### 2.5.2.4 Sequence Number
+
+2
+
+#### 2.5.2.5 Type
+
+🔹 Cache Read
+
+#### 2.5.2.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7 Return Message
+
+Returns a serialized JSON string if found, otherwise returns (nil).
+
+#### 2.5.2.8 Has Return
+
+✅ Yes
+
+#### 2.5.2.9 Is Activation
+
+✅ Yes
+
+#### 2.5.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Redis Protocol (RESP) |
+| Method | GET |
+| Parameters | Key: 'cms:tips:all' |
+| Authentication | Connection string managed via AWS Secrets Manager. |
+| Error Handling | If Redis is unavailable, the `StackExchange.Redis`... |
+| Performance | Expected P99 latency < 5ms. |
+
+### 2.5.3.0 Alternative Fragment
+
+#### 2.5.3.1 Source Id
+
+Amazon ElastiCache for Redis
+
+#### 2.5.3.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.3.3 Message
+
+alt: [Cache Hit]
+
+#### 2.5.3.4 Sequence Number
+
+3
+
+#### 2.5.3.5 Type
+
+🔹 Alternative Fragment
+
+#### 2.5.3.6 Is Synchronous
+
+❌ No
+
+#### 2.5.3.7 Return Message
+
+
+
+#### 2.5.3.8 Has Return
+
+❌ No
+
+#### 2.5.3.9 Is Activation
+
+❌ No
+
+#### 2.5.3.10 Technical Details
+
+*No data available*
+
+#### 2.5.3.11 Nested Interactions
+
+##### 2.5.3.11.1 Cache Response
+
+###### 2.5.3.11.1.1 Source Id
+
+Amazon ElastiCache for Redis
+
+###### 2.5.3.11.1.2 Target Id
+
+REPO-BE-HOST
+
+###### 2.5.3.11.1.3 Message
+
+Return cached JSON string
+
+###### 2.5.3.11.1.4 Sequence Number
+
+3.1
+
+###### 2.5.3.11.1.5 Type
+
+🔹 Cache Response
+
+###### 2.5.3.11.1.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.3.11.1.7 Return Message
+
+
+
+###### 2.5.3.11.1.8 Has Return
+
+❌ No
+
+###### 2.5.3.11.1.9 Is Activation
+
+❌ No
+
+###### 2.5.3.11.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | RESP |
+| Method | GET Response |
+| Parameters | Payload: Serialized JSON of TipDto[] |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | Included in step 2. |
+
+##### 2.5.3.11.2.0 HTTP Response
+
+###### 2.5.3.11.2.1 Source Id
+
+REPO-BE-HOST
+
+###### 2.5.3.11.2.2 Target Id
+
+REPO-FE-MOBILE
+
+###### 2.5.3.11.2.3 Message
+
+200 OK
+
+###### 2.5.3.11.2.4 Sequence Number
+
+3.2
+
+###### 2.5.3.11.2.5 Type
+
+🔹 HTTP Response
+
+###### 2.5.3.11.2.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.3.11.2.7 Return Message
+
+
+
+###### 2.5.3.11.2.8 Has Return
+
+❌ No
+
+###### 2.5.3.11.2.9 Is Activation
+
+❌ No
+
+###### 2.5.3.11.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS/1.1 |
+| Method | GET Response |
+| Parameters | Body: TipDto[] (deserialized from cache) |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | P95 latency target for cache-hit responses < 50ms. |
+
+### 2.5.4.0.0.0 Alternative Fragment
+
+#### 2.5.4.1.0.0 Source Id
+
+Amazon ElastiCache for Redis
+
+#### 2.5.4.2.0.0 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.4.3.0.0 Message
+
+alt: [Cache Miss]
+
+#### 2.5.4.4.0.0 Sequence Number
+
+4
+
+#### 2.5.4.5.0.0 Type
+
+🔹 Alternative Fragment
+
+#### 2.5.4.6.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.4.7.0.0 Return Message
+
+
+
+#### 2.5.4.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.4.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.4.10.0.0 Technical Details
+
+*No data available*
+
+#### 2.5.4.11.0.0 Nested Interactions
+
+##### 2.5.4.11.1.0 Cache Response
+
+###### 2.5.4.11.1.1 Source Id
+
+Amazon ElastiCache for Redis
+
+###### 2.5.4.11.1.2 Target Id
+
+REPO-BE-HOST
+
+###### 2.5.4.11.1.3 Message
+
+Return (nil)
+
+###### 2.5.4.11.1.4 Sequence Number
+
+4.1
+
+###### 2.5.4.11.1.5 Type
+
+🔹 Cache Response
+
+###### 2.5.4.11.1.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.4.11.1.7 Return Message
+
+
+
+###### 2.5.4.11.1.8 Has Return
+
+❌ No
+
+###### 2.5.4.11.1.9 Is Activation
+
+❌ No
+
+###### 2.5.4.11.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | RESP |
+| Method | GET Response |
+| Parameters | Payload: (nil) |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | Included in step 2. |
+
+##### 2.5.4.11.2.0 Loop Fragment
+
+###### 2.5.4.11.2.1 Source Id
+
+REPO-BE-HOST
+
+###### 2.5.4.11.2.2 Target Id
+
+Contentful
+
+###### 2.5.4.11.2.3 Message
+
+loop: [Resilience Policy: Retry 3x, Circuit Breaker 5 fails]
+
+###### 2.5.4.11.2.4 Sequence Number
+
+4.2
+
+###### 2.5.4.11.2.5 Type
+
+🔹 Loop Fragment
+
+###### 2.5.4.11.2.6 Is Synchronous
+
+❌ No
+
+###### 2.5.4.11.2.7 Return Message
+
+
+
+###### 2.5.4.11.2.8 Has Return
+
+❌ No
+
+###### 2.5.4.11.2.9 Is Activation
+
+❌ No
+
+###### 2.5.4.11.2.10 Technical Details
+
+*No data available*
+
+###### 2.5.4.11.2.11 Nested Interactions
+
+- {'sourceId': 'REPO-BE-HOST', 'targetId': 'Contentful', 'message': 'GET /spaces/{space_id}/environments/master/entries?content_type=readingTip', 'sequenceNumber': '4.2.1', 'type': 'External API Call', 'isSynchronous': True, 'returnMessage': 'Returns Contentful JSON response or 5xx error.', 'hasReturn': True, 'isActivation': True, 'technicalDetails': {'protocol': 'HTTPS/1.1', 'method': 'GET', 'parameters': "Headers: { Authorization: 'Bearer <Contentful_Delivery_API_Token>' }", 'authentication': 'Bearer token is retrieved from AWS Secrets Manager.', 'errorHandling': 'Wrapped in a Polly Resilience Pipeline: Retry (3 attempts, exponential backoff starting at 200ms) for transient errors (5xx, timeouts). Circuit Breaker (opens after 5 consecutive failures, 30s break).', 'performance': 'Configured HttpClient timeout of 10 seconds.'}}
+
+##### 2.5.4.11.3.0 Alternative Fragment
+
+###### 2.5.4.11.3.1 Source Id
+
+Contentful
+
+###### 2.5.4.11.3.2 Target Id
+
+REPO-BE-HOST
+
+###### 2.5.4.11.3.3 Message
+
+alt: [Contentful call succeeds]
+
+###### 2.5.4.11.3.4 Sequence Number
+
+4.3
+
+###### 2.5.4.11.3.5 Type
+
+🔹 Alternative Fragment
+
+###### 2.5.4.11.3.6 Is Synchronous
+
+❌ No
+
+###### 2.5.4.11.3.7 Return Message
+
+
+
+###### 2.5.4.11.3.8 Has Return
+
+❌ No
+
+###### 2.5.4.11.3.9 Is Activation
+
+❌ No
+
+###### 2.5.4.11.3.10 Technical Details
+
+*No data available*
+
+###### 2.5.4.11.3.11 Nested Interactions
+
+####### 2.5.4.11.3.11.1 API Response
+
+######## 2.5.4.11.3.11.1.1 Source Id
+
+Contentful
+
+######## 2.5.4.11.3.11.1.2 Target Id
+
+REPO-BE-HOST
+
+######## 2.5.4.11.3.11.1.3 Message
+
+200 OK
+
+######## 2.5.4.11.3.11.1.4 Sequence Number
+
+4.3.1
+
+######## 2.5.4.11.3.11.1.5 Type
+
+🔹 API Response
+
+######## 2.5.4.11.3.11.1.6 Is Synchronous
+
+✅ Yes
+
+######## 2.5.4.11.3.11.1.7 Return Message
+
+
+
+######## 2.5.4.11.3.11.1.8 Has Return
+
+❌ No
+
+######## 2.5.4.11.3.11.1.9 Is Activation
+
+❌ No
+
+######## 2.5.4.11.3.11.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS/1.1 |
+| Method | GET Response |
+| Parameters | Body: Contentful JSON schema |
+| Authentication | N/A |
+| Error Handling | Backend must validate the response structure befor... |
+| Performance | N/A |
+
+####### 2.5.4.11.3.11.2.0 Data Transformation
+
+######## 2.5.4.11.3.11.2.1 Source Id
+
+REPO-BE-HOST
+
+######## 2.5.4.11.3.11.2.2 Target Id
+
+REPO-BE-HOST
+
+######## 2.5.4.11.3.11.2.3 Message
+
+Transform Contentful response to TipDto[]
+
+######## 2.5.4.11.3.11.2.4 Sequence Number
+
+4.3.2
+
+######## 2.5.4.11.3.11.2.5 Type
+
+🔹 Data Transformation
+
+######## 2.5.4.11.3.11.2.6 Is Synchronous
+
+✅ Yes
+
+######## 2.5.4.11.3.11.2.7 Return Message
+
+
+
+######## 2.5.4.11.3.11.2.8 Has Return
+
+❌ No
+
+######## 2.5.4.11.3.11.2.9 Is Activation
+
+❌ No
+
+######## 2.5.4.11.3.11.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal |
+| Method | Mapping/Serialization |
+| Parameters | Input: Contentful JSON, Output: TipDto[] |
+| Authentication | N/A |
+| Error Handling | Transformation logic must handle missing or malfor... |
+| Performance | Should be highly optimized to minimize CPU overhea... |
+
+####### 2.5.4.11.3.11.3.0 Cache Write
+
+######## 2.5.4.11.3.11.3.1 Source Id
+
+REPO-BE-HOST
+
+######## 2.5.4.11.3.11.3.2 Target Id
+
+Amazon ElastiCache for Redis
+
+######## 2.5.4.11.3.11.3.3 Message
+
+Cache the transformed response
+
+######## 2.5.4.11.3.11.3.4 Sequence Number
+
+4.3.3
+
+######## 2.5.4.11.3.11.3.5 Type
+
+🔹 Cache Write
+
+######## 2.5.4.11.3.11.3.6 Is Synchronous
+
+❌ No
+
+######## 2.5.4.11.3.11.3.7 Return Message
+
+OK
+
+######## 2.5.4.11.3.11.3.8 Has Return
+
+✅ Yes
+
+######## 2.5.4.11.3.11.3.9 Is Activation
+
+❌ No
+
+######## 2.5.4.11.3.11.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | RESP |
+| Method | SET |
+| Parameters | Key: 'cms:tips:all', Value: 'Serialized TipDto[] J... |
+| Authentication | N/A |
+| Error Handling | Fire-and-forget. A failure to write to cache is lo... |
+| Performance | Expected P99 latency < 5ms. |
+
+##### 2.5.4.11.4.0.0.0 Alternative Fragment
+
+###### 2.5.4.11.4.1.0.0 Source Id
+
+Contentful
+
+###### 2.5.4.11.4.2.0.0 Target Id
+
+REPO-BE-HOST
+
+###### 2.5.4.11.4.3.0.0 Message
+
+alt: [Contentful call fails after all retries]
+
+###### 2.5.4.11.4.4.0.0 Sequence Number
+
+4.4
+
+###### 2.5.4.11.4.5.0.0 Type
+
+🔹 Alternative Fragment
+
+###### 2.5.4.11.4.6.0.0 Is Synchronous
+
+❌ No
+
+###### 2.5.4.11.4.7.0.0 Return Message
+
+
+
+###### 2.5.4.11.4.8.0.0 Has Return
+
+❌ No
+
+###### 2.5.4.11.4.9.0.0 Is Activation
+
+❌ No
+
+###### 2.5.4.11.4.10.0.0 Technical Details
+
+*No data available*
+
+###### 2.5.4.11.4.11.0.0 Nested Interactions
+
+####### 2.5.4.11.4.11.1.0 API Response
+
+######## 2.5.4.11.4.11.1.1 Source Id
+
+Contentful
+
+######## 2.5.4.11.4.11.1.2 Target Id
+
+REPO-BE-HOST
+
+######## 2.5.4.11.4.11.1.3 Message
+
+503 Service Unavailable
+
+######## 2.5.4.11.4.11.1.4 Sequence Number
+
+4.4.1
+
+######## 2.5.4.11.4.11.1.5 Type
+
+🔹 API Response
+
+######## 2.5.4.11.4.11.1.6 Is Synchronous
+
+✅ Yes
+
+######## 2.5.4.11.4.11.1.7 Return Message
+
+
+
+######## 2.5.4.11.4.11.1.8 Has Return
+
+❌ No
+
+######## 2.5.4.11.4.11.1.9 Is Activation
+
+❌ No
+
+######## 2.5.4.11.4.11.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS/1.1 |
+| Method | Error Response |
+| Parameters | Final state after Polly policy is exhausted. |
+| Authentication | N/A |
+| Error Handling | Polly pipeline throws `BrokenCircuitException` or ... |
+| Performance | N/A |
+
+####### 2.5.4.11.4.11.2.0 HTTP Response
+
+######## 2.5.4.11.4.11.2.1 Source Id
+
+REPO-BE-HOST
+
+######## 2.5.4.11.4.11.2.2 Target Id
+
+REPO-FE-MOBILE
+
+######## 2.5.4.11.4.11.2.3 Message
+
+503 Service Unavailable
+
+######## 2.5.4.11.4.11.2.4 Sequence Number
+
+4.4.2
+
+######## 2.5.4.11.4.11.2.5 Type
+
+🔹 HTTP Response
+
+######## 2.5.4.11.4.11.2.6 Is Synchronous
+
+✅ Yes
+
+######## 2.5.4.11.4.11.2.7 Return Message
+
+
+
+######## 2.5.4.11.4.11.2.8 Has Return
+
+❌ No
+
+######## 2.5.4.11.4.11.2.9 Is Activation
+
+❌ No
+
+######## 2.5.4.11.4.11.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS/1.1 |
+| Method | Error Response |
+| Parameters | Body: { 'traceId': '<CorrelationId>', 'errorCode':... |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | N/A |
+
+##### 2.5.4.11.5.0.0.0 HTTP Response
+
+###### 2.5.4.11.5.1.0.0 Source Id
+
+REPO-BE-HOST
+
+###### 2.5.4.11.5.2.0.0 Target Id
+
+REPO-FE-MOBILE
+
+###### 2.5.4.11.5.3.0.0 Message
+
+200 OK
+
+###### 2.5.4.11.5.4.0.0 Sequence Number
+
+4.5
+
+###### 2.5.4.11.5.5.0.0 Type
+
+🔹 HTTP Response
+
+###### 2.5.4.11.5.6.0.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.4.11.5.7.0.0 Return Message
+
+
+
+###### 2.5.4.11.5.8.0.0 Has Return
+
+❌ No
+
+###### 2.5.4.11.5.9.0.0 Is Activation
+
+❌ No
+
+###### 2.5.4.11.5.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS/1.1 |
+| Method | GET Response |
+| Parameters | Body: TipDto[] (freshly fetched and transformed) |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | P95 latency target for cache-miss responses < 1000... |
+
+### 2.5.5.0.0.0.0.0 Local Persistence
+
+#### 2.5.5.1.0.0.0.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.5.2.0.0.0.0 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.5.3.0.0.0.0 Message
+
+Persist received content to local Isar database
+
+#### 2.5.5.4.0.0.0.0 Sequence Number
+
+5
+
+#### 2.5.5.5.0.0.0.0 Type
+
+🔹 Local Persistence
+
+#### 2.5.5.6.0.0.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7.0.0.0.0 Return Message
+
+
+
+#### 2.5.5.8.0.0.0.0 Has Return
+
+❌ No
+
+#### 2.5.5.9.0.0.0.0 Is Activation
+
+❌ No
+
+#### 2.5.5.10.0.0.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal (Isar SDK) |
+| Method | isar.writeTxn(() => isar.tips.putAll(newTips)) |
+| Parameters | A list of Tip objects to be upserted into the loca... |
+| Authentication | N/A |
+| Error Handling | Any database write errors must be caught and logge... |
+| Performance | Isar write operations are highly performant and sh... |
+
+## 2.6.0.0.0.0.0.0 Notes
+
+### 2.6.1.0.0.0.0.0 Content
+
+#### 2.6.1.1.0.0.0.0 Content
+
+Client-Side Fallback: If the mobile client receives a 5xx error from the backend, it MUST attempt to load the 'Tips' content from its local Isar database. This ensures offline capability and resilience as per REQ-FUNC-011.
+
+#### 2.6.1.2.0.0.0.0 Position
+
+top-left
+
+#### 2.6.1.3.0.0.0.0 Participant Id
+
+REPO-FE-MOBILE
+
+#### 2.6.1.4.0.0.0.0 Sequence Number
+
+1
+
+### 2.6.2.0.0.0.0.0 Content
+
+#### 2.6.2.1.0.0.0.0 Content
+
+Cache Invalidation Strategy: While this sequence describes the read path, cache invalidation is handled asynchronously. Contentful is configured with a webhook that triggers a secured endpoint on the backend API (e.g., POST /api/v1/cache/invalidate) upon content updates, which then deletes the 'cms:tips:all' key from Redis.
+
+#### 2.6.2.2.0.0.0.0 Position
+
+bottom-right
+
+#### 2.6.2.3.0.0.0.0 Participant Id
+
+Amazon ElastiCache for Redis
+
+#### 2.6.2.4.0.0.0.0 Sequence Number
+
+4.3.3
+
+### 2.6.3.0.0.0.0.0 Content
+
+#### 2.6.3.1.0.0.0.0 Content
+
+Stale-While-Revalidate: For enhanced resilience, the backend can be configured to serve stale data from Redis if the Contentful API is down, while asynchronously attempting to refresh the content in the background. This aligns with the business rule in REQ-REL-002.
+
+#### 2.6.3.2.0.0.0.0 Position
+
+middle-right
+
+#### 2.6.3.3.0.0.0.0 Participant Id
+
+REPO-BE-HOST
+
+#### 2.6.3.4.0.0.0.0 Sequence Number
+
+4.4.1
+
+## 2.7.0.0.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | Backend endpoint /api/v1/tips must be protected an... |
+| Performance Targets | API endpoint /api/v1/tips P95 latency must be < 20... |
+| Error Handling Strategy | The backend's Contentful client must use a Polly R... |
+| Testing Considerations | Unit tests must cover the cache-hit, cache-miss, a... |
+| Monitoring Requirements | A custom metric for the Redis cache hit/miss ratio... |
+| Deployment Considerations | Initial deployment requires pre-warming the cache ... |
+

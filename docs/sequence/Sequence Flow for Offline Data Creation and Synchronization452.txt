@@ -1,0 +1,921 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-DF-001
+
+## 1.2 Name
+
+Offline Data Creation and Synchronization
+
+## 1.3 Description
+
+When the user is offline, the mobile client persists new data (e.g., reading sessions) to a local Isar database. Upon restoration of network connectivity, a background synchronization service pushes the local changes to the backend and fetches remote updates, using a 'last write wins' strategy for conflict resolution.
+
+## 1.4 Type
+
+🔹 DataFlow
+
+## 1.5 Purpose
+
+To provide core application functionality without a persistent internet connection, enhancing user experience and resilience as per REQ-OFF-001.
+
+## 1.6 Complexity
+
+High
+
+## 1.7 Priority
+
+🔴 High
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-FE-MOBILE
+- REPO-BE-HOST
+
+## 1.10 Key Interactions
+
+- Client's connectivity listener detects an offline state.
+- User logs a new reading session.
+- The repository layer writes the new session data to the local Isar database, marking it as 'unsynced'.
+- The connectivity listener later detects an online state.
+- A background sync service reads all 'unsynced' records.
+- The service sends the queued data to the backend API in batches.
+- Upon successful push (2xx response), the client marks the local records as 'synced'.
+- The client then fetches any new data from the server that may have been created on another device.
+
+## 1.11 Triggers
+
+- User performs a data-mutating action while offline.
+- Network connectivity is restored after being offline.
+
+## 1.12 Outcomes
+
+- User data is eventually consistent between the local device and the server.
+- Users can use core features of the app seamlessly offline.
+
+## 1.13 Business Rules
+
+- A 'last write wins' conflict resolution strategy is used, based on a client-side timestamp.
+- Features requiring real-time data (e.g., searching new books, AI suggestions) are disabled and their UI reflects this state.
+
+## 1.14 Error Scenarios
+
+- A conflict occurs during synchronization where the server has a newer version.
+- The app is terminated before synchronization is complete (sync should resume on next launch).
+
+## 1.15 Integration Points
+
+*No items available*
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-DF-001
+
+## 2.2 Name
+
+Implementation of Offline-First Data Synchronization
+
+## 2.3 Description
+
+This sequence details the complete data flow for creating data on the mobile client while offline and its subsequent synchronization with the backend server upon network restoration. The process is divided into two main phases: 1) Offline data persistence to the local Isar database, and 2) Asynchronous data push to the backend API via a background service. It implements the Repository pattern to abstract data sources and a 'last write wins' strategy for conflict resolution, ensuring eventual consistency as required by REQ-OFF-001.
+
+## 2.4 Participants
+
+### 2.4.1 Actor
+
+#### 2.4.1.1 Repository Id
+
+user-actor
+
+#### 2.4.1.2 Display Name
+
+User
+
+#### 2.4.1.3 Type
+
+🔹 Actor
+
+#### 2.4.1.4 Technology
+
+Human
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #999999 |
+| Stereotype |  |
+
+### 2.4.2.0 Application
+
+#### 2.4.2.1 Repository Id
+
+REPO-FE-MOBILE
+
+#### 2.4.2.2 Display Name
+
+Flutter Mobile Client
+
+#### 2.4.2.3 Type
+
+🔹 Application
+
+#### 2.4.2.4 Technology
+
+Flutter 3.22+/Dart 3.4+
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | boundary |
+| Color | #1E88E5 |
+| Stereotype | «Client» |
+
+### 2.4.3.0 Database
+
+#### 2.4.3.1 Repository Id
+
+local-isar-db
+
+#### 2.4.3.2 Display Name
+
+Isar Local DB
+
+#### 2.4.3.3 Type
+
+🔹 Database
+
+#### 2.4.3.4 Technology
+
+Isar 3.1+
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #43A047 |
+| Stereotype | «Local Storage» |
+
+### 2.4.4.0 Application Services
+
+#### 2.4.4.1 Repository Id
+
+REPO-BE-HOST
+
+#### 2.4.4.2 Display Name
+
+Backend API Host
+
+#### 2.4.4.3 Type
+
+🔹 Application Services
+
+#### 2.4.4.4 Technology
+
+ASP.NET Core 8/.NET 8
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | boundary |
+| Color | #F4511E |
+| Stereotype | «Server» |
+
+### 2.4.5.0 Database
+
+#### 2.4.5.1 Repository Id
+
+backend-postgres-db
+
+#### 2.4.5.2 Display Name
+
+PostgreSQL DB
+
+#### 2.4.5.3 Type
+
+🔹 Database
+
+#### 2.4.5.4 Technology
+
+PostgreSQL 16
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #5E35B1 |
+| Stereotype | «Primary Datastore» |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 User Action
+
+#### 2.5.1.1 Source Id
+
+user-actor
+
+#### 2.5.1.2 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.1.3 Message
+
+1. logReadingSession(bookId, pagesRead, duration)
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 User Action
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+
+
+#### 2.5.1.8 Has Return
+
+❌ No
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | UI Event |
+| Method | onSaveSession |
+| Parameters | User input from session logging form. |
+| Authentication | N/A |
+| Error Handling | UI validation feedback for invalid input. |
+| Performance | Immediate UI response required (<16ms). |
+
+### 2.5.2.0 Conditional Flow
+
+#### 2.5.2.1 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.2.2 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.2.3 Message
+
+2. alt [ isOffline == true ]
+
+#### 2.5.2.4 Sequence Number
+
+2
+
+#### 2.5.2.5 Type
+
+🔹 Conditional Flow
+
+#### 2.5.2.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7 Return Message
+
+
+
+#### 2.5.2.8 Has Return
+
+❌ No
+
+#### 2.5.2.9 Is Activation
+
+❌ No
+
+#### 2.5.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal Logic |
+| Method | repository.logSession(...) |
+| Parameters | The Repository implementation checks connectivity ... |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | Negligible latency. |
+
+### 2.5.3.0 Database Write
+
+#### 2.5.3.1 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.3.2 Target Id
+
+local-isar-db
+
+#### 2.5.3.3 Message
+
+3. writeTxn(new ReadingSession{ syncStatus: 'unsynced', clientTimestamp: NOW_UTC, ... })
+
+#### 2.5.3.4 Sequence Number
+
+3
+
+#### 2.5.3.5 Type
+
+🔹 Database Write
+
+#### 2.5.3.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7 Return Message
+
+4. returns new local objectId
+
+#### 2.5.3.8 Has Return
+
+✅ Yes
+
+#### 2.5.3.9 Is Activation
+
+✅ Yes
+
+#### 2.5.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Isar SDK |
+| Method | isar.writeTxn() |
+| Parameters | A new `ReadingSession` object with `syncStatus` en... |
+| Authentication | N/A (Local DB access). Isar database file should b... |
+| Error Handling | Transaction can fail, throw exception. UI should s... |
+| Performance | High-performance, typically < 5ms. |
+
+### 2.5.4.0 Event Trigger
+
+#### 2.5.4.1 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.4.2 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.4.3 Message
+
+5. Connectivity listener detects online state and triggers SynchronizationService
+
+#### 2.5.4.4 Sequence Number
+
+5
+
+#### 2.5.4.5 Type
+
+🔹 Event Trigger
+
+#### 2.5.4.6 Is Synchronous
+
+❌ No
+
+#### 2.5.4.7 Return Message
+
+
+
+#### 2.5.4.8 Has Return
+
+❌ No
+
+#### 2.5.4.9 Is Activation
+
+✅ Yes
+
+#### 2.5.4.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal Event Bus |
+| Method | onConnectivityChanged |
+| Parameters | Event payload indicates 'online' status. |
+| Authentication | N/A |
+| Error Handling | The listener should be resilient to exceptions wit... |
+| Performance | Trigger should be near-instantaneous. |
+
+### 2.5.5.0 Database Read
+
+#### 2.5.5.1 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.5.2 Target Id
+
+local-isar-db
+
+#### 2.5.5.3 Message
+
+6. queryAll('FROM ReadingSession WHERE syncStatus = "unsynced"')
+
+#### 2.5.5.4 Sequence Number
+
+6
+
+#### 2.5.5.5 Type
+
+🔹 Database Read
+
+#### 2.5.5.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7 Return Message
+
+7. returns [unsyncedSession1, unsyncedSession2, ...]
+
+#### 2.5.5.8 Has Return
+
+✅ Yes
+
+#### 2.5.5.9 Is Activation
+
+✅ Yes
+
+#### 2.5.5.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Isar SDK |
+| Method | isar.readingSessions.where().syncStatusEqualTo('un... |
+| Parameters | Query uses an index on the `syncStatus` field for ... |
+| Authentication | N/A |
+| Error Handling | Query failure should be logged; sync process halts... |
+| Performance | Highly performant due to indexing (< 10ms). |
+
+### 2.5.6.0 API Call
+
+#### 2.5.6.1 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.6.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.6.3 Message
+
+
+
+```
+8. loop [for each unsynced item in batch]
+POST /api/v1/sessions/sync
+```
+
+#### 2.5.6.4 Sequence Number
+
+8
+
+#### 2.5.6.5 Type
+
+🔹 API Call
+
+#### 2.5.6.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7 Return Message
+
+13. 200 OK (with updated server model)
+
+#### 2.5.6.8 Has Return
+
+✅ Yes
+
+#### 2.5.6.9 Is Activation
+
+✅ Yes
+
+#### 2.5.6.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | POST /api/v1/sessions/sync |
+| Parameters | Body: `SyncSessionDto` { localId, bookId, pagesRea... |
+| Authentication | Authorization: Bearer <JWT> |
+| Error Handling | Client handles 4xx (e.g., 409 Conflict) and 5xx er... |
+| Performance | Request should adhere to REQ-PERF-001 (<200ms P95)... |
+
+#### 2.5.6.11 Nested Interactions
+
+##### 2.5.6.11.1 Database Read
+
+###### 2.5.6.11.1.1 Source Id
+
+REPO-BE-HOST
+
+###### 2.5.6.11.1.2 Target Id
+
+backend-postgres-db
+
+###### 2.5.6.11.1.3 Message
+
+9. FindAsync(id) or FirstOrDefaultAsync(u => u.Id == ...)
+
+###### 2.5.6.11.1.4 Sequence Number
+
+9
+
+###### 2.5.6.11.1.5 Type
+
+🔹 Database Read
+
+###### 2.5.6.11.1.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.6.11.1.7 Return Message
+
+10. returns existing record (or null)
+
+###### 2.5.6.11.1.8 Has Return
+
+✅ Yes
+
+###### 2.5.6.11.1.9 Is Activation
+
+✅ Yes
+
+###### 2.5.6.11.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | EF Core/Npgsql |
+| Method | dbContext.ReadingSessions.FindAsync(dto.Id) |
+| Parameters | Primary key lookup. |
+| Authentication | Connection string credentials. |
+| Error Handling | Database connection errors are caught and result i... |
+| Performance | Very fast due to primary key index. |
+
+##### 2.5.6.11.2.0 Conditional Flow
+
+###### 2.5.6.11.2.1 Source Id
+
+REPO-BE-HOST
+
+###### 2.5.6.11.2.2 Target Id
+
+REPO-BE-HOST
+
+###### 2.5.6.11.2.3 Message
+
+11. alt [ dto.clientTimestamp > serverRecord.updatedAt ]
+
+###### 2.5.6.11.2.4 Sequence Number
+
+11
+
+###### 2.5.6.11.2.5 Type
+
+🔹 Conditional Flow
+
+###### 2.5.6.11.2.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.6.11.2.7 Return Message
+
+
+
+###### 2.5.6.11.2.8 Has Return
+
+❌ No
+
+###### 2.5.6.11.2.9 Is Activation
+
+❌ No
+
+###### 2.5.6.11.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal Logic |
+| Method | Conflict Resolution Logic |
+| Parameters | Compares UTC timestamps to implement 'last write w... |
+| Authentication | N/A |
+| Error Handling | If client timestamp is older, the update is ignore... |
+| Performance | Negligible. |
+
+##### 2.5.6.11.3.0 Database Write
+
+###### 2.5.6.11.3.1 Source Id
+
+REPO-BE-HOST
+
+###### 2.5.6.11.3.2 Target Id
+
+backend-postgres-db
+
+###### 2.5.6.11.3.3 Message
+
+12. UPDATE "ReadingSessions" SET ...; SaveChangesAsync()
+
+###### 2.5.6.11.3.4 Sequence Number
+
+12
+
+###### 2.5.6.11.3.5 Type
+
+🔹 Database Write
+
+###### 2.5.6.11.3.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.6.11.3.7 Return Message
+
+returns success
+
+###### 2.5.6.11.3.8 Has Return
+
+✅ Yes
+
+###### 2.5.6.11.3.9 Is Activation
+
+✅ Yes
+
+###### 2.5.6.11.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | EF Core/Npgsql |
+| Method | dbContext.SaveChangesAsync() |
+| Parameters | Updates entity properties and saves. |
+| Authentication | N/A |
+| Error Handling | Concurrency exceptions or constraint violations re... |
+| Performance | Dependent on transaction complexity and indexing. |
+
+### 2.5.7.0.0.0 Database Write
+
+#### 2.5.7.1.0.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.7.2.0.0 Target Id
+
+local-isar-db
+
+#### 2.5.7.3.0.0 Message
+
+14. writeTxn(update session.id, { syncStatus: 'synced' })
+
+#### 2.5.7.4.0.0 Sequence Number
+
+14
+
+#### 2.5.7.5.0.0 Type
+
+🔹 Database Write
+
+#### 2.5.7.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.7.7.0.0 Return Message
+
+15. returns success
+
+#### 2.5.7.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.7.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.7.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Isar SDK |
+| Method | isar.writeTxn() |
+| Parameters | Updates the `syncStatus` of the specific record to... |
+| Authentication | N/A |
+| Error Handling | Failure to update is critical. Should be logged an... |
+| Performance | High-performance, typically < 5ms. |
+
+### 2.5.8.0.0.0 API Call
+
+#### 2.5.8.1.0.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.8.2.0.0 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.8.3.0.0 Message
+
+16. GET /api/v1/data/pull?since=lastSyncTimestamp
+
+#### 2.5.8.4.0.0 Sequence Number
+
+16
+
+#### 2.5.8.5.0.0 Type
+
+🔹 API Call
+
+#### 2.5.8.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.8.7.0.0 Return Message
+
+17. 200 OK (with delta of new/updated server data)
+
+#### 2.5.8.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.8.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.8.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | GET |
+| Parameters | Query parameter `since` contains the timestamp of ... |
+| Authentication | Authorization: Bearer <JWT> |
+| Error Handling | Failures are logged; client will retry on the next... |
+| Performance | Endpoint must be optimized for timestamp-based que... |
+
+### 2.5.9.0.0.0 Database Write
+
+#### 2.5.9.1.0.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.9.2.0.0 Target Id
+
+local-isar-db
+
+#### 2.5.9.3.0.0 Message
+
+18. writeTxn(upsert received server data)
+
+#### 2.5.9.4.0.0 Sequence Number
+
+18
+
+#### 2.5.9.5.0.0 Type
+
+🔹 Database Write
+
+#### 2.5.9.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.9.7.0.0 Return Message
+
+19. returns success
+
+#### 2.5.9.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.9.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.9.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Isar SDK |
+| Method | isar.writeTxn() with putAll() |
+| Parameters | Batch upsert of data received from the server to u... |
+| Authentication | N/A |
+| Error Handling | Transaction failure should be logged for debugging... |
+| Performance | Optimized for batch operations. |
+
+## 2.6.0.0.0.0 Notes
+
+### 2.6.1.0.0.0 Content
+
+#### 2.6.1.1.0.0 Content
+
+
+
+```
+Phase 1: Offline Data Creation.
+All user-generated data is written to the local Isar DB with a status flag indicating it has not yet been synchronized with the server.
+```
+
+#### 2.6.1.2.0.0 Position
+
+Top
+
+#### 2.6.1.3.0.0 Participant Id
+
+REPO-FE-MOBILE
+
+#### 2.6.1.4.0.0 Sequence Number
+
+1
+
+### 2.6.2.0.0.0 Content
+
+#### 2.6.2.1.0.0 Content
+
+
+
+```
+Phase 2: Online Synchronization.
+Triggered by network restoration. This is a two-step process:
+1. Push local 'unsynced' changes.
+2. Pull remote changes.
+```
+
+#### 2.6.2.2.0.0 Position
+
+Middle
+
+#### 2.6.2.3.0.0 Participant Id
+
+REPO-FE-MOBILE
+
+#### 2.6.2.4.0.0 Sequence Number
+
+5
+
+### 2.6.3.0.0.0 Content
+
+#### 2.6.3.1.0.0 Content
+
+
+
+```
+Conflict Resolution: 'Last Write Wins'.
+The server compares the `clientTimestamp` from the incoming request with the `updatedAt` timestamp of the existing database record. The record with the newer timestamp wins, ensuring data integrity.
+```
+
+#### 2.6.3.2.0.0 Position
+
+Middle
+
+#### 2.6.3.3.0.0 Participant Id
+
+REPO-BE-HOST
+
+#### 2.6.3.4.0.0 Sequence Number
+
+11
+
+## 2.7.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | All client-server communication must use HTTPS (TL... |
+| Performance Targets | Local Isar DB queries must be indexed on `syncStat... |
+| Error Handling Strategy | If a sync API call fails due to a transient error ... |
+| Testing Considerations | Thoroughly test the transition between online and ... |
+| Monitoring Requirements | The client application must log sync cycle start, ... |
+| Deployment Considerations | The API contract for the `/sync` endpoint must be ... |
+

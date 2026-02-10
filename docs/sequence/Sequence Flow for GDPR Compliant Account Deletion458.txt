@@ -1,0 +1,1320 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-CF-001
+
+## 1.2 Name
+
+GDPR Compliant Account Deletion
+
+## 1.3 Description
+
+A user initiates the permanent deletion of their account. The backend performs a hard delete of PII from primary data stores via an asynchronous job and triggers a separate process to find and anonymize their identity in retained application logs to comply with privacy regulations.
+
+## 1.4 Type
+
+🔹 ComplianceFlow
+
+## 1.5 Purpose
+
+To fulfill the user's 'Right to Erasure' under GDPR and CCPA, as specified in REQ-USR-001.
+
+## 1.6 Complexity
+
+High
+
+## 1.7 Priority
+
+🚨 Critical
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-FE-MOBILE
+- REPO-BE-HOST
+
+## 1.10 Key Interactions
+
+- User confirms 'Delete Account' in the client.
+- Client sends a DELETE /api/v1/users/me request.
+- The MOD-USERS service receives the request and enqueues an async deletion job.
+- The job performs a hard delete of all PII and user-generated content from the primary database.
+- The job triggers a separate sub-process to anonymize the user's PII (e.g., user ID, IP address) in application logs.
+- An immutable audit log of the account deletion event is created (containing a non-identifiable ID).
+- The user's session is invalidated, and they are logged out.
+
+## 1.11 Triggers
+
+- User confirms their request to permanently delete their account.
+
+## 1.12 Outcomes
+
+- All of the user's PII and generated content is permanently removed from the system.
+- The user can no longer log in to the application.
+- The action is logged for audit purposes.
+
+## 1.13 Business Rules
+
+- The deletion process must be irreversible (hard delete, not soft delete).
+- The account deletion event itself must be logged for auditing, but without any PII.
+
+## 1.14 Error Scenarios
+
+- The deletion process fails partway through, leaving orphaned data. Must have retry/recovery logic.
+- The log anonymization process fails to find all instances of the user's PII.
+
+## 1.15 Integration Points
+
+*No items available*
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-CF-001
+
+## 2.2 Name
+
+GDPR Compliant Account Deletion with Asynchronous Processing and Immutable Auditing
+
+## 2.3 Description
+
+Implementation sequence for a user-initiated permanent account deletion. The flow immediately invalidates the user's session and enqueues an asynchronous job to perform a hard delete of PII from the primary database. A subsequent sub-process anonymizes the user's identity in retained application logs. All critical stages are recorded in a separate, immutable audit trail to comply with GDPR's 'Right to Erasure' (REQ-USR-001).
+
+## 2.4 Participants
+
+### 2.4.1 Actor
+
+#### 2.4.1.1 Repository Id
+
+USER_ACTOR
+
+#### 2.4.1.2 Display Name
+
+User
+
+#### 2.4.1.3 Type
+
+🔹 Actor
+
+#### 2.4.1.4 Technology
+
+Human
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #999999 |
+| Stereotype |  |
+
+### 2.4.2.0 Client Application
+
+#### 2.4.2.1 Repository Id
+
+REPO-FE-MOBILE
+
+#### 2.4.2.2 Display Name
+
+Mobile Client (Flutter)
+
+#### 2.4.2.3 Type
+
+🔹 Client Application
+
+#### 2.4.2.4 Technology
+
+Flutter 3.x
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | boundary |
+| Color | #1E88E5 |
+| Stereotype | «Client» |
+
+### 2.4.3.0 Application Services
+
+#### 2.4.3.1 Repository Id
+
+REPO-BE-HOST
+
+#### 2.4.3.2 Display Name
+
+API Host (ASP.NET Core)
+
+#### 2.4.3.3 Type
+
+🔹 Application Services
+
+#### 2.4.3.4 Technology
+
+ASP.NET Core 8
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #43A047 |
+| Stereotype | «API Gateway» |
+
+### 2.4.4.0 Business Logic
+
+#### 2.4.4.1 Repository Id
+
+REPO-BE-MOD-USERS
+
+#### 2.4.4.2 Display Name
+
+Users Module
+
+#### 2.4.4.3 Type
+
+🔹 Business Logic
+
+#### 2.4.4.4 Technology
+
+.NET 8
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #43A047 |
+| Stereotype | «Domain Service» |
+
+### 2.4.5.0 Message Queue
+
+#### 2.4.5.1 Repository Id
+
+DATA-DELETION-QUEUE
+
+#### 2.4.5.2 Display Name
+
+Deletion Job Queue
+
+#### 2.4.5.3 Type
+
+🔹 Message Queue
+
+#### 2.4.5.4 Technology
+
+Amazon SQS
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | queue |
+| Color | #FB8C00 |
+| Stereotype | «SQS» |
+
+### 2.4.6.0 Background Process
+
+#### 2.4.6.1 Repository Id
+
+SERVICE-DELETION-WORKER
+
+#### 2.4.6.2 Display Name
+
+Deletion Worker
+
+#### 2.4.6.3 Type
+
+🔹 Background Process
+
+#### 2.4.6.4 Technology
+
+AWS Lambda / Fargate
+
+#### 2.4.6.5 Order
+
+6
+
+#### 2.4.6.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #5E35B1 |
+| Stereotype | «Worker» |
+
+### 2.4.7.0 Database
+
+#### 2.4.7.1 Repository Id
+
+DB-PRIMARY-DATASTORE
+
+#### 2.4.7.2 Display Name
+
+Primary Database
+
+#### 2.4.7.3 Type
+
+🔹 Database
+
+#### 2.4.7.4 Technology
+
+Amazon Aurora (PostgreSQL)
+
+#### 2.4.7.5 Order
+
+7
+
+#### 2.4.7.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #00838F |
+| Stereotype | «PII Store» |
+
+### 2.4.8.0 Background Process
+
+#### 2.4.8.1 Repository Id
+
+SERVICE-LOG-ANONYMIZER
+
+#### 2.4.8.2 Display Name
+
+Log Anonymization Service
+
+#### 2.4.8.3 Type
+
+🔹 Background Process
+
+#### 2.4.8.4 Technology
+
+AWS Lambda / Fargate
+
+#### 2.4.8.5 Order
+
+8
+
+#### 2.4.8.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #5E35B1 |
+| Stereotype | «Worker» |
+
+### 2.4.9.0 Log Storage
+
+#### 2.4.9.1 Repository Id
+
+LOG-APPLICATION-STORE
+
+#### 2.4.9.2 Display Name
+
+Application Logs
+
+#### 2.4.9.3 Type
+
+🔹 Log Storage
+
+#### 2.4.9.4 Technology
+
+AWS CloudWatch Logs
+
+#### 2.4.9.5 Order
+
+9
+
+#### 2.4.9.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #00838F |
+| Stereotype | «Log Store» |
+
+### 2.4.10.0 Audit Storage
+
+#### 2.4.10.1 Repository Id
+
+LOG-AUDIT-TRAIL
+
+#### 2.4.10.2 Display Name
+
+Immutable Audit Trail
+
+#### 2.4.10.3 Type
+
+🔹 Audit Storage
+
+#### 2.4.10.4 Technology
+
+Amazon S3 (Object Lock)
+
+#### 2.4.10.5 Order
+
+10
+
+#### 2.4.10.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #C62828 |
+| Stereotype | «Immutable Store» |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 User Interaction
+
+#### 2.5.1.1 Source Id
+
+USER_ACTOR
+
+#### 2.5.1.2 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.1.3 Message
+
+1. Confirms irreversible account deletion via UI dialog
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 User Interaction
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+
+
+#### 2.5.1.8 Has Return
+
+❌ No
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+##### 2.5.1.10.1 Protocol
+
+UI Event
+
+##### 2.5.1.10.2 Method
+
+onConfirmDelete()
+
+##### 2.5.1.10.3 Parameters
+
+*No items available*
+
+##### 2.5.1.10.4 Authentication
+
+N/A
+
+##### 2.5.1.10.5 Error Handling
+
+N/A
+
+##### 2.5.1.10.6 Performance
+
+###### 2.5.1.10.6.1 Latency
+
+N/A
+
+### 2.5.2.0.0.0 API Request
+
+#### 2.5.2.1.0.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.2.2.0.0 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.2.3.0.0 Message
+
+2. DELETE /api/v1/users/me
+
+#### 2.5.2.4.0.0 Sequence Number
+
+2
+
+#### 2.5.2.5.0.0 Type
+
+🔹 API Request
+
+#### 2.5.2.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7.0.0 Return Message
+
+HTTP 202 Accepted
+
+#### 2.5.2.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.2.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.2.10.0.0 Technical Details
+
+##### 2.5.2.10.1.0 Protocol
+
+HTTPS/1.1
+
+##### 2.5.2.10.2.0 Method
+
+```sql
+DELETE
+```
+
+##### 2.5.2.10.3.0 Parameters
+
+- {'name': 'Header: Authorization', 'value': 'Bearer <JWT>'}
+
+##### 2.5.2.10.4.0 Authentication
+
+JWT Bearer Token
+
+##### 2.5.2.10.5.0 Error Handling
+
+Handles 401 Unauthorized, 403 Forbidden, 5xx Server Error
+
+##### 2.5.2.10.6.0 Performance
+
+###### 2.5.2.10.6.1 Latency
+
+< 500ms
+
+### 2.5.3.0.0.0 Internal Method Call
+
+#### 2.5.3.1.0.0 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.3.2.0.0 Target Id
+
+REPO-BE-MOD-USERS
+
+#### 2.5.3.3.0.0 Message
+
+3. InitiateAccountDeletion(userId)
+
+#### 2.5.3.4.0.0 Sequence Number
+
+3
+
+#### 2.5.3.5.0.0 Type
+
+🔹 Internal Method Call
+
+#### 2.5.3.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7.0.0 Return Message
+
+JobQueuedSuccessfully
+
+#### 2.5.3.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.3.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.3.10.0.0 Technical Details
+
+##### 2.5.3.10.1.0 Protocol
+
+In-Process
+
+##### 2.5.3.10.2.0 Method
+
+InitiateAccountDeletion
+
+##### 2.5.3.10.3.0 Parameters
+
+- {'name': 'userId', 'type': 'Guid', 'description': 'Extracted from validated JWT'}
+
+##### 2.5.3.10.4.0 Authentication
+
+Internal Trust
+
+##### 2.5.3.10.5.0 Error Handling
+
+Throws exception if queueing fails, resulting in a 500 response
+
+##### 2.5.3.10.6.0 Performance
+
+###### 2.5.3.10.6.1 Latency
+
+< 200ms
+
+### 2.5.4.0.0.0 Audit Event
+
+#### 2.5.4.1.0.0 Source Id
+
+REPO-BE-MOD-USERS
+
+#### 2.5.4.2.0.0 Target Id
+
+LOG-AUDIT-TRAIL
+
+#### 2.5.4.3.0.0 Message
+
+4. CreateAuditLog(event: ACCOUNT_DELETION_REQUEST)
+
+#### 2.5.4.4.0.0 Sequence Number
+
+4
+
+#### 2.5.4.5.0.0 Type
+
+🔹 Audit Event
+
+#### 2.5.4.6.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.4.7.0.0 Return Message
+
+
+
+#### 2.5.4.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.4.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.4.10.0.0 Technical Details
+
+##### 2.5.4.10.1.0 Protocol
+
+AWS SDK S3 PutObject
+
+##### 2.5.4.10.2.0 Method
+
+CreateAuditLog
+
+##### 2.5.4.10.3.0 Parameters
+
+- {'name': 'Payload', 'schema': '{ eventId, timestamp, eventType, userId (non-PII), sourceIp }'}
+
+##### 2.5.4.10.4.0 Authentication
+
+IAM Role
+
+##### 2.5.4.10.5.0 Error Handling
+
+Fail-safe: action proceeds even if audit fails; triggers high-priority alert.
+
+##### 2.5.4.10.6.0 Performance
+
+###### 2.5.4.10.6.1 Latency
+
+N/A (asynchronous)
+
+### 2.5.5.0.0.0 Message Queue
+
+#### 2.5.5.1.0.0 Source Id
+
+REPO-BE-MOD-USERS
+
+#### 2.5.5.2.0.0 Target Id
+
+DATA-DELETION-QUEUE
+
+#### 2.5.5.3.0.0 Message
+
+5. SendMessage(payload)
+
+#### 2.5.5.4.0.0 Sequence Number
+
+5
+
+#### 2.5.5.5.0.0 Type
+
+🔹 Message Queue
+
+#### 2.5.5.6.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.5.7.0.0 Return Message
+
+
+
+#### 2.5.5.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.5.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.5.10.0.0 Technical Details
+
+##### 2.5.5.10.1.0 Protocol
+
+AWS SDK SQS
+
+##### 2.5.5.10.2.0 Method
+
+SendMessage
+
+##### 2.5.5.10.3.0 Parameters
+
+- {'name': 'Payload', 'schema': '{ userId, correlationId, requestTimestamp }'}
+
+##### 2.5.5.10.4.0 Authentication
+
+IAM Role
+
+##### 2.5.5.10.5.0 Error Handling
+
+Configured with a Dead-Letter Queue (DLQ) for failed messages.
+
+##### 2.5.5.10.6.0 Performance
+
+###### 2.5.5.10.6.1 Latency
+
+N/A (asynchronous)
+
+### 2.5.6.0.0.0 Internal State Change
+
+#### 2.5.6.1.0.0 Source Id
+
+REPO-BE-MOD-USERS
+
+#### 2.5.6.2.0.0 Target Id
+
+REPO-BE-MOD-USERS
+
+#### 2.5.6.3.0.0 Message
+
+6. InvalidateUserSession()
+
+#### 2.5.6.4.0.0 Sequence Number
+
+6
+
+#### 2.5.6.5.0.0 Type
+
+🔹 Internal State Change
+
+#### 2.5.6.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7.0.0 Return Message
+
+
+
+#### 2.5.6.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.6.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.6.10.0.0 Technical Details
+
+##### 2.5.6.10.1.0 Protocol
+
+In-Process
+
+##### 2.5.6.10.2.0 Method
+
+InvalidateUserSession
+
+##### 2.5.6.10.3.0 Parameters
+
+- {'name': 'userId', 'type': 'Guid'}
+
+##### 2.5.6.10.4.0 Authentication
+
+N/A
+
+##### 2.5.6.10.5.0 Error Handling
+
+N/A
+
+##### 2.5.6.10.6.0 Performance
+
+###### 2.5.6.10.6.1 Latency
+
+N/A
+
+### 2.5.7.0.0.0 Internal State Change
+
+#### 2.5.7.1.0.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.7.2.0.0 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.7.3.0.0 Message
+
+7. Clear local session & navigate to login
+
+#### 2.5.7.4.0.0 Sequence Number
+
+7
+
+#### 2.5.7.5.0.0 Type
+
+🔹 Internal State Change
+
+#### 2.5.7.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.7.7.0.0 Return Message
+
+
+
+#### 2.5.7.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.7.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.7.10.0.0 Technical Details
+
+##### 2.5.7.10.1.0 Protocol
+
+UI State Management
+
+##### 2.5.7.10.2.0 Method
+
+logout()
+
+##### 2.5.7.10.3.0 Parameters
+
+*No items available*
+
+##### 2.5.7.10.4.0 Authentication
+
+N/A
+
+##### 2.5.7.10.5.0 Error Handling
+
+N/A
+
+##### 2.5.7.10.6.0 Performance
+
+###### 2.5.7.10.6.1 Latency
+
+N/A
+
+### 2.5.8.0.0.0 Message Consume
+
+#### 2.5.8.1.0.0 Source Id
+
+DATA-DELETION-QUEUE
+
+#### 2.5.8.2.0.0 Target Id
+
+SERVICE-DELETION-WORKER
+
+#### 2.5.8.3.0.0 Message
+
+8. [Async] Polls and receives deletion message
+
+#### 2.5.8.4.0.0 Sequence Number
+
+8
+
+#### 2.5.8.5.0.0 Type
+
+🔹 Message Consume
+
+#### 2.5.8.6.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.8.7.0.0 Return Message
+
+
+
+#### 2.5.8.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.8.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.8.10.0.0 Technical Details
+
+##### 2.5.8.10.1.0 Protocol
+
+AWS SDK SQS
+
+##### 2.5.8.10.2.0 Method
+
+ReceiveMessage
+
+##### 2.5.8.10.3.0 Parameters
+
+*No items available*
+
+##### 2.5.8.10.4.0 Authentication
+
+IAM Role
+
+##### 2.5.8.10.5.0 Error Handling
+
+Message becomes visible again on processing failure; moved to DLQ after max retries.
+
+##### 2.5.8.10.6.0 Performance
+
+###### 2.5.8.10.6.1 Latency
+
+N/A (asynchronous polling)
+
+### 2.5.9.0.0.0 Database Query
+
+#### 2.5.9.1.0.0 Source Id
+
+SERVICE-DELETION-WORKER
+
+#### 2.5.9.2.0.0 Target Id
+
+DB-PRIMARY-DATASTORE
+
+#### 2.5.9.3.0.0 Message
+
+9. DELETE FROM Users WHERE UserId = @userId; (Cascading Deletes)
+
+#### 2.5.9.4.0.0 Sequence Number
+
+9
+
+#### 2.5.9.5.0.0 Type
+
+🔹 Database Query
+
+#### 2.5.9.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.9.7.0.0 Return Message
+
+Rows Affected
+
+#### 2.5.9.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.9.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.9.10.0.0 Technical Details
+
+##### 2.5.9.10.1.0 Protocol
+
+Npgsql
+
+##### 2.5.9.10.2.0 Method
+
+```sql
+DELETE
+```
+
+##### 2.5.9.10.3.0 Parameters
+
+- {'name': '@userId', 'type': 'Guid'}
+
+##### 2.5.9.10.4.0 Authentication
+
+Database Credentials from Secrets Manager
+
+##### 2.5.9.10.5.0 Error Handling
+
+Retries on transient errors. Permanent failure moves SQS message to DLQ.
+
+##### 2.5.9.10.6.0 Performance
+
+###### 2.5.9.10.6.1 Latency
+
+< 5 seconds
+
+### 2.5.10.0.0.0 Service Invocation
+
+#### 2.5.10.1.0.0 Source Id
+
+SERVICE-DELETION-WORKER
+
+#### 2.5.10.2.0.0 Target Id
+
+SERVICE-LOG-ANONYMIZER
+
+#### 2.5.10.3.0.0 Message
+
+10. TriggerAnonymization(userId, ipAddress)
+
+#### 2.5.10.4.0.0 Sequence Number
+
+10
+
+#### 2.5.10.5.0.0 Type
+
+🔹 Service Invocation
+
+#### 2.5.10.6.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.10.7.0.0 Return Message
+
+
+
+#### 2.5.10.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.10.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.10.10.0.0 Technical Details
+
+##### 2.5.10.10.1.0 Protocol
+
+AWS SDK Lambda Invoke / SQS
+
+##### 2.5.10.10.2.0 Method
+
+TriggerAnonymization
+
+##### 2.5.10.10.3.0 Parameters
+
+- {'name': 'Payload', 'schema': '{ userId, ipAddress, correlationId }'}
+
+##### 2.5.10.10.4.0 Authentication
+
+IAM Role
+
+##### 2.5.10.10.5.0 Error Handling
+
+Service has its own retry/DLQ mechanism. Failure is logged and alerted.
+
+##### 2.5.10.10.6.0 Performance
+
+###### 2.5.10.10.6.1 Latency
+
+N/A (asynchronous)
+
+### 2.5.11.0.0.0 Log Processing
+
+#### 2.5.11.1.0.0 Source Id
+
+SERVICE-LOG-ANONYMIZER
+
+#### 2.5.11.2.0.0 Target Id
+
+LOG-APPLICATION-STORE
+
+#### 2.5.11.3.0.0 Message
+
+11. Search and update log entries containing PII
+
+#### 2.5.11.4.0.0 Sequence Number
+
+11
+
+#### 2.5.11.5.0.0 Type
+
+🔹 Log Processing
+
+#### 2.5.11.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.11.7.0.0 Return Message
+
+Anonymization Complete
+
+#### 2.5.11.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.11.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.11.10.0.0 Technical Details
+
+##### 2.5.11.10.1.0 Protocol
+
+AWS SDK CloudWatch Logs
+
+##### 2.5.11.10.2.0 Method
+
+FilterLogEvents / PutLogEvents (overwrite)
+
+##### 2.5.11.10.3.0 Parameters
+
+- {'name': 'FilterPattern', 'value': "{ $.UserId = '...' || $.IpAddress = '...' }"}
+
+##### 2.5.11.10.4.0 Authentication
+
+IAM Role
+
+##### 2.5.11.10.5.0 Error Handling
+
+Logs and alerts on failure. Manual intervention may be required.
+
+##### 2.5.11.10.6.0 Performance
+
+###### 2.5.11.10.6.1 Latency
+
+Variable, depending on log volume.
+
+### 2.5.12.0.0.0 Audit Event
+
+#### 2.5.12.1.0.0 Source Id
+
+SERVICE-DELETION-WORKER
+
+#### 2.5.12.2.0.0 Target Id
+
+LOG-AUDIT-TRAIL
+
+#### 2.5.12.3.0.0 Message
+
+12. CreateAuditLog(event: ACCOUNT_DELETION_COMPLETE)
+
+#### 2.5.12.4.0.0 Sequence Number
+
+12
+
+#### 2.5.12.5.0.0 Type
+
+🔹 Audit Event
+
+#### 2.5.12.6.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.12.7.0.0 Return Message
+
+
+
+#### 2.5.12.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.12.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.12.10.0.0 Technical Details
+
+##### 2.5.12.10.1.0 Protocol
+
+AWS SDK S3 PutObject
+
+##### 2.5.12.10.2.0 Method
+
+CreateAuditLog
+
+##### 2.5.12.10.3.0 Parameters
+
+- {'name': 'Payload', 'schema': "{ eventId, timestamp, eventType, userId (non-PII), status: 'Success' }"}
+
+##### 2.5.12.10.4.0 Authentication
+
+IAM Role
+
+##### 2.5.12.10.5.0 Error Handling
+
+Fail-safe: logs error and alerts if final audit entry fails.
+
+##### 2.5.12.10.6.0 Performance
+
+###### 2.5.12.10.6.1 Latency
+
+N/A (asynchronous)
+
+### 2.5.13.0.0.0 Message Ack
+
+#### 2.5.13.1.0.0 Source Id
+
+SERVICE-DELETION-WORKER
+
+#### 2.5.13.2.0.0 Target Id
+
+DATA-DELETION-QUEUE
+
+#### 2.5.13.3.0.0 Message
+
+13. DeleteMessage()
+
+#### 2.5.13.4.0.0 Sequence Number
+
+13
+
+#### 2.5.13.5.0.0 Type
+
+🔹 Message Ack
+
+#### 2.5.13.6.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.13.7.0.0 Return Message
+
+
+
+#### 2.5.13.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.13.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.13.10.0.0 Technical Details
+
+##### 2.5.13.10.1.0 Protocol
+
+AWS SDK SQS
+
+##### 2.5.13.10.2.0 Method
+
+DeleteMessage
+
+##### 2.5.13.10.3.0 Parameters
+
+- {'name': 'ReceiptHandle', 'type': 'string'}
+
+##### 2.5.13.10.4.0 Authentication
+
+IAM Role
+
+##### 2.5.13.10.5.0 Error Handling
+
+N/A
+
+##### 2.5.13.10.6.0 Performance
+
+###### 2.5.13.10.6.1 Latency
+
+N/A
+
+## 2.6.0.0.0.0 Notes
+
+### 2.6.1.0.0.0 Content
+
+#### 2.6.1.1.0.0 Content
+
+The Audit Trail (LOG-AUDIT-TRAIL) must be configured with immutability features like Amazon S3 Object Lock in Compliance Mode to satisfy audit requirements.
+
+#### 2.6.1.2.0.0 Position
+
+bottom
+
+#### 2.6.1.3.0.0 Participant Id
+
+LOG-AUDIT-TRAIL
+
+#### 2.6.1.4.0.0 Sequence Number
+
+4
+
+### 2.6.2.0.0.0 Content
+
+#### 2.6.2.1.0.0 Content
+
+The Deletion Worker must be idempotent to handle potential retries from SQS without causing errors on already-deleted data.
+
+#### 2.6.2.2.0.0 Position
+
+bottom
+
+#### 2.6.2.3.0.0 Participant Id
+
+SERVICE-DELETION-WORKER
+
+#### 2.6.2.4.0.0 Sequence Number
+
+8
+
+### 2.6.3.0.0.0 Content
+
+#### 2.6.3.1.0.0 Content
+
+A CloudWatch Alarm must be configured on the SQS Dead-Letter Queue (DLQ) to immediately notify the on-call team of permanent deletion failures.
+
+#### 2.6.3.2.0.0 Position
+
+bottom
+
+#### 2.6.3.3.0.0 Participant Id
+
+DATA-DELETION-QUEUE
+
+#### 2.6.3.4.0.0 Sequence Number
+
+5
+
+## 2.7.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | 1. All worker services and the API Host must opera... |
+| Performance Targets | 1. The synchronous API call (step 2) must respond ... |
+| Error Handling Strategy | 1. **Job Failure**: If the Deletion Worker fails a... |
+| Testing Considerations | 1. **Integration Test**: An end-to-end test should... |
+| Monitoring Requirements | 1. **SQS DLQ Alarm**: A CloudWatch Alarm on `Appro... |
+| Deployment Considerations | The entire infrastructure, including the SQS queue... |
+

@@ -1,0 +1,958 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-EH-002
+
+## 1.2 Name
+
+Internal Database Transaction Failure and Rollback
+
+## 1.3 Description
+
+Handles a scenario where a multi-step operation involving several database writes fails partway through. The system ensures data integrity by rolling back the entire transaction, logs the critical error, and returns a graceful error message to the user.
+
+## 1.4 Type
+
+🔹 ErrorHandling
+
+## 1.5 Purpose
+
+To maintain data consistency and system stability in the event of internal data persistence failures.
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🔴 High
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-BE-HOST
+
+## 1.10 Key Interactions
+
+- User action triggers a complex command (e.g., completing a book, which updates the book status, updates goals, and creates a summary).
+- The Application Service begins a database transaction.
+- The service successfully writes the first entity (e.g., updates LibraryItem status to 'Read').
+- The service attempts to write a second entity (e.g., update Goal progress) but encounters a database constraint violation or connection issue.
+- The operation throws a DbUpdateException.
+- A global exception handling middleware catches the exception.
+- The database transaction is automatically rolled back by the DbContext's disposal.
+- The middleware logs a critical error with the full exception details and correlation ID.
+- The API returns a 500 Internal Server Error with a generic error message to the client.
+
+## 1.11 Triggers
+
+- A database error (e.g., constraint violation, deadlock, connection loss) occurs during a transaction.
+
+## 1.12 Outcomes
+
+- The database is left in a consistent state with no partial data committed.
+- The user is notified that the operation failed.
+- A high-severity alert is triggered for the development team.
+
+## 1.13 Business Rules
+
+- All multi-step write operations must be wrapped in a database transaction.
+
+## 1.14 Error Scenarios
+
+*No items available*
+
+## 1.15 Integration Points
+
+*No items available*
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-EH-002
+
+## 2.2 Name
+
+Implementation: Internal Database Transaction Failure and Rollback
+
+## 2.3 Description
+
+Technical sequence for handling a failed multi-step database write operation. This diagram illustrates how a global exception handling middleware intercepts a DbUpdateException, ensures the transaction is rolled back by the DbContext, logs a critical error for observability, and returns a standardized 500 Internal Server Error to the client, thereby guaranteeing data consistency.
+
+## 2.4 Participants
+
+### 2.4.1 Actor
+
+#### 2.4.1.1 Repository Id
+
+client-mobile-app
+
+#### 2.4.1.2 Display Name
+
+Client
+
+#### 2.4.1.3 Type
+
+🔹 Actor
+
+#### 2.4.1.4 Technology
+
+Flutter
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #90A4AE |
+| Stereotype | External |
+
+### 2.4.2.0 Layer
+
+#### 2.4.2.1 Repository Id
+
+REPO-BE-HOST
+
+#### 2.4.2.2 Display Name
+
+Presentation Layer
+
+#### 2.4.2.3 Type
+
+🔹 Layer
+
+#### 2.4.2.4 Technology
+
+ASP.NET Core 8
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | rectangle |
+| Color | #42A5F5 |
+| Stereotype | Controllers & Middleware |
+
+### 2.4.3.0 Layer
+
+#### 2.4.3.1 Repository Id
+
+REPO-BE-MOD-READING
+
+#### 2.4.3.2 Display Name
+
+Application Layer
+
+#### 2.4.3.3 Type
+
+🔹 Layer
+
+#### 2.4.3.4 Technology
+
+.NET 8 / MediatR
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | rectangle |
+| Color | #66BB6A |
+| Stereotype | Command Handlers |
+
+### 2.4.4.0 Layer
+
+#### 2.4.4.1 Repository Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.4.4.2 Display Name
+
+Infrastructure Layer
+
+#### 2.4.4.3 Type
+
+🔹 Layer
+
+#### 2.4.4.4 Technology
+
+Entity Framework Core 8
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | rectangle |
+| Color | #FFEE58 |
+| Stereotype | DbContext |
+
+### 2.4.5.0 Database
+
+#### 2.4.5.1 Repository Id
+
+postgresql-db
+
+#### 2.4.5.2 Display Name
+
+Database
+
+#### 2.4.5.3 Type
+
+🔹 Database
+
+#### 2.4.5.4 Technology
+
+PostgreSQL
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #7E57C2 |
+| Stereotype | Primary Data Store |
+
+### 2.4.6.0 Service
+
+#### 2.4.6.1 Repository Id
+
+monitoring-service
+
+#### 2.4.6.2 Display Name
+
+Logging & Monitoring
+
+#### 2.4.6.3 Type
+
+🔹 Service
+
+#### 2.4.6.4 Technology
+
+AWS CloudWatch / Serilog
+
+#### 2.4.6.5 Order
+
+6
+
+#### 2.4.6.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #FF7043 |
+| Stereotype | Observability Platform |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 Request
+
+#### 2.5.1.1 Source Id
+
+client-mobile-app
+
+#### 2.5.1.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.1.3 Message
+
+POST /api/v1/library/items/{itemId}/complete
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 Request
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+HTTP 500 Internal Server Error with JSON body: {"error":"An unexpected error occurred.","correlationId":"..."}
+
+#### 2.5.1.8 Has Return
+
+✅ Yes
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | POST |
+| Parameters | URL path with itemId; empty body. |
+| Authentication | JWT Bearer token in 'Authorization' header. |
+| Error Handling | Client-side logic must handle 500 status code and ... |
+| Performance | N/A |
+
+### 2.5.2.0 MethodCall
+
+#### 2.5.2.1 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.2.2 Target Id
+
+REPO-BE-MOD-READING
+
+#### 2.5.2.3 Message
+
+Dispatch(new CompleteBookCommand(itemId, userId))
+
+#### 2.5.2.4 Sequence Number
+
+2
+
+#### 2.5.2.5 Type
+
+🔹 MethodCall
+
+#### 2.5.2.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7 Return Message
+
+Throws DbUpdateException
+
+#### 2.5.2.8 Has Return
+
+✅ Yes
+
+#### 2.5.2.9 Is Activation
+
+✅ Yes
+
+#### 2.5.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | MediatR.ISender.Send |
+| Parameters | CompleteBookCommand object containing validated us... |
+| Authentication | User context (ClaimsPrincipal) is passed implicitl... |
+| Error Handling | Exception propagates up the call stack to the midd... |
+| Performance | N/A |
+
+### 2.5.3.0 MethodCall
+
+#### 2.5.3.1 Source Id
+
+REPO-BE-MOD-READING
+
+#### 2.5.3.2 Target Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.3.3 Message
+
+Begin Database Transaction
+
+#### 2.5.3.4 Sequence Number
+
+3
+
+#### 2.5.3.5 Type
+
+🔹 MethodCall
+
+#### 2.5.3.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7 Return Message
+
+Transaction context established
+
+#### 2.5.3.8 Has Return
+
+✅ Yes
+
+#### 2.5.3.9 Is Activation
+
+✅ Yes
+
+#### 2.5.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | DatabaseFacade.BeginTransactionAsync() |
+| Parameters | IsolationLevel.ReadCommitted |
+| Authentication | N/A |
+| Error Handling | A failure to start the transaction would throw an ... |
+| Performance | Sub-millisecond latency. |
+
+### 2.5.4.0 MethodCall
+
+#### 2.5.4.1 Source Id
+
+REPO-BE-MOD-READING
+
+#### 2.5.4.2 Target Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.4.3 Message
+
+Update LibraryItem status to 'Read' in DbContext
+
+#### 2.5.4.4 Sequence Number
+
+4
+
+#### 2.5.4.5 Type
+
+🔹 MethodCall
+
+#### 2.5.4.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7 Return Message
+
+
+
+#### 2.5.4.8 Has Return
+
+❌ No
+
+#### 2.5.4.9 Is Activation
+
+❌ No
+
+#### 2.5.4.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | repository.Update(libraryItem) |
+| Parameters | The hydrated LibraryItem entity. |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | In-memory operation. |
+
+### 2.5.5.0 DatabaseQuery
+
+#### 2.5.5.1 Source Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.5.2 Target Id
+
+postgresql-db
+
+#### 2.5.5.3 Message
+
+EXEC SQL: UPDATE "LibraryItems" SET ...
+
+#### 2.5.5.4 Sequence Number
+
+5
+
+#### 2.5.5.5 Type
+
+🔹 DatabaseQuery
+
+#### 2.5.5.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7 Return Message
+
+Success (Rows affected: 1)
+
+#### 2.5.5.8 Has Return
+
+✅ Yes
+
+#### 2.5.5.9 Is Activation
+
+✅ Yes
+
+#### 2.5.5.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | TCP/IP (Npgsql) |
+| Method | UPDATE |
+| Parameters | SQL parameters for item ID and new status. |
+| Authentication | Connection string credentials. |
+| Error Handling | Database returns success code. |
+| Performance | Expected latency < 10ms. |
+
+### 2.5.6.0 MethodCall
+
+#### 2.5.6.1 Source Id
+
+REPO-BE-MOD-READING
+
+#### 2.5.6.2 Target Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.6.3 Message
+
+Update Goal progress in DbContext (causes violation)
+
+#### 2.5.6.4 Sequence Number
+
+6
+
+#### 2.5.6.5 Type
+
+🔹 MethodCall
+
+#### 2.5.6.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7 Return Message
+
+
+
+#### 2.5.6.8 Has Return
+
+❌ No
+
+#### 2.5.6.9 Is Activation
+
+❌ No
+
+#### 2.5.6.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | repository.Update(goal) |
+| Parameters | The hydrated Goal entity with invalid progress dat... |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | In-memory operation. |
+
+### 2.5.7.0 MethodCall
+
+#### 2.5.7.1 Source Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.7.2 Target Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.7.3 Message
+
+Execute DbContext.SaveChangesAsync()
+
+#### 2.5.7.4 Sequence Number
+
+7
+
+#### 2.5.7.5 Type
+
+🔹 MethodCall
+
+#### 2.5.7.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.7.7 Return Message
+
+Throws DbUpdateException
+
+#### 2.5.7.8 Has Return
+
+✅ Yes
+
+#### 2.5.7.9 Is Activation
+
+❌ No
+
+#### 2.5.7.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | DbContext.SaveChangesAsync() |
+| Parameters | N/A |
+| Authentication | N/A |
+| Error Handling | This method orchestrates the database writes and t... |
+| Performance | N/A |
+
+#### 2.5.7.11 Nested Interactions
+
+##### 2.5.7.11.1 DatabaseQuery
+
+###### 2.5.7.11.1.1 Source Id
+
+REPO-BE-LIB-INFRA
+
+###### 2.5.7.11.1.2 Target Id
+
+postgresql-db
+
+###### 2.5.7.11.1.3 Message
+
+EXEC SQL: UPDATE "Goals" SET ...
+
+###### 2.5.7.11.1.4 Sequence Number
+
+7.1
+
+###### 2.5.7.11.1.5 Type
+
+🔹 DatabaseQuery
+
+###### 2.5.7.11.1.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.7.11.1.7 Return Message
+
+[ERROR: 23505 unique_violation]
+
+###### 2.5.7.11.1.8 Has Return
+
+✅ Yes
+
+###### 2.5.7.11.1.9 Is Activation
+
+✅ Yes
+
+###### 2.5.7.11.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | TCP/IP (Npgsql) |
+| Method | UPDATE |
+| Parameters | SQL parameters for goal ID and new progress value. |
+| Authentication | N/A |
+| Error Handling | Database engine rejects the write due to a constra... |
+| Performance | Expected latency < 10ms. |
+
+##### 2.5.7.11.2.0 Response
+
+###### 2.5.7.11.2.1 Source Id
+
+postgresql-db
+
+###### 2.5.7.11.2.2 Target Id
+
+REPO-BE-LIB-INFRA
+
+###### 2.5.7.11.2.3 Message
+
+Return database error
+
+###### 2.5.7.11.2.4 Sequence Number
+
+7.2
+
+###### 2.5.7.11.2.5 Type
+
+🔹 Response
+
+###### 2.5.7.11.2.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.7.11.2.7 Return Message
+
+
+
+###### 2.5.7.11.2.8 Has Return
+
+❌ No
+
+###### 2.5.7.11.2.9 Is Activation
+
+❌ No
+
+###### 2.5.7.11.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | TCP/IP (Npgsql) |
+| Method | N/A |
+| Parameters | Error code and message. |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | Sub-millisecond latency. |
+
+### 2.5.8.0.0.0 Exception
+
+#### 2.5.8.1.0.0 Source Id
+
+REPO-BE-MOD-READING
+
+#### 2.5.8.2.0.0 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.8.3.0.0 Message
+
+Exception propagates to Global Exception Handling Middleware
+
+#### 2.5.8.4.0.0 Sequence Number
+
+8
+
+#### 2.5.8.5.0.0 Type
+
+🔹 Exception
+
+#### 2.5.8.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.8.7.0.0 Return Message
+
+
+
+#### 2.5.8.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.8.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.8.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | Exception Propagation |
+| Parameters | DbUpdateException object with InnerException conta... |
+| Authentication | N/A |
+| Error Handling | The middleware is the designated catch block for t... |
+| Performance | Microsecond latency. |
+
+### 2.5.9.0.0.0 MethodCall
+
+#### 2.5.9.1.0.0 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.9.2.0.0 Target Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.9.3.0.0 Message
+
+Trigger Transaction Rollback (via DbContext.Dispose())
+
+#### 2.5.9.4.0.0 Sequence Number
+
+9
+
+#### 2.5.9.5.0.0 Type
+
+🔹 MethodCall
+
+#### 2.5.9.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.9.7.0.0 Return Message
+
+
+
+#### 2.5.9.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.9.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.9.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | DbContext.Dispose() |
+| Parameters | N/A |
+| Authentication | N/A |
+| Error Handling | The .NET runtime and ASP.NET Core request pipeline... |
+| Performance | In-memory operation. |
+
+### 2.5.10.0.0.0 DatabaseCommand
+
+#### 2.5.10.1.0.0 Source Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.10.2.0.0 Target Id
+
+postgresql-db
+
+#### 2.5.10.3.0.0 Message
+
+EXEC SQL: ROLLBACK TRANSACTION
+
+#### 2.5.10.4.0.0 Sequence Number
+
+10
+
+#### 2.5.10.5.0.0 Type
+
+🔹 DatabaseCommand
+
+#### 2.5.10.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.10.7.0.0 Return Message
+
+Success
+
+#### 2.5.10.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.10.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.10.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | TCP/IP (Npgsql) |
+| Method | ROLLBACK |
+| Parameters | N/A |
+| Authentication | N/A |
+| Error Handling | This command discards all changes made in the tran... |
+| Performance | Expected latency < 5ms. |
+
+### 2.5.11.0.0.0 Log
+
+#### 2.5.11.1.0.0 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.11.2.0.0 Target Id
+
+monitoring-service
+
+#### 2.5.11.3.0.0 Message
+
+Log Critical Error
+
+#### 2.5.11.4.0.0 Sequence Number
+
+11
+
+#### 2.5.11.5.0.0 Type
+
+🔹 Log
+
+#### 2.5.11.6.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.11.7.0.0 Return Message
+
+
+
+#### 2.5.11.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.11.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.11.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | Serilog.ILogger.Error(exception, ...) |
+| Parameters | Structured log entry including: Level='Error', Exc... |
+| Authentication | IAM Role for CloudWatch access. |
+| Error Handling | The logging pipeline should be resilient with its ... |
+| Performance | Asynchronous call to avoid blocking the response t... |
+
+## 2.6.0.0.0.0 Notes
+
+### 2.6.1.0.0.0 Content
+
+#### 2.6.1.1.0.0 Content
+
+CRITICAL: The rollback is an automatic side effect of the DbContext being disposed while its transaction is uncommitted. This is a key safety feature of Entity Framework Core within an ASP.NET Core request scope.
+
+#### 2.6.1.2.0.0 Position
+
+bottom
+
+#### 2.6.1.3.0.0 Participant Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.6.1.4.0.0 Sequence Number
+
+9
+
+### 2.6.2.0.0.0 Content
+
+#### 2.6.2.1.0.0 Content
+
+The global exception middleware is configured in Program.cs and acts as a centralized, top-level `try-catch` block for all requests, ensuring consistent error handling and response formatting.
+
+#### 2.6.2.2.0.0 Position
+
+top
+
+#### 2.6.2.3.0.0 Participant Id
+
+REPO-BE-HOST
+
+#### 2.6.2.4.0.0 Sequence Number
+
+8
+
+## 2.7.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | The final HTTP 500 error response sent to the clie... |
+| Performance Targets | The recovery time objective (RTO) for the data is ... |
+| Error Handling Strategy | This sequence demonstrates a 'fail-fast' and 'ensu... |
+| Testing Considerations | Create an integration test that specifically orche... |
+| Monitoring Requirements | A CloudWatch Alarm must be configured to trigger w... |
+| Deployment Considerations | All database schema changes (migrations) must be r... |
+

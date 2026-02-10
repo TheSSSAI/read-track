@@ -1,0 +1,922 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-IF-002
+
+## 1.2 Name
+
+Resilient External API Call (Google Books)
+
+## 1.3 Description
+
+The backend service for adding a book calls the Google Books API using an HttpClient wrapped with Polly resilience policies. This automatically handles transient errors through retries with an exponential backoff and jitter strategy.
+
+## 1.4 Type
+
+🔹 IntegrationFlow
+
+## 1.5 Purpose
+
+To ensure that interactions with critical external dependencies are reliable and can withstand transient failures, as per REQ-REL-001.
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🔴 High
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-BE-HOST
+- Google Books API
+
+## 1.10 Key Interactions
+
+- A user searches for a book by ISBN.
+- The MOD-READING service uses a typed HttpClient to call the Google Books API.
+- The Polly Retry Policy intercepts the outgoing request.
+- The Google Books API returns a transient error (e.g., 503 Service Unavailable).
+- The Polly policy catches the exception, waits for a calculated delay (exponential backoff + jitter), and retries the request.
+- On the second attempt, the API responds successfully.
+- The service processes the successful response.
+
+## 1.11 Triggers
+
+- Any backend service call to an external API (Google Books, OpenAI, Contentful).
+
+## 1.12 Outcomes
+
+- The API call eventually succeeds despite an initial transient failure.
+- The user experience is uninterrupted.
+
+## 1.13 Business Rules
+
+- A limited number of retries (e.g., 3) should be attempted.
+- An exponential backoff strategy must be used to avoid overwhelming a recovering service.
+
+## 1.14 Error Scenarios
+
+- The external API continues to fail after all retry attempts are exhausted, which would then trigger a Circuit Breaker.
+
+## 1.15 Integration Points
+
+- Google Books API (SI-005)
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-IF-002
+
+## 2.2 Name
+
+Implementation of Resilient Google Books API Integration with Polly Retry Policy
+
+## 2.3 Description
+
+This diagram details the technical implementation of a resilient call from the backend service to the external Google Books API. It utilizes an IHttpClientFactory-managed typed HttpClient wrapped with a Polly PolicyWrap containing both a Retry and a Circuit Breaker policy. The sequence demonstrates the retry mechanism handling a transient HTTP 503 error, fulfilling the resilience requirements outlined in REQ-REL-001 and REQ-REL-002.
+
+## 2.4 Participants
+
+### 2.4.1 API Controller
+
+#### 2.4.1.1 Repository Id
+
+REPO-BE-HOST:PresentationLayer
+
+#### 2.4.1.2 Display Name
+
+Presentation: ReadingController
+
+#### 2.4.1.3 Type
+
+🔹 API Controller
+
+#### 2.4.1.4 Technology
+
+ASP.NET Core 8
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #1E90FF |
+| Stereotype | <<Controller>> |
+
+### 2.4.2.0 CQRS Handler
+
+#### 2.4.2.1 Repository Id
+
+REPO-BE-HOST:ApplicationLayer
+
+#### 2.4.2.2 Display Name
+
+Application: GetBookByIsbnQueryHandler
+
+#### 2.4.2.3 Type
+
+🔹 CQRS Handler
+
+#### 2.4.2.4 Technology
+
+MediatR 12.2+
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #32CD32 |
+| Stereotype | <<Handler>> |
+
+### 2.4.3.0 Typed HttpClient
+
+#### 2.4.3.1 Repository Id
+
+REPO-BE-HOST:InfrastructureLayer:Client
+
+#### 2.4.3.2 Display Name
+
+Infrastructure: GoogleBooksApiClient
+
+#### 2.4.3.3 Type
+
+🔹 Typed HttpClient
+
+#### 2.4.3.4 Technology
+
+HttpClient, Polly 8.4+
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #FFD700 |
+| Stereotype | <<ApiClient>> |
+
+### 2.4.4.0 Resilience Policy
+
+#### 2.4.4.1 Repository Id
+
+REPO-BE-HOST:InfrastructureLayer:Policy
+
+#### 2.4.4.2 Display Name
+
+Infrastructure: Polly Resilience Policy
+
+#### 2.4.4.3 Type
+
+🔹 Resilience Policy
+
+#### 2.4.4.4 Technology
+
+Polly 8.4+
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #FFA07A |
+| Stereotype | <<Policy>> |
+
+### 2.4.5.0 External REST API
+
+#### 2.4.5.1 Repository Id
+
+EXT-API:GoogleBooks
+
+#### 2.4.5.2 Display Name
+
+External: Google Books API
+
+#### 2.4.5.3 Type
+
+🔹 External REST API
+
+#### 2.4.5.4 Technology
+
+HTTP/JSON
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #D3D3D3 |
+| Stereotype | <<External>> |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 CQRS Query
+
+#### 2.5.1.1 Source Id
+
+REPO-BE-HOST:PresentationLayer
+
+#### 2.5.1.2 Target Id
+
+REPO-BE-HOST:ApplicationLayer
+
+#### 2.5.1.3 Message
+
+Sends GetBookByIsbnQuery via MediatR
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 CQRS Query
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+Returns BookDetailsDto or throws exception
+
+#### 2.5.1.8 Has Return
+
+✅ Yes
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+##### 2.5.1.10.1 Protocol
+
+In-Process
+
+##### 2.5.1.10.2 Method
+
+mediator.Send(new GetBookByIsbnQuery(isbn))
+
+##### 2.5.1.10.3 Parameters
+
+- {'name': 'isbn', 'type': 'string', 'description': 'The ISBN-13 of the book to search for.'}
+
+##### 2.5.1.10.4 Authentication
+
+N/A (Internal)
+
+##### 2.5.1.10.5 Error Handling
+
+Catches exceptions from application layer and maps them to appropriate HTTP status codes (e.g., 404, 503).
+
+##### 2.5.1.10.6 Performance
+
+###### 2.5.1.10.6.1 Latency
+
+<10ms for dispatch
+
+### 2.5.2.0.0.0 Method Call
+
+#### 2.5.2.1.0.0 Source Id
+
+REPO-BE-HOST:ApplicationLayer
+
+#### 2.5.2.2.0.0 Target Id
+
+REPO-BE-HOST:InfrastructureLayer:Client
+
+#### 2.5.2.3.0.0 Message
+
+Invokes GetBookByIsbnAsync(isbn)
+
+#### 2.5.2.4.0.0 Sequence Number
+
+2
+
+#### 2.5.2.5.0.0 Type
+
+🔹 Method Call
+
+#### 2.5.2.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7.0.0 Return Message
+
+Returns deserialized BookDetailsDto
+
+#### 2.5.2.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.2.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.2.10.0.0 Technical Details
+
+##### 2.5.2.10.1.0 Protocol
+
+In-Process
+
+##### 2.5.2.10.2.0 Method
+
+googleBooksApiClient.GetBookByIsbnAsync(isbn)
+
+##### 2.5.2.10.3.0 Parameters
+
+- {'name': 'isbn', 'type': 'string'}
+
+##### 2.5.2.10.4.0 Authentication
+
+N/A (Internal)
+
+##### 2.5.2.10.5.0 Error Handling
+
+Propagates exceptions (e.g., BrokenCircuitException) from the infrastructure layer to be handled by the controller.
+
+##### 2.5.2.10.6.0 Performance
+
+###### 2.5.2.10.6.1 Latency
+
+Dependent on external API and resilience policy delays.
+
+### 2.5.3.0.0.0 Policy Execution
+
+#### 2.5.3.1.0.0 Source Id
+
+REPO-BE-HOST:InfrastructureLayer:Client
+
+#### 2.5.3.2.0.0 Target Id
+
+REPO-BE-HOST:InfrastructureLayer:Policy
+
+#### 2.5.3.3.0.0 Message
+
+Executes request via Polly PolicyWrap
+
+#### 2.5.3.4.0.0 Sequence Number
+
+3
+
+#### 2.5.3.5.0.0 Type
+
+🔹 Policy Execution
+
+#### 2.5.3.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7.0.0 Return Message
+
+Returns successful HttpResponseMessage or throws exception after exhausting retries.
+
+#### 2.5.3.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.3.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.3.10.0.0 Technical Details
+
+##### 2.5.3.10.1.0 Protocol
+
+In-Process
+
+##### 2.5.3.10.2.0 Method
+
+resiliencePolicy.ExecuteAsync(() => httpClient.GetAsync(...))
+
+##### 2.5.3.10.3.0 Parameters
+
+- {'name': 'Action', 'type': 'Func<Task<HttpResponseMessage>>', 'description': 'The delegate containing the HttpClient call.'}
+
+##### 2.5.3.10.4.0 Authentication
+
+N/A
+
+##### 2.5.3.10.5.0 Error Handling
+
+The policy itself defines the error handling logic (retry, circuit breaker).
+
+##### 2.5.3.10.6.0 Performance
+
+###### 2.5.3.10.6.1 Latency
+
+Adds overhead for policy evaluation and wait delays on failure.
+
+### 2.5.4.0.0.0 HTTP Request
+
+#### 2.5.4.1.0.0 Source Id
+
+REPO-BE-HOST:InfrastructureLayer:Policy
+
+#### 2.5.4.2.0.0 Target Id
+
+EXT-API:GoogleBooks
+
+#### 2.5.4.3.0.0 Message
+
+GET /books/v1/volumes?q=isbn:{isbn}&key={apiKey} (Attempt 1)
+
+#### 2.5.4.4.0.0 Sequence Number
+
+4
+
+#### 2.5.4.5.0.0 Type
+
+🔹 HTTP Request
+
+#### 2.5.4.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7.0.0 Return Message
+
+HTTP 503 Service Unavailable
+
+#### 2.5.4.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.4.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.4.10.0.0 Technical Details
+
+##### 2.5.4.10.1.0 Protocol
+
+HTTPS/1.1
+
+##### 2.5.4.10.2.0 Method
+
+GET
+
+##### 2.5.4.10.3.0 Parameters
+
+###### 2.5.4.10.3.1 query
+
+####### 2.5.4.10.3.1.1 Name
+
+q
+
+####### 2.5.4.10.3.1.2 Type
+
+🔹 query
+
+####### 2.5.4.10.3.1.3 Value
+
+isbn:{isbn}
+
+###### 2.5.4.10.3.2.0 query
+
+####### 2.5.4.10.3.2.1 Name
+
+key
+
+####### 2.5.4.10.3.2.2 Type
+
+🔹 query
+
+####### 2.5.4.10.3.2.3 Value
+
+{apiKey}
+
+##### 2.5.4.10.4.0.0 Authentication
+
+API Key in query string
+
+##### 2.5.4.10.5.0.0 Error Handling
+
+Response is a transient failure.
+
+##### 2.5.4.10.6.0.0 Performance
+
+###### 2.5.4.10.6.1.0 Latency
+
+Variable, depends on external service.
+
+### 2.5.5.0.0.0.0 Self-Call / Internal Logic
+
+#### 2.5.5.1.0.0.0 Source Id
+
+REPO-BE-HOST:InfrastructureLayer:Policy
+
+#### 2.5.5.2.0.0.0 Target Id
+
+REPO-BE-HOST:InfrastructureLayer:Policy
+
+#### 2.5.5.3.0.0.0 Message
+
+Catches HttpRequestException, initiates retry delay (Exponential Backoff + Jitter)
+
+#### 2.5.5.4.0.0.0 Sequence Number
+
+5
+
+#### 2.5.5.5.0.0.0 Type
+
+🔹 Self-Call / Internal Logic
+
+#### 2.5.5.6.0.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7.0.0.0 Return Message
+
+
+
+#### 2.5.5.8.0.0.0 Has Return
+
+❌ No
+
+#### 2.5.5.9.0.0.0 Is Activation
+
+❌ No
+
+#### 2.5.5.10.0.0.0 Technical Details
+
+##### 2.5.5.10.1.0.0 Protocol
+
+In-Process
+
+##### 2.5.5.10.2.0.0 Method
+
+WaitAndRetry logic
+
+##### 2.5.5.10.3.0.0 Parameters
+
+- {'name': 'retryAttempt', 'value': '1'}
+
+##### 2.5.5.10.4.0.0 Authentication
+
+N/A
+
+##### 2.5.5.10.5.0.0 Error Handling
+
+Calculates wait duration: TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)) + randomJitter.
+
+##### 2.5.5.10.6.0.0 Performance
+
+###### 2.5.5.10.6.1.0 Latency
+
+Wait duration (e.g., ~2 seconds for first retry).
+
+### 2.5.6.0.0.0.0 HTTP Request
+
+#### 2.5.6.1.0.0.0 Source Id
+
+REPO-BE-HOST:InfrastructureLayer:Policy
+
+#### 2.5.6.2.0.0.0 Target Id
+
+EXT-API:GoogleBooks
+
+#### 2.5.6.3.0.0.0 Message
+
+GET /books/v1/volumes?q=isbn:{isbn}&key={apiKey} (Attempt 2)
+
+#### 2.5.6.4.0.0.0 Sequence Number
+
+6
+
+#### 2.5.6.5.0.0.0 Type
+
+🔹 HTTP Request
+
+#### 2.5.6.6.0.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7.0.0.0 Return Message
+
+HTTP 200 OK with JSON payload
+
+#### 2.5.6.8.0.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.6.9.0.0.0 Is Activation
+
+❌ No
+
+#### 2.5.6.10.0.0.0 Technical Details
+
+##### 2.5.6.10.1.0.0 Protocol
+
+HTTPS/1.1
+
+##### 2.5.6.10.2.0.0 Method
+
+GET
+
+##### 2.5.6.10.3.0.0 Parameters
+
+*No items available*
+
+##### 2.5.6.10.4.0.0 Authentication
+
+API Key in query string
+
+##### 2.5.6.10.5.0.0 Error Handling
+
+Successful response.
+
+##### 2.5.6.10.6.0.0 Performance
+
+###### 2.5.6.10.6.1.0 Latency
+
+Variable
+
+### 2.5.7.0.0.0.0 Return Value
+
+#### 2.5.7.1.0.0.0 Source Id
+
+REPO-BE-HOST:InfrastructureLayer:Policy
+
+#### 2.5.7.2.0.0.0 Target Id
+
+REPO-BE-HOST:InfrastructureLayer:Client
+
+#### 2.5.7.3.0.0.0 Message
+
+Returns successful HttpResponseMessage
+
+#### 2.5.7.4.0.0.0 Sequence Number
+
+7
+
+#### 2.5.7.5.0.0.0 Type
+
+🔹 Return Value
+
+#### 2.5.7.6.0.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.7.7.0.0.0 Return Message
+
+
+
+#### 2.5.7.8.0.0.0 Has Return
+
+❌ No
+
+#### 2.5.7.9.0.0.0 Is Activation
+
+❌ No
+
+#### 2.5.7.10.0.0.0 Technical Details
+
+##### 2.5.7.10.1.0.0 Protocol
+
+In-Process
+
+##### 2.5.7.10.2.0.0 Method
+
+Return from ExecuteAsync
+
+##### 2.5.7.10.3.0.0 Parameters
+
+- {'name': 'HttpResponseMessage', 'value': 'StatusCode: 200 OK'}
+
+##### 2.5.7.10.4.0.0 Authentication
+
+N/A
+
+##### 2.5.7.10.5.0.0 Error Handling
+
+N/A
+
+##### 2.5.7.10.6.0.0 Performance
+
+*No data available*
+
+### 2.5.8.0.0.0.0 Return Value
+
+#### 2.5.8.1.0.0.0 Source Id
+
+REPO-BE-HOST:InfrastructureLayer:Client
+
+#### 2.5.8.2.0.0.0 Target Id
+
+REPO-BE-HOST:ApplicationLayer
+
+#### 2.5.8.3.0.0.0 Message
+
+Deserializes JSON and returns BookDetailsDto
+
+#### 2.5.8.4.0.0.0 Sequence Number
+
+8
+
+#### 2.5.8.5.0.0.0 Type
+
+🔹 Return Value
+
+#### 2.5.8.6.0.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.8.7.0.0.0 Return Message
+
+
+
+#### 2.5.8.8.0.0.0 Has Return
+
+❌ No
+
+#### 2.5.8.9.0.0.0 Is Activation
+
+❌ No
+
+#### 2.5.8.10.0.0.0 Technical Details
+
+##### 2.5.8.10.1.0.0 Protocol
+
+In-Process
+
+##### 2.5.8.10.2.0.0 Method
+
+Return from GetBookByIsbnAsync
+
+##### 2.5.8.10.3.0.0 Parameters
+
+- {'name': 'BookDetailsDto', 'description': 'Populated DTO object.'}
+
+##### 2.5.8.10.4.0.0 Authentication
+
+N/A
+
+##### 2.5.8.10.5.0.0 Error Handling
+
+Handles JSON deserialization errors.
+
+##### 2.5.8.10.6.0.0 Performance
+
+###### 2.5.8.10.6.1.0 Latency
+
+<5ms for deserialization
+
+### 2.5.9.0.0.0.0 Return Value
+
+#### 2.5.9.1.0.0.0 Source Id
+
+REPO-BE-HOST:ApplicationLayer
+
+#### 2.5.9.2.0.0.0 Target Id
+
+REPO-BE-HOST:PresentationLayer
+
+#### 2.5.9.3.0.0.0 Message
+
+Returns successful result
+
+#### 2.5.9.4.0.0.0 Sequence Number
+
+9
+
+#### 2.5.9.5.0.0.0 Type
+
+🔹 Return Value
+
+#### 2.5.9.6.0.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.9.7.0.0.0 Return Message
+
+
+
+#### 2.5.9.8.0.0.0 Has Return
+
+❌ No
+
+#### 2.5.9.9.0.0.0 Is Activation
+
+❌ No
+
+#### 2.5.9.10.0.0.0 Technical Details
+
+##### 2.5.9.10.1.0.0 Protocol
+
+In-Process
+
+##### 2.5.9.10.2.0.0 Method
+
+Return from mediator.Send
+
+##### 2.5.9.10.3.0.0 Parameters
+
+- {'name': 'BookDetailsDto'}
+
+##### 2.5.9.10.4.0.0 Authentication
+
+N/A
+
+##### 2.5.9.10.5.0.0 Error Handling
+
+N/A
+
+##### 2.5.9.10.6.0.0 Performance
+
+*No data available*
+
+## 2.6.0.0.0.0.0 Notes
+
+### 2.6.1.0.0.0.0 Content
+
+#### 2.6.1.1.0.0.0 Content
+
+The PollyResiliencePolicy is configured at application startup using IHttpClientFactory and AddPolicyHandler. It should be a PolicyWrap combining a Retry policy and a Circuit Breaker policy.
+
+#### 2.6.1.2.0.0.0 Position
+
+top
+
+#### 2.6.1.3.0.0.0 Participant Id
+
+REPO-BE-HOST:InfrastructureLayer:Policy
+
+#### 2.6.1.4.0.0.0 Sequence Number
+
+3
+
+### 2.6.2.0.0.0.0 Content
+
+#### 2.6.2.1.0.0.0 Content
+
+Retry Policy Config: 3 retry attempts. Exponential backoff starting at 2 seconds. Jitter of +/- 500ms is added to prevent thundering herd on recovery.
+
+#### 2.6.2.2.0.0.0 Position
+
+bottom
+
+#### 2.6.2.3.0.0.0 Participant Id
+
+REPO-BE-HOST:InfrastructureLayer:Policy
+
+#### 2.6.2.4.0.0.0 Sequence Number
+
+5
+
+### 2.6.3.0.0.0.0 Content
+
+#### 2.6.3.1.0.0.0 Content
+
+Circuit Breaker Config: Breaks for 30 seconds after 5 consecutive failures. This policy wraps the retry policy.
+
+#### 2.6.3.2.0.0.0 Position
+
+bottom
+
+#### 2.6.3.3.0.0.0 Participant Id
+
+REPO-BE-HOST:InfrastructureLayer:Policy
+
+#### 2.6.3.4.0.0.0 Sequence Number
+
+5
+
+## 2.7.0.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | The Google Books API key must be stored securely i... |
+| Performance Targets | The P99 latency for a successful, non-retried API ... |
+| Error Handling Strategy | A PolicyWrap must be implemented. The outer policy... |
+| Testing Considerations | Integration tests must be written for the `GoogleB... |
+| Monitoring Requirements | 1. Log each retry attempt at the 'Warning' level, ... |
+| Deployment Considerations | The configuration for the Polly policies (retry co... |
+

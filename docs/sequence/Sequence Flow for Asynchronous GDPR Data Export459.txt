@@ -1,0 +1,996 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-CF-002
+
+## 1.2 Name
+
+Asynchronous GDPR Data Export
+
+## 1.3 Description
+
+A user requests an export of their data. The backend queues an asynchronous job that generates a JSON file, stores it securely in a private S3 bucket, generates a pre-signed, time-limited download URL, and emails the link to the user via Amazon SES.
+
+## 1.4 Type
+
+🔹 ComplianceFlow
+
+## 1.5 Purpose
+
+To fulfill the user's 'Right to Data Portability' under GDPR and CCPA, as specified in REQ-USR-001.
+
+## 1.6 Complexity
+
+High
+
+## 1.7 Priority
+
+🚨 Critical
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-FE-MOBILE
+- REPO-BE-HOST
+- Amazon SQS
+- Amazon S3
+- Amazon SES
+
+## 1.10 Key Interactions
+
+- User taps 'Export My Data'.
+- Backend creates a data export job record and publishes a message to an SQS queue.
+- A backend worker (e.g., Lambda/Hangfire) consumes the message.
+- The worker fetches all user data (library, sessions) and formats it into a JSON file.
+- The file is uploaded to a secure, private S3 bucket.
+- The worker generates a pre-signed S3 URL valid for 24 hours.
+- The worker uses Amazon SES to email the download link to the user.
+- A separate cleanup process deletes the file from S3 after its expiration.
+
+## 1.11 Triggers
+
+- User initiates a data export request.
+
+## 1.12 Outcomes
+
+- The user receives an email with a secure link to download their personal data in JSON format.
+
+## 1.13 Business Rules
+
+- The download link must expire after 24 hours.
+- The exported file must be permanently deleted from storage after 24 hours.
+- The process must be asynchronous to avoid timing out the user's request.
+
+## 1.14 Error Scenarios
+
+- The background job fails during data aggregation.
+- The email fails to send.
+- The S3 upload fails.
+
+## 1.15 Integration Points
+
+- Amazon SQS
+- Amazon S3
+- Amazon SES
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-CF-002
+
+## 2.2 Name
+
+Implementation of Asynchronous GDPR Data Export Flow
+
+## 2.3 Description
+
+Provides a detailed technical specification for the asynchronous process of exporting user data in compliance with GDPR 'Right to Data Portability' (REQ-USR-001). The sequence is initiated by a user request, which triggers a decoupled background job via Amazon SQS. A Hangfire worker processes the job, generates a JSON file, uploads it to a secure S3 bucket, generates a time-limited pre-signed URL, and emails the link to the user via Amazon SES. The entire process is audited for compliance.
+
+## 2.4 Participants
+
+### 2.4.1 Client
+
+#### 2.4.1.1 Repository Id
+
+REPO-FE-MOBILE
+
+#### 2.4.1.2 Display Name
+
+Flutter Mobile Client
+
+#### 2.4.1.3 Type
+
+🔹 Client
+
+#### 2.4.1.4 Technology
+
+Flutter 3.x, Dio
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #007ACC |
+| Stereotype | User Interface |
+
+### 2.4.2.0 Application Service
+
+#### 2.4.2.1 Repository Id
+
+REPO-BE-HOST
+
+#### 2.4.2.2 Display Name
+
+Backend API Host
+
+#### 2.4.2.3 Type
+
+🔹 Application Service
+
+#### 2.4.2.4 Technology
+
+ASP.NET Core 8
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | participant |
+| Color | #5D3FD3 |
+| Stereotype | API Host |
+
+### 2.4.3.0 Infrastructure Library
+
+#### 2.4.3.1 Repository Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.4.3.2 Display Name
+
+Infrastructure & Data Layer
+
+#### 2.4.3.3 Type
+
+🔹 Infrastructure Library
+
+#### 2.4.3.4 Technology
+
+EF Core 8, Npgsql, AWS SDK
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #4CAF50 |
+| Stereotype | Persistence |
+
+### 2.4.4.0 Message Queue
+
+#### 2.4.4.1 Repository Id
+
+Amazon SQS
+
+#### 2.4.4.2 Display Name
+
+Amazon SQS
+
+#### 2.4.4.3 Type
+
+🔹 Message Queue
+
+#### 2.4.4.4 Technology
+
+AWS SQS
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | queue |
+| Color | #FF9900 |
+| Stereotype | AWS Service |
+
+### 2.4.5.0 Background Worker
+
+#### 2.4.5.1 Repository Id
+
+REPO-BE-WORKER
+
+#### 2.4.5.2 Display Name
+
+Hangfire Background Worker
+
+#### 2.4.5.3 Type
+
+🔹 Background Worker
+
+#### 2.4.5.4 Technology
+
+Hangfire, .NET 8
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | participant |
+| Color | #9C27B0 |
+| Stereotype | Job Processor |
+
+### 2.4.6.0 Object Storage
+
+#### 2.4.6.1 Repository Id
+
+Amazon S3
+
+#### 2.4.6.2 Display Name
+
+Amazon S3
+
+#### 2.4.6.3 Type
+
+🔹 Object Storage
+
+#### 2.4.6.4 Technology
+
+AWS S3
+
+#### 2.4.6.5 Order
+
+6
+
+#### 2.4.6.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | cloud |
+| Color | #FF9900 |
+| Stereotype | AWS Service |
+
+### 2.4.7.0 Email Service
+
+#### 2.4.7.1 Repository Id
+
+Amazon SES
+
+#### 2.4.7.2 Display Name
+
+Amazon SES
+
+#### 2.4.7.3 Type
+
+🔹 Email Service
+
+#### 2.4.7.4 Technology
+
+AWS SES
+
+#### 2.4.7.5 Order
+
+7
+
+#### 2.4.7.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #FF9900 |
+| Stereotype | AWS Service |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 Request
+
+#### 2.5.1.1 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.1.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.1.3 Message
+
+1. User initiates data export
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 Request
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+4. Acknowledge request processing
+
+#### 2.5.1.8 Has Return
+
+✅ Yes
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+##### 2.5.1.10.1 Protocol
+
+HTTPS
+
+##### 2.5.1.10.2 Method
+
+POST /api/v1/users/me/export
+
+##### 2.5.1.10.3 Parameters
+
+None (user identified via token)
+
+##### 2.5.1.10.4 Authentication
+
+JWT Bearer Token in Authorization header
+
+##### 2.5.1.10.5 Error Handling
+
+401 Unauthorized if token is invalid. 429 Too Many Requests if rate limited.
+
+##### 2.5.1.10.6 Performance
+
+###### 2.5.1.10.6.1 Latency
+
+< 200ms P95
+
+###### 2.5.1.10.6.2 Notes
+
+Must respond quickly to avoid client timeout.
+
+### 2.5.2.0.0.0 Database Call
+
+#### 2.5.2.1.0.0 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.2.2.0.0 Target Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.2.3.0.0 Message
+
+2. Create and persist DataExportJob record
+
+#### 2.5.2.4.0.0 Sequence Number
+
+2
+
+#### 2.5.2.5.0.0 Type
+
+🔹 Database Call
+
+#### 2.5.2.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7.0.0 Return Message
+
+Job record created with 'Pending' status
+
+#### 2.5.2.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.2.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.2.10.0.0 Technical Details
+
+##### 2.5.2.10.1.0 Protocol
+
+DB Connection
+
+##### 2.5.2.10.2.0 Method
+
+dbContext.DataExportJobs.AddAsync(job); dbContext.SaveChangesAsync();
+
+##### 2.5.2.10.3.0 Parameters
+
+job: { UserId, Status: 'Pending', CreatedAt: UtcNow }
+
+##### 2.5.2.10.4.0 Authentication
+
+Database connection string credentials
+
+##### 2.5.2.10.5.0 Error Handling
+
+Throws DbUpdateException on failure. Encapsulated in a transaction.
+
+##### 2.5.2.10.6.0 Performance
+
+###### 2.5.2.10.6.1 Latency
+
+< 20ms
+
+###### 2.5.2.10.6.2 Notes
+
+Simple INSERT operation.
+
+#### 2.5.2.11.0.0 Nested Interactions
+
+- {'sourceId': 'REPO-BE-HOST', 'targetId': 'REPO-BE-LIB-INFRA', 'message': '2a. Log audit event for compliance', 'sequenceNumber': 2.1, 'type': 'Audit Log', 'isSynchronous': False, 'returnMessage': '', 'hasReturn': False, 'isActivation': False, 'technicalDetails': {'protocol': 'In-memory/Logger', 'method': "auditLogger.Log('DATA_EXPORT_REQUESTED', ...)", 'parameters': 'event: { UserId, SourceIp, Timestamp }', 'authentication': 'N/A', 'errorHandling': 'Log to primary error log if audit trail is unavailable.', 'performance': {'latency': '< 5ms', 'notes': 'Asynchronous fire-and-forget logging.'}}}
+
+### 2.5.3.0.0.0 Message Queue
+
+#### 2.5.3.1.0.0 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.3.2.0.0 Target Id
+
+Amazon SQS
+
+#### 2.5.3.3.0.0 Message
+
+3. Enqueue job for asynchronous processing
+
+#### 2.5.3.4.0.0 Sequence Number
+
+3
+
+#### 2.5.3.5.0.0 Type
+
+🔹 Message Queue
+
+#### 2.5.3.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7.0.0 Return Message
+
+Message enqueued successfully
+
+#### 2.5.3.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.3.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.3.10.0.0 Technical Details
+
+##### 2.5.3.10.1.0 Protocol
+
+AWS SDK for SQS
+
+##### 2.5.3.10.2.0 Method
+
+SendMessageAsync(request)
+
+##### 2.5.3.10.3.0 Parameters
+
+request: { QueueUrl, MessageBody: '{ "jobId": ..., "userId": ... }' }
+
+##### 2.5.3.10.4.0 Authentication
+
+IAM Role with sqs:SendMessage permission
+
+##### 2.5.3.10.5.0 Error Handling
+
+SDK handles retries for transient errors. Throws exception on persistent failure.
+
+##### 2.5.3.10.6.0 Performance
+
+###### 2.5.3.10.6.1 Latency
+
+< 50ms
+
+###### 2.5.3.10.6.2 Notes
+
+
+
+### 2.5.4.0.0.0 Message Queue
+
+#### 2.5.4.1.0.0 Source Id
+
+REPO-BE-WORKER
+
+#### 2.5.4.2.0.0 Target Id
+
+Amazon SQS
+
+#### 2.5.4.3.0.0 Message
+
+5. Consume job message from queue
+
+#### 2.5.4.4.0.0 Sequence Number
+
+5
+
+#### 2.5.4.5.0.0 Type
+
+🔹 Message Queue
+
+#### 2.5.4.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7.0.0 Return Message
+
+Message received with JobId and UserId
+
+#### 2.5.4.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.4.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.4.10.0.0 Technical Details
+
+##### 2.5.4.10.1.0 Protocol
+
+AWS SDK for SQS
+
+##### 2.5.4.10.2.0 Method
+
+ReceiveMessageAsync() via Hangfire.Aws.Sqs storage provider
+
+##### 2.5.4.10.3.0 Parameters
+
+Long-polling for messages
+
+##### 2.5.4.10.4.0 Authentication
+
+IAM Role with sqs:ReceiveMessage and sqs:DeleteMessage permissions
+
+##### 2.5.4.10.5.0 Error Handling
+
+If processing fails, message becomes visible again for retry. After max retries, moves to a Dead-Letter Queue (DLQ).
+
+##### 2.5.4.10.6.0 Performance
+
+###### 2.5.4.10.6.1 Notes
+
+Hangfire manages the polling loop.
+
+### 2.5.5.0.0.0 Database Call
+
+#### 2.5.5.1.0.0 Source Id
+
+REPO-BE-WORKER
+
+#### 2.5.5.2.0.0 Target Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.5.3.0.0 Message
+
+6. Fetch all user data from database
+
+#### 2.5.5.4.0.0 Sequence Number
+
+6
+
+#### 2.5.5.5.0.0 Type
+
+🔹 Database Call
+
+#### 2.5.5.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7.0.0 Return Message
+
+User's library and reading sessions
+
+#### 2.5.5.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.5.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.5.10.0.0 Technical Details
+
+##### 2.5.5.10.1.0 Protocol
+
+DB Connection
+
+##### 2.5.5.10.2.0 Method
+
+dbContext.Users.Include(u => u.LibraryItems).ThenInclude(li => li.ReadingSessions)...
+
+##### 2.5.5.10.3.0 Parameters
+
+userId
+
+##### 2.5.5.10.4.0 Authentication
+
+Database connection string credentials
+
+##### 2.5.5.10.5.0 Error Handling
+
+Job fails if data cannot be retrieved; message is retried via SQS.
+
+##### 2.5.5.10.6.0 Performance
+
+###### 2.5.5.10.6.1 Notes
+
+Potentially long-running query. Must be optimized. Use AsNoTracking() for read-only operation.
+
+### 2.5.6.0.0.0 File Storage
+
+#### 2.5.6.1.0.0 Source Id
+
+REPO-BE-WORKER
+
+#### 2.5.6.2.0.0 Target Id
+
+Amazon S3
+
+#### 2.5.6.3.0.0 Message
+
+7. Upload generated JSON file to secure bucket
+
+#### 2.5.6.4.0.0 Sequence Number
+
+7
+
+#### 2.5.6.5.0.0 Type
+
+🔹 File Storage
+
+#### 2.5.6.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7.0.0 Return Message
+
+File uploaded successfully
+
+#### 2.5.6.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.6.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.6.10.0.0 Technical Details
+
+##### 2.5.6.10.1.0 Protocol
+
+AWS SDK for S3
+
+##### 2.5.6.10.2.0 Method
+
+PutObjectAsync(request)
+
+##### 2.5.6.10.3.0 Parameters
+
+request: { BucketName, Key: 'exports/{userId}/{jobId}.json', Body: jsonStream, ServerSideEncryption: AES256 }
+
+##### 2.5.6.10.4.0 Authentication
+
+IAM Role with s3:PutObject permission on the specific bucket/prefix
+
+##### 2.5.6.10.5.0 Error Handling
+
+Job fails; SQS message is retried. Potential for partial file uploads requires cleanup.
+
+##### 2.5.6.10.6.0 Performance
+
+###### 2.5.6.10.6.1 Notes
+
+Depends on file size. Use streaming upload for large files.
+
+### 2.5.7.0.0.0 Security Operation
+
+#### 2.5.7.1.0.0 Source Id
+
+REPO-BE-WORKER
+
+#### 2.5.7.2.0.0 Target Id
+
+Amazon S3
+
+#### 2.5.7.3.0.0 Message
+
+8. Generate time-limited pre-signed URL
+
+#### 2.5.7.4.0.0 Sequence Number
+
+8
+
+#### 2.5.7.5.0.0 Type
+
+🔹 Security Operation
+
+#### 2.5.7.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.7.7.0.0 Return Message
+
+Secure pre-signed URL
+
+#### 2.5.7.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.7.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.7.10.0.0 Technical Details
+
+##### 2.5.7.10.1.0 Protocol
+
+AWS SDK for S3
+
+##### 2.5.7.10.2.0 Method
+
+GetPreSignedUrlRequest()
+
+##### 2.5.7.10.3.0 Parameters
+
+request: { BucketName, Key, Expires: 24 hours }
+
+##### 2.5.7.10.4.0 Authentication
+
+IAM Role with s3:GetObject permission
+
+##### 2.5.7.10.5.0 Error Handling
+
+Job fails; SQS message is retried.
+
+##### 2.5.7.10.6.0 Performance
+
+###### 2.5.7.10.6.1 Latency
+
+< 30ms
+
+###### 2.5.7.10.6.2 Notes
+
+Local SDK operation, no network call.
+
+### 2.5.8.0.0.0 Notification
+
+#### 2.5.8.1.0.0 Source Id
+
+REPO-BE-WORKER
+
+#### 2.5.8.2.0.0 Target Id
+
+Amazon SES
+
+#### 2.5.8.3.0.0 Message
+
+9. Email download link to user
+
+#### 2.5.8.4.0.0 Sequence Number
+
+9
+
+#### 2.5.8.5.0.0 Type
+
+🔹 Notification
+
+#### 2.5.8.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.8.7.0.0 Return Message
+
+Email sent successfully
+
+#### 2.5.8.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.8.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.8.10.0.0 Technical Details
+
+##### 2.5.8.10.1.0 Protocol
+
+AWS SDK for SES
+
+##### 2.5.8.10.2.0 Method
+
+SendEmailAsync(request)
+
+##### 2.5.8.10.3.0 Parameters
+
+request: { Destination: { ToAddresses: [userEmail] }, Message: { Subject, Body: { Html: { Data: emailTemplate } } } }
+
+##### 2.5.8.10.4.0 Authentication
+
+IAM Role with ses:SendEmail permission
+
+##### 2.5.8.10.5.0 Error Handling
+
+Job fails; SQS message is retried. Monitor SES bounces and complaints.
+
+##### 2.5.8.10.6.0 Performance
+
+###### 2.5.8.10.6.1 Latency
+
+< 300ms
+
+###### 2.5.8.10.6.2 Notes
+
+
+
+### 2.5.9.0.0.0 Database Call
+
+#### 2.5.9.1.0.0 Source Id
+
+REPO-BE-WORKER
+
+#### 2.5.9.2.0.0 Target Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.9.3.0.0 Message
+
+10. Update job status to 'Completed'
+
+#### 2.5.9.4.0.0 Sequence Number
+
+10
+
+#### 2.5.9.5.0.0 Type
+
+🔹 Database Call
+
+#### 2.5.9.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.9.7.0.0 Return Message
+
+Job record updated
+
+#### 2.5.9.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.9.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.9.10.0.0 Technical Details
+
+##### 2.5.9.10.1.0 Protocol
+
+DB Connection
+
+##### 2.5.9.10.2.0 Method
+
+job.Status = 'Completed'; dbContext.SaveChangesAsync();
+
+##### 2.5.9.10.3.0 Parameters
+
+jobId
+
+##### 2.5.9.10.4.0 Authentication
+
+Database connection string credentials
+
+##### 2.5.9.10.5.0 Error Handling
+
+Critical failure if this fails after email is sent. Requires careful transaction management or idempotency.
+
+##### 2.5.9.10.6.0 Performance
+
+###### 2.5.9.10.6.1 Latency
+
+< 20ms
+
+###### 2.5.9.10.6.2 Notes
+
+
+
+## 2.6.0.0.0.0 Notes
+
+### 2.6.1.0.0.0 Content
+
+#### 2.6.1.1.0.0 Content
+
+Compliance Requirement: S3 bucket must be private, enforce encryption at rest (SSE-S3), and have an S3 Lifecycle Policy to permanently delete objects under the 'exports/' prefix after 24 hours to comply with REQ-USR-001.
+
+#### 2.6.1.2.0.0 Position
+
+top-right
+
+#### 2.6.1.3.0.0 Participant Id
+
+Amazon S3
+
+#### 2.6.1.4.0.0 Sequence Number
+
+7
+
+### 2.6.2.0.0.0 Content
+
+#### 2.6.2.1.0.0 Content
+
+Resilience: The SQS queue must be configured with a Dead-Letter Queue (DLQ) to capture messages that fail processing after all retries. This triggers a CloudWatch Alarm for manual investigation by the DevOps team.
+
+#### 2.6.2.2.0.0 Position
+
+bottom-left
+
+#### 2.6.2.3.0.0 Participant Id
+
+Amazon SQS
+
+#### 2.6.2.4.0.0 Sequence Number
+
+5
+
+### 2.6.3.0.0.0 Content
+
+#### 2.6.3.1.0.0 Content
+
+Security: The IAM Role for the Hangfire Worker must follow the principle of least privilege, granting only necessary permissions for SQS, S3 (specific bucket/prefix), and SES.
+
+#### 2.6.3.2.0.0 Position
+
+bottom-right
+
+#### 2.6.3.3.0.0 Participant Id
+
+REPO-BE-WORKER
+
+#### 2.6.3.4.0.0 Sequence Number
+
+5
+
+## 2.7.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | 1. The initial API request MUST be authenticated v... |
+| Performance Targets | 1. The initial API response (`POST /export`) must ... |
+| Error Handling Strategy | 1. **Job Failure**: If any step in the background ... |
+| Testing Considerations | 1. **Unit Tests**: Test the JSON formatting logic ... |
+| Monitoring Requirements | 1. **SQS**: Monitor `ApproximateNumberOfMessagesVi... |
+| Deployment Considerations | All AWS resources (S3 bucket, SQS queue, DLQ, IAM ... |
+

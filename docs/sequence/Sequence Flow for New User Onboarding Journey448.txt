@@ -1,0 +1,778 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-UJ-001
+
+## 1.2 Name
+
+New User Onboarding Journey
+
+## 1.3 Description
+
+Guides a first-time user through the initial setup process after successful authentication. The flow includes prompting the user to set a primary goal and add their first book, then notifies the backend that onboarding is complete. This sequence is designed to maximize user engagement from the start.
+
+## 1.4 Type
+
+🔹 UserJourney
+
+## 1.5 Purpose
+
+To successfully onboard new users by personalizing their experience and familiarizing them with core application features, as per REQ-ONB-001.
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🚨 Critical
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-FE-MOBILE
+- REPO-BE-HOST
+
+## 1.10 Key Interactions
+
+- User completes social sign-in.
+- Mobile client displays multi-step onboarding UI.
+- User is prompted to set a yearly reading goal.
+- User is guided to search for and add a 'Currently Reading' book.
+- Client sends onboarding data (e.g., initial goal, book) and a completion flag to the backend.
+- The user's `hasCompletedOnboarding` flag is set to true in the database.
+- User is navigated to the main dashboard.
+
+## 1.11 Triggers
+
+- A new user logs in for the very first time.
+
+## 1.12 Outcomes
+
+- A user account is created and personalized with an initial goal and book.
+- The user understands the basic functionality of the app.
+- The user's onboarding status is permanently recorded.
+
+## 1.13 Business Rules
+
+- Onboarding flow is mandatory for all new users upon their first login.
+- Users can skip optional steps like setting a goal or adding a book.
+
+## 1.14 Error Scenarios
+
+- Network failure prevents saving the initial goal or book.
+- User closes the app mid-onboarding (state should be saved to resume).
+
+## 1.15 Integration Points
+
+*No items available*
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-UJ-001-IMPL
+
+## 2.2 Name
+
+Implementation: New User Onboarding Journey
+
+## 2.3 Description
+
+Provides a detailed technical specification for the new user onboarding flow as per REQ-ONB-001. This sequence begins after a first-time user's successful authentication, where the client application, driven by a state management component (e.g., Riverpod Provider/BLoC), guides them through a multi-step UI. The flow orchestrates user input for an initial reading goal and book selection, handles state persistence for resilience, and culminates in a single API call to the backend to mark onboarding as complete and persist the initial user data. The backend processes this request transactionally.
+
+## 2.4 Participants
+
+### 2.4.1 Mobile Application
+
+#### 2.4.1.1 Repository Id
+
+REPO-FE-MOBILE
+
+#### 2.4.1.2 Display Name
+
+Flutter Mobile Client
+
+#### 2.4.1.3 Type
+
+🔹 Mobile Application
+
+#### 2.4.1.4 Technology
+
+Flutter 3.x, Riverpod
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #4CAF50 |
+| Stereotype | <<UI/State Management>> |
+
+### 2.4.2.0 Application Services
+
+#### 2.4.2.1 Repository Id
+
+REPO-BE-HOST
+
+#### 2.4.2.2 Display Name
+
+Backend API Host
+
+#### 2.4.2.3 Type
+
+🔹 Application Services
+
+#### 2.4.2.4 Technology
+
+ASP.NET Core 8, MediatR
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | participant |
+| Color | #2196F3 |
+| Stereotype | <<Modular Monolith>> |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 State Transition
+
+#### 2.5.1.1 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.1.2 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.1.3 Message
+
+1. Handle successful authentication. Post-login service fetches user profile, confirms `hasCompletedOnboarding` is false. Navigation logic routes to OnboardingScreen.
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 State Transition
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+
+
+#### 2.5.1.8 Has Return
+
+❌ No
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+##### 2.5.1.10.1 Protocol
+
+Internal Event
+
+##### 2.5.1.10.2 Method
+
+NavigationService.navigate()
+
+##### 2.5.1.10.3 Parameters
+
+- { route: '/onboarding' }
+
+##### 2.5.1.10.4 Authentication
+
+N/A
+
+##### 2.5.1.10.5 Error Handling
+
+If user profile fetch fails, display a global error and prevent navigation.
+
+##### 2.5.1.10.6 Performance
+
+Navigation should occur within 200ms of profile fetch completion.
+
+### 2.5.2.0.0 UI Render
+
+#### 2.5.2.1.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.2.2.0 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.2.3.0 Message
+
+2. `OnboardingBloc` initializes state for the first step (Set Goal). `OnboardingScreen` renders the UI based on the initial state.
+
+#### 2.5.2.4.0 Sequence Number
+
+2
+
+#### 2.5.2.5.0 Type
+
+🔹 UI Render
+
+#### 2.5.2.6.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7.0 Return Message
+
+
+
+#### 2.5.2.8.0 Has Return
+
+❌ No
+
+#### 2.5.2.9.0 Is Activation
+
+❌ No
+
+#### 2.5.2.10.0 Technical Details
+
+##### 2.5.2.10.1 Protocol
+
+State Management
+
+##### 2.5.2.10.2 Method
+
+OnboardingBloc.add(OnboardingStarted())
+
+##### 2.5.2.10.3 Parameters
+
+*No items available*
+
+##### 2.5.2.10.4 Authentication
+
+N/A
+
+##### 2.5.2.10.5 Error Handling
+
+N/A
+
+##### 2.5.2.10.6 Performance
+
+Initial screen render must be < 500ms.
+
+### 2.5.3.0.0 User Interaction
+
+#### 2.5.3.1.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.3.2.0 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.3.3.0 Message
+
+3. User inputs a yearly goal and submits. `OnboardingBloc` validates input (e.g., isPositiveInteger) and persists the value to its state. UI transitions to the 'Add Book' step.
+
+#### 2.5.3.4.0 Sequence Number
+
+3
+
+#### 2.5.3.5.0 Type
+
+🔹 User Interaction
+
+#### 2.5.3.6.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7.0 Return Message
+
+
+
+#### 2.5.3.8.0 Has Return
+
+❌ No
+
+#### 2.5.3.9.0 Is Activation
+
+❌ No
+
+#### 2.5.3.10.0 Technical Details
+
+##### 2.5.3.10.1 Protocol
+
+UI Event
+
+##### 2.5.3.10.2 Method
+
+OnboardingBloc.add(GoalSubmitted(value))
+
+##### 2.5.3.10.3 Parameters
+
+- { value: number }
+
+##### 2.5.3.10.4 Authentication
+
+N/A
+
+##### 2.5.3.10.5 Error Handling
+
+If validation fails, update UI state to show an inline error message without making an API call.
+
+##### 2.5.3.10.6 Performance
+
+Validation and state update should be instantaneous (<50ms).
+
+### 2.5.4.0.0 API Call
+
+#### 2.5.4.1.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.4.2.0 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.4.3.0 Message
+
+4. User searches for a book. Client sends search query to the backend.
+
+#### 2.5.4.4.0 Sequence Number
+
+4
+
+#### 2.5.4.5.0 Type
+
+🔹 API Call
+
+#### 2.5.4.6.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7.0 Return Message
+
+5. Returns `200 OK` with a list of `BookSearchResultDto` objects.
+
+#### 2.5.4.8.0 Has Return
+
+✅ Yes
+
+#### 2.5.4.9.0 Is Activation
+
+✅ Yes
+
+#### 2.5.4.10.0 Technical Details
+
+##### 2.5.4.10.1 Protocol
+
+HTTPS/REST
+
+##### 2.5.4.10.2 Method
+
+GET /api/v1/books/search
+
+##### 2.5.4.10.3 Parameters
+
+- { query: string }
+
+##### 2.5.4.10.4 Authentication
+
+JWT Bearer Token in Authorization header.
+
+##### 2.5.4.10.5 Error Handling
+
+Client handles HTTP 4xx/5xx errors, showing a message like 'Could not perform search'.
+
+##### 2.5.4.10.6 Performance
+
+P95 latency should be < 300ms.
+
+### 2.5.5.0.0 User Interaction
+
+#### 2.5.5.1.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.5.2.0 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.5.3.0 Message
+
+6. User selects a book and taps 'Finish'. `OnboardingBloc` gathers the goal and selected book ID into a final onboarding payload.
+
+#### 2.5.5.4.0 Sequence Number
+
+6
+
+#### 2.5.5.5.0 Type
+
+🔹 User Interaction
+
+#### 2.5.5.6.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7.0 Return Message
+
+
+
+#### 2.5.5.8.0 Has Return
+
+❌ No
+
+#### 2.5.5.9.0 Is Activation
+
+❌ No
+
+#### 2.5.5.10.0 Technical Details
+
+##### 2.5.5.10.1 Protocol
+
+UI Event
+
+##### 2.5.5.10.2 Method
+
+OnboardingBloc.add(OnboardingFinished(bookId))
+
+##### 2.5.5.10.3 Parameters
+
+- { bookId: string }
+
+##### 2.5.5.10.4 Authentication
+
+N/A
+
+##### 2.5.5.10.5 Error Handling
+
+N/A
+
+##### 2.5.5.10.6 Performance
+
+UI feedback should be immediate.
+
+### 2.5.6.0.0 API Call
+
+#### 2.5.6.1.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.6.2.0 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.6.3.0 Message
+
+7. Send onboarding completion data to the backend.
+
+#### 2.5.6.4.0 Sequence Number
+
+7
+
+#### 2.5.6.5.0 Type
+
+🔹 API Call
+
+#### 2.5.6.6.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7.0 Return Message
+
+10. Returns `204 No Content` on successful processing.
+
+#### 2.5.6.8.0 Has Return
+
+✅ Yes
+
+#### 2.5.6.9.0 Is Activation
+
+✅ Yes
+
+#### 2.5.6.10.0 Technical Details
+
+##### 2.5.6.10.1 Protocol
+
+HTTPS/REST
+
+##### 2.5.6.10.2 Method
+
+POST /api/v1/users/me/onboarding
+
+##### 2.5.6.10.3 Parameters
+
+- Body: { yearlyGoal: number | null, initialBookId: string | null }
+
+##### 2.5.6.10.4 Authentication
+
+JWT Bearer Token in Authorization header.
+
+##### 2.5.6.10.5 Error Handling
+
+If the request fails (e.g., network error), the client displays an error toast with a 'Retry' action. The `OnboardingBloc` retains the submitted data for the retry attempt.
+
+##### 2.5.6.10.6 Performance
+
+P95 latency must be < 500ms as this is a blocking user action.
+
+#### 2.5.6.11.0 Nested Interactions
+
+##### 2.5.6.11.1 Internal Dispatch
+
+###### 2.5.6.11.1.1 Source Id
+
+REPO-BE-HOST
+
+###### 2.5.6.11.1.2 Target Id
+
+REPO-BE-HOST
+
+###### 2.5.6.11.1.3 Message
+
+8. `UsersController` receives request. Dispatches `CompleteUserOnboardingCommand` via MediatR.
+
+###### 2.5.6.11.1.4 Sequence Number
+
+8
+
+###### 2.5.6.11.1.5 Type
+
+🔹 Internal Dispatch
+
+###### 2.5.6.11.1.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.6.11.1.7 Return Message
+
+Returns result of command execution.
+
+###### 2.5.6.11.1.8 Has Return
+
+✅ Yes
+
+###### 2.5.6.11.1.9 Is Activation
+
+❌ No
+
+###### 2.5.6.11.1.10 Technical Details
+
+####### 2.5.6.11.1.10.1 Protocol
+
+In-Process
+
+####### 2.5.6.11.1.10.2 Method
+
+mediator.Send(command)
+
+####### 2.5.6.11.1.10.3 Parameters
+
+- CompleteUserOnboardingCommand
+
+####### 2.5.6.11.1.10.4 Authentication
+
+N/A
+
+####### 2.5.6.11.1.10.5 Error Handling
+
+Global exception handler catches errors from the handler, logs them, and returns an HTTP 500 response.
+
+####### 2.5.6.11.1.10.6 Performance
+
+N/A
+
+##### 2.5.6.11.2.0.0 Database Transaction
+
+###### 2.5.6.11.2.1.0 Source Id
+
+REPO-BE-HOST
+
+###### 2.5.6.11.2.2.0 Target Id
+
+REPO-BE-HOST
+
+###### 2.5.6.11.2.3.0 Message
+
+9. `CompleteUserOnboardingCommandHandler` executes business logic within a single database transaction: creates initial Goal, adds initial LibraryItem, and updates the User's `hasCompletedOnboarding` flag to `true`.
+
+###### 2.5.6.11.2.4.0 Sequence Number
+
+9
+
+###### 2.5.6.11.2.5.0 Type
+
+🔹 Database Transaction
+
+###### 2.5.6.11.2.6.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.6.11.2.7.0 Return Message
+
+
+
+###### 2.5.6.11.2.8.0 Has Return
+
+❌ No
+
+###### 2.5.6.11.2.9.0 Is Activation
+
+❌ No
+
+###### 2.5.6.11.2.10.0 Technical Details
+
+####### 2.5.6.11.2.10.1 Protocol
+
+EF Core
+
+####### 2.5.6.11.2.10.2 Method
+
+dbContext.SaveChangesAsync()
+
+####### 2.5.6.11.2.10.3 Parameters
+
+*No items available*
+
+####### 2.5.6.11.2.10.4 Authentication
+
+N/A
+
+####### 2.5.6.11.2.10.5 Error Handling
+
+If any database operation fails, the entire transaction is rolled back automatically by EF Core's transaction management.
+
+####### 2.5.6.11.2.10.6 Performance
+
+Transaction should complete in < 200ms.
+
+### 2.5.7.0.0.0.0 State Transition
+
+#### 2.5.7.1.0.0.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.7.2.0.0.0 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.7.3.0.0.0 Message
+
+11. On successful API response, `OnboardingBloc` emits a final `OnboardingSuccess` state. Navigation logic observes this state and permanently navigates the user to the main Dashboard screen.
+
+#### 2.5.7.4.0.0.0 Sequence Number
+
+11
+
+#### 2.5.7.5.0.0.0 Type
+
+🔹 State Transition
+
+#### 2.5.7.6.0.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.7.7.0.0.0 Return Message
+
+
+
+#### 2.5.7.8.0.0.0 Has Return
+
+❌ No
+
+#### 2.5.7.9.0.0.0 Is Activation
+
+❌ No
+
+#### 2.5.7.10.0.0.0 Technical Details
+
+##### 2.5.7.10.1.0.0 Protocol
+
+Internal Event
+
+##### 2.5.7.10.2.0.0 Method
+
+NavigationService.replaceAllWith('/dashboard')
+
+##### 2.5.7.10.3.0.0 Parameters
+
+*No items available*
+
+##### 2.5.7.10.4.0.0 Authentication
+
+N/A
+
+##### 2.5.7.10.5.0.0 Error Handling
+
+N/A
+
+##### 2.5.7.10.6.0.0 Performance
+
+Navigation transition should be immediate.
+
+## 2.6.0.0.0.0.0 Notes
+
+### 2.6.1.0.0.0.0 Content
+
+#### 2.6.1.1.0.0.0 Content
+
+Client-Side State Persistence: If the user closes the app mid-onboarding, the `OnboardingBloc`'s current state (including step and any entered data) must be persisted to local storage (Isar). On app restart, the initial navigation logic must check for this persisted state and resume the onboarding flow from where the user left off.
+
+#### 2.6.1.2.0.0.0 Position
+
+top-left
+
+#### 2.6.1.3.0.0.0 Participant Id
+
+REPO-FE-MOBILE
+
+#### 2.6.1.4.0.0.0 Sequence Number
+
+2
+
+### 2.6.2.0.0.0.0 Content
+
+#### 2.6.2.1.0.0.0 Content
+
+Transactional Integrity: The backend operation to create the initial goal, add the book, and update the user's status MUST be atomic. Using a single `DbContext.SaveChangesAsync()` call within the command handler ensures all changes are committed in one transaction or none are.
+
+#### 2.6.2.2.0.0.0 Position
+
+bottom-right
+
+#### 2.6.2.3.0.0.0 Participant Id
+
+REPO-BE-HOST
+
+#### 2.6.2.4.0.0.0 Sequence Number
+
+9
+
+## 2.7.0.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | Backend endpoint `/api/v1/users/me/onboarding` mus... |
+| Performance Targets | The entire user-facing onboarding flow should feel... |
+| Error Handling Strategy | The client is responsible for handling all API cal... |
+| Testing Considerations | End-to-end tests must cover: the complete happy pa... |
+| Monitoring Requirements | Backend: Monitor the latency and error rate of the... |
+| Deployment Considerations | This feature is a critical part of the initial use... |
+

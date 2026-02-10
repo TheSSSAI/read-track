@@ -1,0 +1,950 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-FF-002
+
+## 1.2 Name
+
+Freemium Limit Enforcement Check
+
+## 1.3 Description
+
+Before a 'Free User' performs a limited action (e.g., adding a book), the backend API checks if they have reached their limit. If so, the action is blocked with a specific error code, which the client uses to display an upgrade prompt.
+
+## 1.4 Type
+
+🔹 FeatureFlow
+
+## 1.5 Purpose
+
+To enforce the business rules of the freemium model and create an upsell opportunity, as per REQ-FRE-001.
+
+## 1.6 Complexity
+
+Low
+
+## 1.7 Priority
+
+🔴 High
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-FE-MOBILE
+- REPO-BE-HOST
+
+## 1.10 Key Interactions
+
+- A 'Free User' attempts to add their 21st book.
+- The client sends a POST /api/v1/library request.
+- An authorization policy or service logic inspects the user's 'Free User' role.
+- The service queries the database to count the user's current number of library items.
+- The service determines the user is at the 20-item limit.
+- The service rejects the request with a specific error code (e.g., 402 Payment Required) and a message.
+- The client's global error handler intercepts the specific error code and displays a standardized upgrade prompt UI.
+
+## 1.11 Triggers
+
+- A 'Free User' attempts an action that is limited by their subscription tier.
+
+## 1.12 Outcomes
+
+- The action is prevented.
+- The integrity of the freemium business model is maintained.
+- The user is informed about the limitation and prompted to upgrade.
+
+## 1.13 Business Rules
+
+- Free Users are limited to 20 items.
+- Free Users are limited to one active goal.
+- Free Users are limited to 5 AI suggestions per month.
+
+## 1.14 Error Scenarios
+
+- The limit check logic contains a bug, incorrectly blocking or allowing an action.
+
+## 1.15 Integration Points
+
+*No items available*
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-FF-002
+
+## 2.2 Name
+
+Freemium Limit Enforcement - Book Addition Check
+
+## 2.3 Description
+
+Technical sequence for enforcing the 'Free User' library item limit. When a free user attempts to add an item beyond their quota, the backend API rejects the request with a specific error code (402 Payment Required), which the mobile client interprets to display an upgrade prompt. This sequence details the authorization check, business rule validation, and client-side error handling.
+
+## 2.4 Participants
+
+### 2.4.1 Client Application
+
+#### 2.4.1.1 Repository Id
+
+REPO-FE-MOBILE
+
+#### 2.4.1.2 Display Name
+
+Flutter Mobile Client
+
+#### 2.4.1.3 Type
+
+🔹 Client Application
+
+#### 2.4.1.4 Technology
+
+Flutter 3.x, Riverpod, Dio
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #3498DB |
+| Stereotype | <<Mobile Client>> |
+
+### 2.4.2.0 Application Gateway
+
+#### 2.4.2.1 Repository Id
+
+REPO-BE-HOST
+
+#### 2.4.2.2 Display Name
+
+Backend API Host
+
+#### 2.4.2.3 Type
+
+🔹 Application Gateway
+
+#### 2.4.2.4 Technology
+
+.NET 8, ASP.NET Core 8
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #2ECC71 |
+| Stereotype | <<API Host>> |
+
+### 2.4.3.0 Business Domain Module
+
+#### 2.4.3.1 Repository Id
+
+REPO-BE-MOD-READING
+
+#### 2.4.3.2 Display Name
+
+Reading Module
+
+#### 2.4.3.3 Type
+
+🔹 Business Domain Module
+
+#### 2.4.3.4 Technology
+
+.NET 8, MediatR, EF Core 8
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #F39C12 |
+| Stereotype | <<Domain Logic>> |
+
+### 2.4.4.0 Database
+
+#### 2.4.4.1 Repository Id
+
+DB-POSTGRES-001
+
+#### 2.4.4.2 Display Name
+
+PostgreSQL Database
+
+#### 2.4.4.3 Type
+
+🔹 Database
+
+#### 2.4.4.4 Technology
+
+PostgreSQL 16
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #9B59B6 |
+| Stereotype | <<Primary DB>> |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 HTTP Request
+
+#### 2.5.1.1 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.1.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.1.3 Message
+
+1. POST /api/v1/library
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 HTTP Request
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+10. HTTP 402 Payment Required
+
+#### 2.5.1.8 Has Return
+
+✅ Yes
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+##### 2.5.1.10.1 Protocol
+
+HTTPS/1.1
+
+##### 2.5.1.10.2 Method
+
+POST
+
+##### 2.5.1.10.3 Parameters
+
+| Property | Value |
+|----------|-------|
+| Headers | Authorization: Bearer <jwt_token>, Content-Type: a... |
+| Body | { "isbn": "978-0321765723", "shelfStatus": "WantTo... |
+
+##### 2.5.1.10.4 Authentication
+
+JWT Bearer Token required. Token contains UserId and user role claims.
+
+##### 2.5.1.10.5 Error Handling
+
+Client expects a standard JSON error response. A 402 status code is specifically handled to trigger the upgrade prompt.
+
+##### 2.5.1.10.6 Performance
+
+###### 2.5.1.10.6.1 Latency
+
+< 300ms (end-to-end)
+
+#### 2.5.1.11.0.0 Nested Interactions
+
+##### 2.5.1.11.1.0 Middleware Execution
+
+###### 2.5.1.11.1.1 Source Id
+
+REPO-BE-HOST
+
+###### 2.5.1.11.1.2 Target Id
+
+REPO-BE-HOST
+
+###### 2.5.1.11.1.3 Message
+
+2. Auth Middleware: Validate JWT & Claims
+
+###### 2.5.1.11.1.4 Sequence Number
+
+2
+
+###### 2.5.1.11.1.5 Type
+
+🔹 Middleware Execution
+
+###### 2.5.1.11.1.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.1.11.1.7 Return Message
+
+User is authenticated 'Free User'
+
+###### 2.5.1.11.1.8 Has Return
+
+✅ Yes
+
+###### 2.5.1.11.1.9 Is Activation
+
+❌ No
+
+###### 2.5.1.11.1.10 Technical Details
+
+####### 2.5.1.11.1.10.1 Protocol
+
+In-Process
+
+####### 2.5.1.11.1.10.2 Method
+
+AuthenticationMiddleware.InvokeAsync()
+
+####### 2.5.1.11.1.10.3 Parameters
+
+| Property | Value |
+|----------|-------|
+| Http Context | Contains the request with Authorization header. |
+
+####### 2.5.1.11.1.10.4 Authentication
+
+Validates token signature, issuer, and expiry. Populates HttpContext.User with claims.
+
+####### 2.5.1.11.1.10.5 Error Handling
+
+If token is invalid, short-circuits the request with a 401 Unauthorized response.
+
+####### 2.5.1.11.1.10.6 Performance
+
+######## 2.5.1.11.1.10.6.1 Latency
+
+< 5ms
+
+##### 2.5.1.11.2.0.0.0 Command Dispatch
+
+###### 2.5.1.11.2.1.0.0 Source Id
+
+REPO-BE-HOST
+
+###### 2.5.1.11.2.2.0.0 Target Id
+
+REPO-BE-MOD-READING
+
+###### 2.5.1.11.2.3.0.0 Message
+
+3. MediatR.Send(new AddLibraryItemCommand(...))
+
+###### 2.5.1.11.2.4.0.0 Sequence Number
+
+3
+
+###### 2.5.1.11.2.5.0.0 Type
+
+🔹 Command Dispatch
+
+###### 2.5.1.11.2.6.0.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.1.11.2.7.0.0 Return Message
+
+9. Throws LimitExceededException
+
+###### 2.5.1.11.2.8.0.0 Has Return
+
+✅ Yes
+
+###### 2.5.1.11.2.9.0.0 Is Activation
+
+✅ Yes
+
+###### 2.5.1.11.2.10.0.0 Technical Details
+
+####### 2.5.1.11.2.10.1.0 Protocol
+
+In-Process
+
+####### 2.5.1.11.2.10.2.0 Method
+
+IMediator.Send
+
+####### 2.5.1.11.2.10.3.0 Parameters
+
+| Property | Value |
+|----------|-------|
+| Command | AddLibraryItemCommand { UserId, Isbn, ShelfStatus ... |
+
+####### 2.5.1.11.2.10.4.0 Authentication
+
+N/A (internal call)
+
+####### 2.5.1.11.2.10.5.0 Error Handling
+
+Command handler exceptions are caught by the MediatR pipeline and propagated to the controller.
+
+####### 2.5.1.11.2.10.6.0 Performance
+
+######## 2.5.1.11.2.10.6.1 Latency
+
+< 100ms
+
+###### 2.5.1.11.2.11.0.0 Nested Interactions
+
+####### 2.5.1.11.2.11.1.0 Business Rule Check
+
+######## 2.5.1.11.2.11.1.1 Source Id
+
+REPO-BE-MOD-READING
+
+######## 2.5.1.11.2.11.1.2 Target Id
+
+REPO-BE-MOD-READING
+
+######## 2.5.1.11.2.11.1.3 Message
+
+4. Handler: Check user tier limit
+
+######## 2.5.1.11.2.11.1.4 Sequence Number
+
+4
+
+######## 2.5.1.11.2.11.1.5 Type
+
+🔹 Business Rule Check
+
+######## 2.5.1.11.2.11.1.6 Is Synchronous
+
+✅ Yes
+
+######## 2.5.1.11.2.11.1.7 Return Message
+
+
+
+######## 2.5.1.11.2.11.1.8 Has Return
+
+❌ No
+
+######## 2.5.1.11.2.11.1.9 Is Activation
+
+❌ No
+
+######## 2.5.1.11.2.11.1.10 Technical Details
+
+######### 2.5.1.11.2.11.1.10.1 Protocol
+
+In-Process
+
+######### 2.5.1.11.2.11.1.10.2 Method
+
+AddLibraryItemCommandHandler.Handle()
+
+######### 2.5.1.11.2.11.1.10.3 Parameters
+
+| Property | Value |
+|----------|-------|
+| Command | Contains UserId |
+
+######### 2.5.1.11.2.11.1.10.4 Authentication
+
+N/A
+
+######### 2.5.1.11.2.11.1.10.5 Error Handling
+
+This is the point where the business rule is enforced. It will throw a custom domain exception if the limit is reached.
+
+######### 2.5.1.11.2.11.1.10.6 Performance
+
+########## 2.5.1.11.2.11.1.10.6.1 Latency
+
+< 50ms
+
+####### 2.5.1.11.2.11.2.0.0.0 Database Query
+
+######## 2.5.1.11.2.11.2.1.0.0 Source Id
+
+REPO-BE-MOD-READING
+
+######## 2.5.1.11.2.11.2.2.0.0 Target Id
+
+DB-POSTGRES-001
+
+######## 2.5.1.11.2.11.2.3.0.0 Message
+
+5. SELECT COUNT(*) FROM "LibraryItems" WHERE "UserId" = @p0
+
+######## 2.5.1.11.2.11.2.4.0.0 Sequence Number
+
+5
+
+######## 2.5.1.11.2.11.2.5.0.0 Type
+
+🔹 Database Query
+
+######## 2.5.1.11.2.11.2.6.0.0 Is Synchronous
+
+✅ Yes
+
+######## 2.5.1.11.2.11.2.7.0.0 Return Message
+
+6. Returns count: 20
+
+######## 2.5.1.11.2.11.2.8.0.0 Has Return
+
+✅ Yes
+
+######## 2.5.1.11.2.11.2.9.0.0 Is Activation
+
+✅ Yes
+
+######## 2.5.1.11.2.11.2.10.0.0 Technical Details
+
+######### 2.5.1.11.2.11.2.10.1.0 Protocol
+
+TCP/IP (Npgsql)
+
+######### 2.5.1.11.2.11.2.10.2.0 Method
+
+EF Core Query Execution
+
+######### 2.5.1.11.2.11.2.10.3.0 Parameters
+
+| Property | Value |
+|----------|-------|
+| User Id | The authenticated user's ID. |
+
+######### 2.5.1.11.2.11.2.10.4.0 Authentication
+
+Database connection string credentials.
+
+######### 2.5.1.11.2.11.2.10.5.0 Error Handling
+
+Handled by EF Core (e.g., connection exceptions).
+
+######### 2.5.1.11.2.11.2.10.6.0 Performance
+
+########## 2.5.1.11.2.11.2.10.6.1 Latency
+
+< 20ms
+
+########## 2.5.1.11.2.11.2.10.6.2 Notes
+
+Query must use an index on the 'UserId' column for performance.
+
+####### 2.5.1.11.2.11.3.0.0.0 Logic Evaluation
+
+######## 2.5.1.11.2.11.3.1.0.0 Source Id
+
+REPO-BE-MOD-READING
+
+######## 2.5.1.11.2.11.3.2.0.0 Target Id
+
+REPO-BE-MOD-READING
+
+######## 2.5.1.11.2.11.3.3.0.0 Message
+
+7. Compare item count (20) to configured limit (20)
+
+######## 2.5.1.11.2.11.3.4.0.0 Sequence Number
+
+7
+
+######## 2.5.1.11.2.11.3.5.0.0 Type
+
+🔹 Logic Evaluation
+
+######## 2.5.1.11.2.11.3.6.0.0 Is Synchronous
+
+✅ Yes
+
+######## 2.5.1.11.2.11.3.7.0.0 Return Message
+
+Result: Limit is reached.
+
+######## 2.5.1.11.2.11.3.8.0.0 Has Return
+
+✅ Yes
+
+######## 2.5.1.11.2.11.3.9.0.0 Is Activation
+
+❌ No
+
+######## 2.5.1.11.2.11.3.10.0.0 Technical Details
+
+######### 2.5.1.11.2.11.3.10.1.0 Protocol
+
+In-Process
+
+######### 2.5.1.11.2.11.3.10.2.0 Method
+
+N/A
+
+######### 2.5.1.11.2.11.3.10.3.0 Parameters
+
+| Property | Value |
+|----------|-------|
+| Current Count | 20 |
+| Limit | Value from IConfiguration (e.g., appsettings.json) |
+
+######### 2.5.1.11.2.11.3.10.4.0 Authentication
+
+N/A
+
+######### 2.5.1.11.2.11.3.10.5.0 Error Handling
+
+N/A
+
+######### 2.5.1.11.2.11.3.10.6.0 Performance
+
+########## 2.5.1.11.2.11.3.10.6.1 Latency
+
+< 1ms
+
+####### 2.5.1.11.2.11.4.0.0.0 Exception Throw
+
+######## 2.5.1.11.2.11.4.1.0.0 Source Id
+
+REPO-BE-MOD-READING
+
+######## 2.5.1.11.2.11.4.2.0.0 Target Id
+
+REPO-BE-MOD-READING
+
+######## 2.5.1.11.2.11.4.3.0.0 Message
+
+8. throw new LimitExceededException("Library item limit reached.")
+
+######## 2.5.1.11.2.11.4.4.0.0 Sequence Number
+
+8
+
+######## 2.5.1.11.2.11.4.5.0.0 Type
+
+🔹 Exception Throw
+
+######## 2.5.1.11.2.11.4.6.0.0 Is Synchronous
+
+❌ No
+
+######## 2.5.1.11.2.11.4.7.0.0 Return Message
+
+
+
+######## 2.5.1.11.2.11.4.8.0.0 Has Return
+
+❌ No
+
+######## 2.5.1.11.2.11.4.9.0.0 Is Activation
+
+❌ No
+
+######## 2.5.1.11.2.11.4.10.0.0 Technical Details
+
+######### 2.5.1.11.2.11.4.10.1.0 Protocol
+
+In-Process
+
+######### 2.5.1.11.2.11.4.10.2.0 Method
+
+N/A
+
+######### 2.5.1.11.2.11.4.10.3.0 Parameters
+
+| Property | Value |
+|----------|-------|
+| Exception | Custom domain exception with a specific error code... |
+
+######### 2.5.1.11.2.11.4.10.4.0 Authentication
+
+N/A
+
+######### 2.5.1.11.2.11.4.10.5.0 Error Handling
+
+This exception will be caught further up the call stack.
+
+######### 2.5.1.11.2.11.4.10.6.0 Performance
+
+########## 2.5.1.11.2.11.4.10.6.1 Latency
+
+N/A
+
+##### 2.5.1.11.3.0.0.0.0.0 Exception Handling
+
+###### 2.5.1.11.3.1.0.0.0.0 Source Id
+
+REPO-BE-HOST
+
+###### 2.5.1.11.3.2.0.0.0.0 Target Id
+
+REPO-BE-HOST
+
+###### 2.5.1.11.3.3.0.0.0.0 Message
+
+9a. Global Exception Middleware: Map LimitExceededException to HTTP 402
+
+###### 2.5.1.11.3.4.0.0.0.0 Sequence Number
+
+9
+
+###### 2.5.1.11.3.5.0.0.0.0 Type
+
+🔹 Exception Handling
+
+###### 2.5.1.11.3.6.0.0.0.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.1.11.3.7.0.0.0.0 Return Message
+
+Generates structured error response
+
+###### 2.5.1.11.3.8.0.0.0.0 Has Return
+
+✅ Yes
+
+###### 2.5.1.11.3.9.0.0.0.0 Is Activation
+
+❌ No
+
+###### 2.5.1.11.3.10.0.0.0.0 Technical Details
+
+####### 2.5.1.11.3.10.1.0.0.0 Protocol
+
+In-Process
+
+####### 2.5.1.11.3.10.2.0.0.0 Method
+
+ExceptionHandlerMiddleware.InvokeAsync()
+
+####### 2.5.1.11.3.10.3.0.0.0 Parameters
+
+| Property | Value |
+|----------|-------|
+| Exception | LimitExceededException caught from MediatR pipelin... |
+
+####### 2.5.1.11.3.10.4.0.0.0 Authentication
+
+N/A
+
+####### 2.5.1.11.3.10.5.0.0.0 Error Handling
+
+Centralized logic to map specific domain exceptions to appropriate HTTP status codes and error payloads.
+
+####### 2.5.1.11.3.10.6.0.0.0 Performance
+
+######## 2.5.1.11.3.10.6.1.0.0 Latency
+
+< 2ms
+
+### 2.5.2.0.0.0.0.0.0.0 Client Error Handling
+
+#### 2.5.2.1.0.0.0.0.0.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.2.2.0.0.0.0.0.0 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.2.3.0.0.0.0.0.0 Message
+
+11. Dio Interceptor: Detect 402 status code
+
+#### 2.5.2.4.0.0.0.0.0.0 Sequence Number
+
+11
+
+#### 2.5.2.5.0.0.0.0.0.0 Type
+
+🔹 Client Error Handling
+
+#### 2.5.2.6.0.0.0.0.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7.0.0.0.0.0.0 Return Message
+
+
+
+#### 2.5.2.8.0.0.0.0.0.0 Has Return
+
+❌ No
+
+#### 2.5.2.9.0.0.0.0.0.0 Is Activation
+
+❌ No
+
+#### 2.5.2.10.0.0.0.0.0.0 Technical Details
+
+##### 2.5.2.10.1.0.0.0.0.0 Protocol
+
+In-Process
+
+##### 2.5.2.10.2.0.0.0.0.0 Method
+
+Dio.interceptors.onError()
+
+##### 2.5.2.10.3.0.0.0.0.0 Parameters
+
+| Property | Value |
+|----------|-------|
+| Dio Error | Contains response with statusCode: 402 and data: {... |
+
+##### 2.5.2.10.4.0.0.0.0.0 Authentication
+
+N/A
+
+##### 2.5.2.10.5.0.0.0.0.0 Error Handling
+
+This is a global handler for API responses. It inspects the status code to decide on a specific action.
+
+##### 2.5.2.10.6.0.0.0.0.0 Performance
+
+###### 2.5.2.10.6.1.0.0.0.0 Latency
+
+N/A
+
+### 2.5.3.0.0.0.0.0.0.0 UI Navigation
+
+#### 2.5.3.1.0.0.0.0.0.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.3.2.0.0.0.0.0.0 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.3.3.0.0.0.0.0.0 Message
+
+12. Trigger Navigation to Upgrade Prompt UI
+
+#### 2.5.3.4.0.0.0.0.0.0 Sequence Number
+
+12
+
+#### 2.5.3.5.0.0.0.0.0.0 Type
+
+🔹 UI Navigation
+
+#### 2.5.3.6.0.0.0.0.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.3.7.0.0.0.0.0.0 Return Message
+
+
+
+#### 2.5.3.8.0.0.0.0.0.0 Has Return
+
+❌ No
+
+#### 2.5.3.9.0.0.0.0.0.0 Is Activation
+
+❌ No
+
+#### 2.5.3.10.0.0.0.0.0.0 Technical Details
+
+##### 2.5.3.10.1.0.0.0.0.0 Protocol
+
+In-Process
+
+##### 2.5.3.10.2.0.0.0.0.0 Method
+
+NavigationService.showUpgradeModal()
+
+##### 2.5.3.10.3.0.0.0.0.0 Parameters
+
+| Property | Value |
+|----------|-------|
+| Context | From the error interceptor. |
+
+##### 2.5.3.10.4.0.0.0.0.0 Authentication
+
+N/A
+
+##### 2.5.3.10.5.0.0.0.0.0 Error Handling
+
+N/A
+
+##### 2.5.3.10.6.0.0.0.0.0 Performance
+
+###### 2.5.3.10.6.1.0.0.0.0 Latency
+
+N/A
+
+## 2.6.0.0.0.0.0.0.0.0 Notes
+
+### 2.6.1.0.0.0.0.0.0.0 Content
+
+#### 2.6.1.1.0.0.0.0.0.0 Content
+
+Using HTTP 402 'Payment Required' is a semantically correct and specific way to signal that the action failed due to a business/monetization rule. This makes client-side handling robust.
+
+#### 2.6.1.2.0.0.0.0.0.0 Position
+
+top-right
+
+#### 2.6.1.3.0.0.0.0.0.0 Participant Id
+
+REPO-BE-HOST
+
+#### 2.6.1.4.0.0.0.0.0.0 Sequence Number
+
+10
+
+### 2.6.2.0.0.0.0.0.0.0 Content
+
+#### 2.6.2.1.0.0.0.0.0.0 Content
+
+The limit value (e.g., 20) MUST be sourced from a configuration service (e.g., appsettings.json or a feature flag system) and not hard-coded in the logic.
+
+#### 2.6.2.2.0.0.0.0.0.0 Position
+
+bottom-left
+
+#### 2.6.2.3.0.0.0.0.0.0 Participant Id
+
+REPO-BE-MOD-READING
+
+#### 2.6.2.4.0.0.0.0.0.0 Sequence Number
+
+7
+
+## 2.7.0.0.0.0.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | The API endpoint must be protected by an authoriza... |
+| Performance Targets | The entire limit check process (steps 4-8) must co... |
+| Error Handling Strategy | The backend MUST return a structured error payload... |
+| Testing Considerations | Integration tests are critical. Scenarios to test:... |
+| Monitoring Requirements | The backend should emit a custom metric (e.g., `fr... |
+| Deployment Considerations | This feature can be controlled by a feature flag. ... |
+

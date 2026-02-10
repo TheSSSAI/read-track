@@ -1,0 +1,1016 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-OP-001
+
+## 1.2 Name
+
+Production Deployment with Go-Live Checks
+
+## 1.3 Description
+
+A new version of the application is deployed to production via a CI/CD pipeline. The pipeline uses AWS CDK for infrastructure, runs automated end-to-end tests against the new deployment, and coordinates the app store release. Post-launch, an intensive monitoring phase ensures NFRs are met.
+
+## 1.4 Type
+
+🔹 OperationalFlow
+
+## 1.5 Purpose
+
+To ensure a reliable, repeatable, and safe process for releasing new software versions to end-users, as detailed in REQ-TRN-001.
+
+## 1.6 Complexity
+
+High
+
+## 1.7 Priority
+
+🚨 Critical
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- GitHub Actions
+- AWS CDK
+- REPO-BE-HOST
+- REPO-FE-MOBILE
+- Apple App Store / Google Play Store
+
+## 1.10 Key Interactions
+
+- Code merge triggers a GitHub Actions workflow.
+- Workflow builds artifacts and executes AWS CDK to deploy infrastructure changes.
+- A full suite of automated end-to-end tests are run against the newly deployed backend.
+- If tests pass, mobile builds are submitted to app stores for review.
+- Upon approval, the release is coordinated to go live.
+- An intensive monitoring phase begins, tracking system health, P95 latency, and error rates for 72 hours against go-live success criteria.
+
+## 1.11 Triggers
+
+- Code is merged into the main branch.
+
+## 1.12 Outcomes
+
+- A new version of the application is successfully and safely deployed to production.
+- Go-live success criteria are met (zero critical incidents, latency below 200ms).
+
+## 1.13 Business Rules
+
+- A deployment cannot proceed if automated tests fail.
+- Go-live is only considered successful if specific performance and stability metrics are met.
+
+## 1.14 Error Scenarios
+
+- The CDK deployment fails.
+- End-to-end tests fail against the production environment.
+- A critical bug is discovered post-launch.
+
+## 1.15 Integration Points
+
+- AWS APIs
+- Apple App Store Connect API
+- Google Play Console API
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-OP-001
+
+## 2.2 Name
+
+Production Deployment with Go-Live Checks and Automated Monitoring
+
+## 2.3 Description
+
+A detailed sequence for a fully automated production deployment of the application, triggered by a code merge. The process leverages Infrastructure as Code (IaC) via AWS CDK for backend deployment, executes a comprehensive E2E test suite against the live environment, and coordinates mobile app store releases. The sequence culminates in an intensive 72-hour monitoring phase to validate go-live success criteria as defined in REQ-TRN-001.
+
+## 2.4 Participants
+
+### 2.4.1 CI/CD Orchestrator
+
+#### 2.4.1.1 Repository Id
+
+github-actions
+
+#### 2.4.1.2 Display Name
+
+GitHub Actions (CI/CD)
+
+#### 2.4.1.3 Type
+
+🔹 CI/CD Orchestrator
+
+#### 2.4.1.4 Technology
+
+GitHub Actions
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #333333 |
+| Stereotype | <<CI/CD>> |
+
+### 2.4.2.0 Infrastructure as Code Tool
+
+#### 2.4.2.1 Repository Id
+
+aws-cdk
+
+#### 2.4.2.2 Display Name
+
+AWS Cloud Development Kit (CDK)
+
+#### 2.4.2.3 Type
+
+🔹 Infrastructure as Code Tool
+
+#### 2.4.2.4 Technology
+
+AWS CDK, TypeScript
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #FF9900 |
+| Stereotype | <<IaC>> |
+
+### 2.4.3.0 Application Service Environment
+
+#### 2.4.3.1 Repository Id
+
+REPO-BE-HOST
+
+#### 2.4.3.2 Display Name
+
+Backend Host (Production Env)
+
+#### 2.4.3.3 Type
+
+🔹 Application Service Environment
+
+#### 2.4.3.4 Technology
+
+AWS Fargate, Aurora PostgreSQL
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #232F3E |
+| Stereotype | <<Production>> |
+
+### 2.4.4.0 Observability Platform
+
+#### 2.4.4.1 Repository Id
+
+monitoring-platform
+
+#### 2.4.4.2 Display Name
+
+Monitoring Platform
+
+#### 2.4.4.3 Type
+
+🔹 Observability Platform
+
+#### 2.4.4.4 Technology
+
+AWS CloudWatch, Sentry
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #5A6B86 |
+| Stereotype | <<Observability>> |
+
+### 2.4.5.0 Application Artifact
+
+#### 2.4.5.1 Repository Id
+
+REPO-FE-MOBILE
+
+#### 2.4.5.2 Display Name
+
+Mobile App Build Artifacts
+
+#### 2.4.5.3 Type
+
+🔹 Application Artifact
+
+#### 2.4.5.4 Technology
+
+Flutter (IPA/AAB)
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | artifact |
+| Color | #0175C2 |
+| Stereotype | <<Artifact>> |
+
+### 2.4.6.0 External Platform
+
+#### 2.4.6.1 Repository Id
+
+app-stores
+
+#### 2.4.6.2 Display Name
+
+Apple App Store / Google Play Store
+
+#### 2.4.6.3 Type
+
+🔹 External Platform
+
+#### 2.4.6.4 Technology
+
+App Store Connect API / Google Play Console API
+
+#### 2.4.6.5 Order
+
+6
+
+#### 2.4.6.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | cloud |
+| Color | #4285F4 |
+| Stereotype | <<External>> |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 Self-Activation
+
+#### 2.5.1.1 Source Id
+
+github-actions
+
+#### 2.5.1.2 Target Id
+
+github-actions
+
+#### 2.5.1.3 Message
+
+[on: push, branches: [main]] Trigger 'Production Deploy' Workflow
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 Self-Activation
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+
+
+#### 2.5.1.8 Has Return
+
+❌ No
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+##### 2.5.1.10.1 Protocol
+
+GitHub Webhook
+
+##### 2.5.1.10.2 Method
+
+workflow_dispatch or push event
+
+##### 2.5.1.10.3 Parameters
+
+Commit SHA, branch ref
+
+##### 2.5.1.10.4 Authentication
+
+N/A
+
+##### 2.5.1.10.5 Error Handling
+
+Workflow fails if trigger conditions are not met.
+
+##### 2.5.1.10.6 Performance
+
+###### 2.5.1.10.6.1 Latency
+
+<1s
+
+### 2.5.2.0.0.0 Build Process
+
+#### 2.5.2.1.0.0 Source Id
+
+github-actions
+
+#### 2.5.2.2.0.0 Target Id
+
+github-actions
+
+#### 2.5.2.3.0.0 Message
+
+Build backend container image and mobile app artifacts (.ipa, .aab)
+
+#### 2.5.2.4.0.0 Sequence Number
+
+2
+
+#### 2.5.2.5.0.0 Type
+
+🔹 Build Process
+
+#### 2.5.2.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7.0.0 Return Message
+
+Build artifacts stored
+
+#### 2.5.2.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.2.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.2.10.0.0 Technical Details
+
+##### 2.5.2.10.1.0 Protocol
+
+Shell/Docker CLI/Flutter CLI
+
+##### 2.5.2.10.2.0 Method
+
+docker build, flutter build
+
+##### 2.5.2.10.3.0 Parameters
+
+Dockerfile, build configurations
+
+##### 2.5.2.10.4.0 Authentication
+
+N/A
+
+##### 2.5.2.10.5.0 Error Handling
+
+Workflow fails on build or test failure. Logs are uploaded as artifacts.
+
+##### 2.5.2.10.6.0 Performance
+
+###### 2.5.2.10.6.1 Latency
+
+5-15 mins
+
+### 2.5.3.0.0.0 IaC Deployment
+
+#### 2.5.3.1.0.0 Source Id
+
+github-actions
+
+#### 2.5.3.2.0.0 Target Id
+
+aws-cdk
+
+#### 2.5.3.3.0.0 Message
+
+Execute 'cdk deploy' for production environment
+
+#### 2.5.3.4.0.0 Sequence Number
+
+3
+
+#### 2.5.3.5.0.0 Type
+
+🔹 IaC Deployment
+
+#### 2.5.3.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7.0.0 Return Message
+
+CloudFormation Stack Update Status (SUCCESS/FAIL)
+
+#### 2.5.3.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.3.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.3.10.0.0 Technical Details
+
+##### 2.5.3.10.1.0 Protocol
+
+AWS CLI
+
+##### 2.5.3.10.2.0 Method
+
+cdk deploy --require-approval never --outputs-file cdk-outputs.json
+
+##### 2.5.3.10.3.0 Parameters
+
+Production environment context variables
+
+##### 2.5.3.10.4.0 Authentication
+
+Secure OIDC Role (GitHub Actions -> AWS IAM)
+
+##### 2.5.3.10.5.0 Error Handling
+
+On failure, CDK exits with non-zero code. Workflow posts failure to Slack and triggers automated rollback to previous stable CloudFormation template.
+
+##### 2.5.3.10.6.0 Performance
+
+###### 2.5.3.10.6.1 Latency
+
+5-20 mins
+
+### 2.5.4.0.0.0 Resource Provisioning
+
+#### 2.5.4.1.0.0 Source Id
+
+aws-cdk
+
+#### 2.5.4.2.0.0 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.4.3.0.0 Message
+
+Provision/Update AWS infrastructure and deploy new backend container version
+
+#### 2.5.4.4.0.0 Sequence Number
+
+4
+
+#### 2.5.4.5.0.0 Type
+
+🔹 Resource Provisioning
+
+#### 2.5.4.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7.0.0 Return Message
+
+
+
+#### 2.5.4.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.4.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.4.10.0.0 Technical Details
+
+##### 2.5.4.10.1.0 Protocol
+
+AWS CloudFormation API
+
+##### 2.5.4.10.2.0 Method
+
+Create/Update Stack
+
+##### 2.5.4.10.3.0 Parameters
+
+CDK-synthesized CloudFormation template
+
+##### 2.5.4.10.4.0 Authentication
+
+IAM Role assumed by CloudFormation service
+
+##### 2.5.4.10.5.0 Error Handling
+
+CloudFormation handles resource update failures and attempts automatic rollback of the stack.
+
+##### 2.5.4.10.6.0 Performance
+
+###### 2.5.4.10.6.1 Latency
+
+Dependent on resource changes
+
+### 2.5.5.0.0.0 Quality Gate
+
+#### 2.5.5.1.0.0 Source Id
+
+github-actions
+
+#### 2.5.5.2.0.0 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.5.3.0.0 Message
+
+Execute E2E Test Suite against deployed production backend
+
+#### 2.5.5.4.0.0 Sequence Number
+
+5
+
+#### 2.5.5.5.0.0 Type
+
+🔹 Quality Gate
+
+#### 2.5.5.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7.0.0 Return Message
+
+Test Execution Report (Pass/Fail)
+
+#### 2.5.5.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.5.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.5.10.0.0 Technical Details
+
+##### 2.5.5.10.1.0 Protocol
+
+HTTPS/REST
+
+##### 2.5.5.10.2.0 Method
+
+Run integration_test suite via test runner
+
+##### 2.5.5.10.3.0 Parameters
+
+API Endpoint from cdk-outputs.json
+
+##### 2.5.5.10.4.0 Authentication
+
+Pre-configured Test User JWT
+
+##### 2.5.5.10.5.0 Error Handling
+
+If tests fail, workflow is halted. Test reports and logs are uploaded as artifacts for review. Deployment is not promoted.
+
+##### 2.5.5.10.6.0 Performance
+
+###### 2.5.5.10.6.1 Latency
+
+5-10 mins
+
+### 2.5.6.0.0.0 API Call
+
+#### 2.5.6.1.0.0 Source Id
+
+github-actions
+
+#### 2.5.6.2.0.0 Target Id
+
+app-stores
+
+#### 2.5.6.3.0.0 Message
+
+If E2E tests pass, upload and submit mobile builds (from Step 2) for review
+
+#### 2.5.6.4.0.0 Sequence Number
+
+6
+
+#### 2.5.6.5.0.0 Type
+
+🔹 API Call
+
+#### 2.5.6.6.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.6.7.0.0 Return Message
+
+Submission Acknowledged
+
+#### 2.5.6.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.6.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.6.10.0.0 Technical Details
+
+##### 2.5.6.10.1.0 Protocol
+
+HTTPS/REST
+
+##### 2.5.6.10.2.0 Method
+
+fastlane deliver / App Store Connect API / Google Play Developer API
+
+##### 2.5.6.10.3.0 Parameters
+
+Build artifacts, release notes, metadata
+
+##### 2.5.6.10.4.0 Authentication
+
+API Key / Service Account credentials stored in GitHub Secrets
+
+##### 2.5.6.10.5.0 Error Handling
+
+Retry mechanism for transient API errors. On persistent failure, notify team.
+
+##### 2.5.6.10.6.0 Performance
+
+###### 2.5.6.10.6.1 Latency
+
+5-10 mins for upload
+
+### 2.5.7.0.0.0 Webhook Callback
+
+#### 2.5.7.1.0.0 Source Id
+
+app-stores
+
+#### 2.5.7.2.0.0 Target Id
+
+github-actions
+
+#### 2.5.7.3.0.0 Message
+
+Notify build review status (Approved/Rejected) via webhook
+
+#### 2.5.7.4.0.0 Sequence Number
+
+7
+
+#### 2.5.7.5.0.0 Type
+
+🔹 Webhook Callback
+
+#### 2.5.7.6.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.7.7.0.0 Return Message
+
+
+
+#### 2.5.7.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.7.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.7.10.0.0 Technical Details
+
+##### 2.5.7.10.1.0 Protocol
+
+HTTPS
+
+##### 2.5.7.10.2.0 Method
+
+POST
+
+##### 2.5.7.10.3.0 Parameters
+
+JSON payload with build status
+
+##### 2.5.7.10.4.0 Authentication
+
+Webhook signature verification
+
+##### 2.5.7.10.5.0 Error Handling
+
+If webhook is missed, a scheduled polling mechanism acts as a backup.
+
+##### 2.5.7.10.6.0 Performance
+
+###### 2.5.7.10.6.1 Latency
+
+1 hour - 7 days (App Store Review Time)
+
+### 2.5.8.0.0.0 Release Command
+
+#### 2.5.8.1.0.0 Source Id
+
+github-actions
+
+#### 2.5.8.2.0.0 Target Id
+
+app-stores
+
+#### 2.5.8.3.0.0 Message
+
+On 'Approved' status, trigger phased release to production
+
+#### 2.5.8.4.0.0 Sequence Number
+
+8
+
+#### 2.5.8.5.0.0 Type
+
+🔹 Release Command
+
+#### 2.5.8.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.8.7.0.0 Return Message
+
+Release Initiated
+
+#### 2.5.8.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.8.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.8.10.0.0 Technical Details
+
+##### 2.5.8.10.1.0 Protocol
+
+HTTPS/REST
+
+##### 2.5.8.10.2.0 Method
+
+Promote release via API
+
+##### 2.5.8.10.3.0 Parameters
+
+Release version, rollout percentage (e.g., 1%)
+
+##### 2.5.8.10.4.0 Authentication
+
+API Key / Service Account credentials
+
+##### 2.5.8.10.5.0 Error Handling
+
+On failure, alert team to perform manual release.
+
+##### 2.5.8.10.6.0 Performance
+
+###### 2.5.8.10.6.1 Latency
+
+<1 min
+
+### 2.5.9.0.0.0 Data Streaming
+
+#### 2.5.9.1.0.0 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.9.2.0.0 Target Id
+
+monitoring-platform
+
+#### 2.5.9.3.0.0 Message
+
+Begin intensive monitoring: Continuously emit metrics, logs, and traces
+
+#### 2.5.9.4.0.0 Sequence Number
+
+9
+
+#### 2.5.9.5.0.0 Type
+
+🔹 Data Streaming
+
+#### 2.5.9.6.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.9.7.0.0 Return Message
+
+
+
+#### 2.5.9.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.9.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.9.10.0.0 Technical Details
+
+##### 2.5.9.10.1.0 Protocol
+
+OTLP/HTTPS
+
+##### 2.5.9.10.2.0 Method
+
+N/A
+
+##### 2.5.9.10.3.0 Parameters
+
+P95 Latency, 5xx Error Rates, CPU/Memory Util, Custom Business Events
+
+##### 2.5.9.10.4.0 Authentication
+
+IAM Role for AWS services
+
+##### 2.5.9.10.5.0 Error Handling
+
+Monitoring agent handles buffering and retries.
+
+##### 2.5.9.10.6.0 Performance
+
+###### 2.5.9.10.6.1 Latency
+
+<50ms
+
+### 2.5.10.0.0.0 Health Check
+
+#### 2.5.10.1.0.0 Source Id
+
+monitoring-platform
+
+#### 2.5.10.2.0.0 Target Id
+
+github-actions
+
+#### 2.5.10.3.0.0 Message
+
+Evaluate go-live success criteria against defined CloudWatch Alarms
+
+#### 2.5.10.4.0.0 Sequence Number
+
+10
+
+#### 2.5.10.5.0.0 Type
+
+🔹 Health Check
+
+#### 2.5.10.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.10.7.0.0 Return Message
+
+Health Status (OK/ALARM)
+
+#### 2.5.10.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.10.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.10.10.0.0 Technical Details
+
+##### 2.5.10.10.1.0 Protocol
+
+AWS API
+
+##### 2.5.10.10.2.0 Method
+
+DescribeAlarms
+
+##### 2.5.10.10.3.0 Parameters
+
+Alarm names for P95 Latency, Error Rate
+
+##### 2.5.10.10.4.0 Authentication
+
+OIDC Role (GitHub Actions -> AWS IAM)
+
+##### 2.5.10.10.5.0 Error Handling
+
+If an alarm is in 'ALARM' state, trigger post-launch failure protocol.
+
+##### 2.5.10.10.6.0 Performance
+
+###### 2.5.10.10.6.1 Latency
+
+<1s
+
+### 2.5.11.0.0.0 Reporting
+
+#### 2.5.11.1.0.0 Source Id
+
+github-actions
+
+#### 2.5.11.2.0.0 Target Id
+
+github-actions
+
+#### 2.5.11.3.0.0 Message
+
+After 72h, finalize deployment report (Success/Rolled Back) and notify team
+
+#### 2.5.11.4.0.0 Sequence Number
+
+11
+
+#### 2.5.11.5.0.0 Type
+
+🔹 Reporting
+
+#### 2.5.11.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.11.7.0.0 Return Message
+
+
+
+#### 2.5.11.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.11.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.11.10.0.0 Technical Details
+
+##### 2.5.11.10.1.0 Protocol
+
+Slack/Teams API
+
+##### 2.5.11.10.2.0 Method
+
+Post Message
+
+##### 2.5.11.10.3.0 Parameters
+
+Deployment summary, links to dashboards and build logs
+
+##### 2.5.11.10.4.0 Authentication
+
+Webhook URL stored in GitHub Secrets
+
+##### 2.5.11.10.5.0 Error Handling
+
+N/A
+
+##### 2.5.11.10.6.0 Performance
+
+###### 2.5.11.10.6.1 Latency
+
+<2s
+
+## 2.6.0.0.0.0 Notes
+
+- {'content': "ALT: Post-Launch Critical Failure\n1. CloudWatch Alarm triggers (e.g., P99 Latency > 1s or 5xx Rate > 1%).\n2. Alarm sends notification to an SNS topic.\n3. SNS topic triggers a 'Rollback' GitHub Actions workflow.\n4. Rollback workflow executes 'cdk deploy' with a pointer to the previous stable version's artifacts and infrastructure definition.\n5. Team is notified and public status page is updated.", 'position': 'bottom', 'participantId': None, 'sequenceNumber': 10}
+
+## 2.7.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | GitHub Actions must use a secure OIDC connection t... |
+| Performance Targets | Go-live success criteria as per REQ-TRN-001: zero ... |
+| Error Handling Strategy | CDK Deployment Failure: The workflow fails and tri... |
+| Testing Considerations | The E2E test suite must be run against the live pr... |
+| Monitoring Requirements | A dedicated 'Go-Live Monitoring' dashboard in AWS ... |
+| Deployment Considerations | The backend follows a 'Big Bang' deployment via AW... |
+

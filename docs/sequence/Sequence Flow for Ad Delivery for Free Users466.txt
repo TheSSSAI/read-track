@@ -1,0 +1,897 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-FF-003
+
+## 1.2 Name
+
+Ad Delivery for Free Users
+
+## 1.3 Description
+
+For users on the 'Free User' tier, the mobile client integrates with the Google AdMob SDK to request and display ads at specific placement points, such as banner ads or interstitial ads, while respecting user consent choices for personalized advertising.
+
+## 1.4 Type
+
+🔹 FeatureFlow
+
+## 1.5 Purpose
+
+To generate revenue from non-paying users as part of the freemium business model, as required by REQ-ADS-001.
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🟡 Medium
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-FE-MOBILE
+- Google AdMob SDK
+
+## 1.10 Key Interactions
+
+- User navigates to a screen with an ad placement (e.g., statistics page).
+- The client state management confirms the user's tier is 'Free User'.
+- An ad component initializes the Google AdMob SDK and requests an ad for a specific ad unit ID.
+- The AdMob service returns an ad creative, which is then displayed in the designated view.
+- The client also tracks events (e.g., reading session logged) to trigger interstitial ads according to frequency rules (e.g., after every 3rd session).
+
+## 1.11 Triggers
+
+- A 'Free User' views a screen with an ad placement.
+- A 'Free User' completes an action that triggers a frequency-capped ad.
+
+## 1.12 Outcomes
+
+- Advertisements are displayed to Free Users.
+- Ad impression and click events are tracked by the AdMob SDK.
+
+## 1.13 Business Rules
+
+- Ads must not be displayed to 'Premium User' accounts.
+- Ad placement and frequency must be configured to minimize disruption to the core user experience.
+- User consent for personalized advertising (e.g., App Tracking Transparency on iOS) must be respected.
+
+## 1.14 Error Scenarios
+
+- The AdMob SDK fails to load an ad (no-fill), and the UI gracefully handles the empty space.
+- A client-side bug causes ads to be shown to premium users.
+
+## 1.15 Integration Points
+
+- Google AdMob SDK
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-FF-003
+
+## 2.2 Name
+
+Implementation: Ad Delivery for Free Users
+
+## 2.3 Description
+
+Technical sequence for the mobile client to request and display Google AdMob advertisements for users on the 'Free User' subscription tier. The process is initiated on specific screen navigations or after key user actions, and includes asynchronous ad loading, state management to confirm user tier, and robust error handling for ad-fill failures, directly implementing REQ-ADS-001.
+
+## 2.4 Participants
+
+### 2.4.1 Client Application
+
+#### 2.4.1.1 Repository Id
+
+REPO-FE-MOBILE
+
+#### 2.4.1.2 Display Name
+
+Flutter Mobile Client
+
+#### 2.4.1.3 Type
+
+🔹 Client Application
+
+#### 2.4.1.4 Technology
+
+Flutter 3.x, Dart 3.x, Riverpod
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #1E88E5 |
+| Stereotype | <<Mobile Client>> |
+
+### 2.4.2.0 External Service SDK
+
+#### 2.4.2.1 Repository Id
+
+EXT-ADMOB-SDK
+
+#### 2.4.2.2 Display Name
+
+Google AdMob SDK
+
+#### 2.4.2.3 Type
+
+🔹 External Service SDK
+
+#### 2.4.2.4 Technology
+
+Native AdMob SDK for iOS/Android
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #43A047 |
+| Stereotype | <<External SDK>> |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 User Interaction
+
+#### 2.5.1.1 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.1.2 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.1.3 Message
+
+User (Free Tier) navigates to a screen with a banner ad placement (e.g., Statistics Page).
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 User Interaction
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+
+
+#### 2.5.1.8 Has Return
+
+❌ No
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+##### 2.5.1.10.1 Protocol
+
+Internal Navigation Event
+
+##### 2.5.1.10.2 Method
+
+Navigator.push('/statistics')
+
+##### 2.5.1.10.3 Parameters
+
+*No items available*
+
+##### 2.5.1.10.4 Authentication
+
+Requires authenticated user session.
+
+##### 2.5.1.10.5 Error Handling
+
+N/A
+
+##### 2.5.1.10.6 Performance
+
+Screen transition should be < 500ms.
+
+#### 2.5.1.11.0 Nested Interactions
+
+*No items available*
+
+### 2.5.2.0.0 State Management Read
+
+#### 2.5.2.1.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.2.2.0 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.2.3.0 Message
+
+Widget build checks user's subscription tier via Riverpod state provider.
+
+#### 2.5.2.4.0 Sequence Number
+
+2
+
+#### 2.5.2.5.0 Type
+
+🔹 State Management Read
+
+#### 2.5.2.6.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7.0 Return Message
+
+Returns User object with tier='Free User'
+
+#### 2.5.2.8.0 Has Return
+
+✅ Yes
+
+#### 2.5.2.9.0 Is Activation
+
+❌ No
+
+#### 2.5.2.10.0 Technical Details
+
+##### 2.5.2.10.1 Protocol
+
+Riverpod State Access
+
+##### 2.5.2.10.2 Method
+
+ref.watch(userProvider)
+
+##### 2.5.2.10.3 Parameters
+
+*No items available*
+
+##### 2.5.2.10.4 Authentication
+
+N/A
+
+##### 2.5.2.10.5 Error Handling
+
+Provider will have a defined error state if user data is unavailable.
+
+##### 2.5.2.10.6 Performance
+
+Synchronous, near-instant state read.
+
+#### 2.5.2.11.0 Nested Interactions
+
+*No items available*
+
+### 2.5.3.0.0 Asynchronous Method Call
+
+#### 2.5.3.1.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.3.2.0 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.3.3.0 Message
+
+[Opt: userTier == 'Free'] Initialize AdBannerWidget and request ad.
+
+#### 2.5.3.4.0 Sequence Number
+
+3
+
+#### 2.5.3.5.0 Type
+
+🔹 Asynchronous Method Call
+
+#### 2.5.3.6.0 Is Synchronous
+
+❌ No
+
+#### 2.5.3.7.0 Return Message
+
+
+
+#### 2.5.3.8.0 Has Return
+
+❌ No
+
+#### 2.5.3.9.0 Is Activation
+
+❌ No
+
+#### 2.5.3.10.0 Technical Details
+
+##### 2.5.3.10.1 Protocol
+
+Internal Service Call
+
+##### 2.5.3.10.2 Method
+
+AdService.loadBannerAd()
+
+##### 2.5.3.10.3 Parameters
+
+- { adUnitId: 'config.bannerAdUnitId', consentStatus: 'obtained' }
+
+##### 2.5.3.10.4 Authentication
+
+N/A
+
+##### 2.5.3.10.5 Error Handling
+
+The method call itself is wrapped in a try/catch; SDK errors are handled via callbacks.
+
+##### 2.5.3.10.6 Performance
+
+Must not block UI thread. Returns a Future.
+
+#### 2.5.3.11.0 Nested Interactions
+
+*No items available*
+
+### 2.5.4.0.0 SDK Method Call
+
+#### 2.5.4.1.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.4.2.0 Target Id
+
+EXT-ADMOB-SDK
+
+#### 2.5.4.3.0 Message
+
+Load banner ad creative for the specified ad unit.
+
+#### 2.5.4.4.0 Sequence Number
+
+4
+
+#### 2.5.4.5.0 Type
+
+🔹 SDK Method Call
+
+#### 2.5.4.6.0 Is Synchronous
+
+❌ No
+
+#### 2.5.4.7.0 Return Message
+
+Ad creative or a 'no-fill' error via a listener callback.
+
+#### 2.5.4.8.0 Has Return
+
+✅ Yes
+
+#### 2.5.4.9.0 Is Activation
+
+✅ Yes
+
+#### 2.5.4.10.0 Technical Details
+
+##### 2.5.4.10.1 Protocol
+
+Native SDK Bridge
+
+##### 2.5.4.10.2 Method
+
+BannerAd(...).load()
+
+##### 2.5.4.10.3 Parameters
+
+- adUnitId
+- AdRequest object
+- BannerAdListener
+
+##### 2.5.4.10.4 Authentication
+
+SDK initializes with the application's AdMob App ID.
+
+##### 2.5.4.10.5 Error Handling
+
+Failures are handled by the `onAdFailedToLoad` callback in the listener.
+
+##### 2.5.4.10.6 Performance
+
+Network-dependent, typically 200-2000ms.
+
+#### 2.5.4.11.0 Nested Interactions
+
+*No items available*
+
+### 2.5.5.0.0 Asynchronous Callback
+
+#### 2.5.5.1.0 Source Id
+
+EXT-ADMOB-SDK
+
+#### 2.5.5.2.0 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.5.3.0 Message
+
+[Success] Callback: onAdLoaded(ad)
+
+#### 2.5.5.4.0 Sequence Number
+
+5
+
+#### 2.5.5.5.0 Type
+
+🔹 Asynchronous Callback
+
+#### 2.5.5.6.0 Is Synchronous
+
+❌ No
+
+#### 2.5.5.7.0 Return Message
+
+
+
+#### 2.5.5.8.0 Has Return
+
+❌ No
+
+#### 2.5.5.9.0 Is Activation
+
+❌ No
+
+#### 2.5.5.10.0 Technical Details
+
+##### 2.5.5.10.1 Protocol
+
+Native SDK Listener
+
+##### 2.5.5.10.2 Method
+
+BannerAdListener.onAdLoaded
+
+##### 2.5.5.10.3 Parameters
+
+- Ad object
+
+##### 2.5.5.10.4 Authentication
+
+N/A
+
+##### 2.5.5.10.5 Error Handling
+
+N/A
+
+##### 2.5.5.10.6 Performance
+
+N/A
+
+#### 2.5.5.11.0 Nested Interactions
+
+- {'sourceId': 'REPO-FE-MOBILE', 'targetId': 'REPO-FE-MOBILE', 'message': 'Update widget state to display the loaded ad.', 'sequenceNumber': 5.1, 'type': 'State Management Write', 'isSynchronous': True, 'returnMessage': '', 'hasReturn': False, 'isActivation': False, 'technicalDetails': {'protocol': 'Riverpod State Update', 'method': 'state = AdState.loaded(ad)', 'parameters': [], 'authentication': 'N/A', 'errorHandling': 'N/A', 'performance': 'Triggers a widget rebuild.'}}
+
+### 2.5.6.0.0 Asynchronous Callback
+
+#### 2.5.6.1.0 Source Id
+
+EXT-ADMOB-SDK
+
+#### 2.5.6.2.0 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.6.3.0 Message
+
+[Failure] Callback: onAdFailedToLoad(error)
+
+#### 2.5.6.4.0 Sequence Number
+
+6
+
+#### 2.5.6.5.0 Type
+
+🔹 Asynchronous Callback
+
+#### 2.5.6.6.0 Is Synchronous
+
+❌ No
+
+#### 2.5.6.7.0 Return Message
+
+
+
+#### 2.5.6.8.0 Has Return
+
+❌ No
+
+#### 2.5.6.9.0 Is Activation
+
+❌ No
+
+#### 2.5.6.10.0 Technical Details
+
+##### 2.5.6.10.1 Protocol
+
+Native SDK Listener
+
+##### 2.5.6.10.2 Method
+
+BannerAdListener.onAdFailedToLoad
+
+##### 2.5.6.10.3 Parameters
+
+- LoadAdError object
+
+##### 2.5.6.10.4 Authentication
+
+N/A
+
+##### 2.5.6.10.5 Error Handling
+
+This is the primary error handling mechanism.
+
+##### 2.5.6.10.6 Performance
+
+N/A
+
+#### 2.5.6.11.0 Nested Interactions
+
+- {'sourceId': 'REPO-FE-MOBILE', 'targetId': 'REPO-FE-MOBILE', 'message': 'Log failure event to analytics and update state to handle empty space.', 'sequenceNumber': 6.1, 'type': 'Error Handling / Logging', 'isSynchronous': True, 'returnMessage': '', 'hasReturn': False, 'isActivation': False, 'technicalDetails': {'protocol': 'Internal Logging/State', 'method': "logger.warn('Ad failed to load'); state = AdState.error(error)", 'parameters': ['error object'], 'authentication': 'N/A', 'errorHandling': 'N/A', 'performance': 'Minimal.'}}
+
+### 2.5.7.0.0 Business Event
+
+#### 2.5.7.1.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.7.2.0 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.7.3.0 Message
+
+User completes an action triggering an interstitial ad (e.g., logs 3rd reading session).
+
+#### 2.5.7.4.0 Sequence Number
+
+7
+
+#### 2.5.7.5.0 Type
+
+🔹 Business Event
+
+#### 2.5.7.6.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.7.7.0 Return Message
+
+
+
+#### 2.5.7.8.0 Has Return
+
+❌ No
+
+#### 2.5.7.9.0 Is Activation
+
+❌ No
+
+#### 2.5.7.10.0 Technical Details
+
+##### 2.5.7.10.1 Protocol
+
+Internal Application Logic
+
+##### 2.5.7.10.2 Method
+
+ReadingService.logSession()
+
+##### 2.5.7.10.3 Parameters
+
+*No items available*
+
+##### 2.5.7.10.4 Authentication
+
+Requires authenticated user session.
+
+##### 2.5.7.10.5 Error Handling
+
+Standard application error handling.
+
+##### 2.5.7.10.6 Performance
+
+N/A
+
+### 2.5.8.0.0 Asynchronous Method Call
+
+#### 2.5.8.1.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.8.2.0 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.8.3.0 Message
+
+[Opt: userTier == 'Free' && shouldShowInterstitial()] Request interstitial ad.
+
+#### 2.5.8.4.0 Sequence Number
+
+8
+
+#### 2.5.8.5.0 Type
+
+🔹 Asynchronous Method Call
+
+#### 2.5.8.6.0 Is Synchronous
+
+❌ No
+
+#### 2.5.8.7.0 Return Message
+
+
+
+#### 2.5.8.8.0 Has Return
+
+❌ No
+
+#### 2.5.8.9.0 Is Activation
+
+❌ No
+
+#### 2.5.8.10.0 Technical Details
+
+##### 2.5.8.10.1 Protocol
+
+Internal Service Call
+
+##### 2.5.8.10.2 Method
+
+AdService.loadAndShowInterstitialAd()
+
+##### 2.5.8.10.3 Parameters
+
+- { adUnitId: 'config.interstitialAdUnitId' }
+
+##### 2.5.8.10.4 Authentication
+
+N/A
+
+##### 2.5.8.10.5 Error Handling
+
+The user's primary action (logging the session) is already complete and must not be blocked by this call.
+
+##### 2.5.8.10.6 Performance
+
+Must not block UI thread.
+
+#### 2.5.8.11.0 Nested Interactions
+
+*No items available*
+
+### 2.5.9.0.0 SDK Method Call
+
+#### 2.5.9.1.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.9.2.0 Target Id
+
+EXT-ADMOB-SDK
+
+#### 2.5.9.3.0 Message
+
+Load interstitial ad creative.
+
+#### 2.5.9.4.0 Sequence Number
+
+9
+
+#### 2.5.9.5.0 Type
+
+🔹 SDK Method Call
+
+#### 2.5.9.6.0 Is Synchronous
+
+❌ No
+
+#### 2.5.9.7.0 Return Message
+
+Ad creative or error via callback.
+
+#### 2.5.9.8.0 Has Return
+
+✅ Yes
+
+#### 2.5.9.9.0 Is Activation
+
+✅ Yes
+
+#### 2.5.9.10.0 Technical Details
+
+##### 2.5.9.10.1 Protocol
+
+Native SDK Bridge
+
+##### 2.5.9.10.2 Method
+
+InterstitialAd.load()
+
+##### 2.5.9.10.3 Parameters
+
+- adUnitId
+- AdRequest object
+- InterstitialAdLoadCallback
+
+##### 2.5.9.10.4 Authentication
+
+N/A
+
+##### 2.5.9.10.5 Error Handling
+
+Failures handled via `onAdFailedToLoad` callback.
+
+##### 2.5.9.10.6 Performance
+
+Network-dependent, pre-loading is recommended.
+
+#### 2.5.9.11.0 Nested Interactions
+
+*No items available*
+
+### 2.5.10.0.0 Asynchronous Callback
+
+#### 2.5.10.1.0 Source Id
+
+EXT-ADMOB-SDK
+
+#### 2.5.10.2.0 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.10.3.0 Message
+
+[Success] Callback: onAdLoaded(interstitialAd)
+
+#### 2.5.10.4.0 Sequence Number
+
+10
+
+#### 2.5.10.5.0 Type
+
+🔹 Asynchronous Callback
+
+#### 2.5.10.6.0 Is Synchronous
+
+❌ No
+
+#### 2.5.10.7.0 Return Message
+
+
+
+#### 2.5.10.8.0 Has Return
+
+❌ No
+
+#### 2.5.10.9.0 Is Activation
+
+❌ No
+
+#### 2.5.10.10.0 Technical Details
+
+##### 2.5.10.10.1 Protocol
+
+Native SDK Listener
+
+##### 2.5.10.10.2 Method
+
+InterstitialAdLoadCallback.onAdLoaded
+
+##### 2.5.10.10.3 Parameters
+
+- InterstitialAd object
+
+##### 2.5.10.10.4 Authentication
+
+N/A
+
+##### 2.5.10.10.5 Error Handling
+
+N/A
+
+##### 2.5.10.10.6 Performance
+
+N/A
+
+#### 2.5.10.11.0 Nested Interactions
+
+- {'sourceId': 'REPO-FE-MOBILE', 'targetId': 'EXT-ADMOB-SDK', 'message': 'Immediately display the loaded full-screen ad.', 'sequenceNumber': 10.1, 'type': 'SDK Method Call', 'isSynchronous': True, 'returnMessage': '', 'hasReturn': False, 'isActivation': False, 'technicalDetails': {'protocol': 'Native SDK Bridge', 'method': 'interstitialAd.show()', 'parameters': [], 'authentication': 'N/A', 'errorHandling': 'SDK handles errors if ad is expired or already shown.', 'performance': 'Presents a full-screen overlay, blocking UI.'}}
+
+## 2.6.0.0.0 Notes
+
+### 2.6.1.0.0 Content
+
+#### 2.6.1.1.0 Content
+
+Business Rule Check: The check `user.subscriptionTier == 'Free User'` is the critical security and business logic checkpoint. This must be a reliable state read and should be implemented as a feature toggle or condition before any ad-related code is executed.
+
+#### 2.6.1.2.0 Position
+
+top-right
+
+#### 2.6.1.3.0 Participant Id
+
+REPO-FE-MOBILE
+
+#### 2.6.1.4.0 Sequence Number
+
+2
+
+### 2.6.2.0.0 Content
+
+#### 2.6.2.1.0 Content
+
+Configuration: Ad Unit IDs for banner, interstitial, and other formats must be stored in a remote configuration service (e.g., Firebase Remote Config) or environment variables, NOT hardcoded in the application binary.
+
+#### 2.6.2.2.0 Position
+
+bottom-left
+
+#### 2.6.2.3.0 Participant Id
+
+*Not specified*
+
+#### 2.6.2.4.0 Sequence Number
+
+3
+
+### 2.6.3.0.0 Content
+
+#### 2.6.3.1.0 Content
+
+User Consent: Before initializing the AdMob SDK for the first time, the application must request user consent via the platform's mechanism (e.g., App Tracking Transparency on iOS). The result of this consent check is passed during SDK initialization and ad requests.
+
+#### 2.6.3.2.0 Position
+
+bottom-right
+
+#### 2.6.3.3.0 Participant Id
+
+*Not specified*
+
+#### 2.6.3.4.0 Sequence Number
+
+4
+
+## 2.7.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | The primary security control is to strictly preven... |
+| Performance Targets | Ad loading must be fully asynchronous to avoid blo... |
+| Error Handling Strategy | The primary failure mode is an ad 'no-fill', where... |
+| Testing Considerations | Unit/Widget tests should mock the AdService to ver... |
+| Monitoring Requirements | Client-side analytics (e.g., Sentry, Firebase Anal... |
+| Deployment Considerations | The ad display logic is effectively controlled by ... |
+

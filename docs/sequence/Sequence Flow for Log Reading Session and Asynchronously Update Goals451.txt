@@ -1,0 +1,781 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-FF-001
+
+## 1.2 Name
+
+Log Reading Session and Asynchronously Update Goals
+
+## 1.3 Description
+
+A user records a reading session for a book. The system saves the session details and then publishes an asynchronous, in-process event. Decoupled handlers subscribe to this event to update the progress of all relevant active goals without blocking the initial user request.
+
+## 1.4 Type
+
+🔹 FeatureFlow
+
+## 1.5 Purpose
+
+To enable the core reading tracking functionality (REQ-TRK-001) and provide real-time feedback on goal achievement (REQ-GOL-001) in a scalable, decoupled manner.
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🚨 Critical
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-FE-MOBILE
+- REPO-BE-HOST
+
+## 1.10 Key Interactions
+
+- User selects a book and enters progress (page number/time spent).
+- Client sends the session data to the backend API.
+- The MOD-READING service validates and saves the ReadingSession entity within a transaction.
+- An in-process event (`ReadingSessionLogged`) is published via MediatR before the transaction commits.
+- A handler in the MOD-ENGAGEMENT service consumes the event.
+- The handler fetches the user's active goals and updates their progress values.
+- The transaction is committed, and a success response is sent to the client.
+- Client UI reflects the new session and fetches updated goal progress.
+
+## 1.11 Triggers
+
+- User submits a form to log a reading session.
+
+## 1.12 Outcomes
+
+- A new ReadingSession record is created.
+- The progress of the user's active goals is updated.
+- The UI reflects the new session and updated goal progress.
+
+## 1.13 Business Rules
+
+- Reading sessions can only be logged for items on the 'Currently Reading' shelf.
+- Goal progress must update automatically after a session is logged.
+
+## 1.14 Error Scenarios
+
+- Invalid progress is entered (e.g., page number lower than previous).
+- The event handler for goal updates fails; the main transaction should still succeed, but the error must be logged.
+
+## 1.15 Integration Points
+
+*No items available*
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-FF-001
+
+## 2.2 Name
+
+Implementation: Log Reading Session and Asynchronously Update Goals
+
+## 2.3 Description
+
+A comprehensive technical sequence for logging a user's reading session. The process utilizes a CQRS pattern with a `LogReadingSessionCommand` to handle the initial synchronous write operation. Upon successful persistence of the session, an in-process, asynchronous domain event (`ReadingSessionLogged`) is dispatched via MediatR. This event is consumed by a separate, decoupled handler in the Engagement module to update the user's goal progress. This event-driven approach ensures the initial user request is highly responsive and resilient to failures in secondary, non-critical operations like goal updates.
+
+## 2.4 Participants
+
+### 2.4.1 Client Application
+
+#### 2.4.1.1 Repository Id
+
+REPO-FE-MOBILE
+
+#### 2.4.1.2 Display Name
+
+Flutter Mobile Client
+
+#### 2.4.1.3 Type
+
+🔹 Client Application
+
+#### 2.4.1.4 Technology
+
+Flutter 3.x, Dart 3.x, Dio
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #4CAF50 |
+| Stereotype | <<Client>> |
+
+### 2.4.2.0 API Gateway / Controller Layer
+
+#### 2.4.2.1 Repository Id
+
+REPO-BE-HOST
+
+#### 2.4.2.2 Display Name
+
+Backend API Host
+
+#### 2.4.2.3 Type
+
+🔹 API Gateway / Controller Layer
+
+#### 2.4.2.4 Technology
+
+ASP.NET Core 8
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | rectangle |
+| Color | #2196F3 |
+| Stereotype | <<Presentation>> |
+
+### 2.4.3.0 Business Logic / Command Handler
+
+#### 2.4.3.1 Repository Id
+
+REPO-BE-MOD-READING
+
+#### 2.4.3.2 Display Name
+
+Reading Module
+
+#### 2.4.3.3 Type
+
+🔹 Business Logic / Command Handler
+
+#### 2.4.3.4 Technology
+
+.NET 8, C# 12
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | rectangle |
+| Color | #FFC107 |
+| Stereotype | <<Application Logic>> |
+
+### 2.4.4.0 Data Access & Messaging
+
+#### 2.4.4.1 Repository Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.4.4.2 Display Name
+
+Infrastructure & Persistence
+
+#### 2.4.4.3 Type
+
+🔹 Data Access & Messaging
+
+#### 2.4.4.4 Technology
+
+EF Core 8, MediatR, PostgreSQL
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #9E9E9E |
+| Stereotype | <<Infrastructure>> |
+
+### 2.4.5.0 Business Logic / Event Handler
+
+#### 2.4.5.1 Repository Id
+
+REPO-BE-MOD-ENGAGEMENT
+
+#### 2.4.5.2 Display Name
+
+Engagement Module
+
+#### 2.4.5.3 Type
+
+🔹 Business Logic / Event Handler
+
+#### 2.4.5.4 Technology
+
+.NET 8, C# 12
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | rectangle |
+| Color | #FF5722 |
+| Stereotype | <<Application Logic>> |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 HTTP Request
+
+#### 2.5.1.1 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.1.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.1.3 Message
+
+User submits reading session progress.
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 HTTP Request
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+200 OK with `SessionDto`
+
+#### 2.5.1.8 Has Return
+
+✅ Yes
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | POST /api/v1/sessions |
+| Parameters | Body: `LogSessionRequestDto` { libraryItemId: Guid... |
+| Authentication | Requires JWT Bearer token in 'Authorization' heade... |
+| Error Handling | Client handles 400 (Bad Request), 401 (Unauthorize... |
+| Performance | Client-side timeout of 15 seconds. |
+
+### 2.5.2.0 In-Process Command
+
+#### 2.5.2.1 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.2.2 Target Id
+
+REPO-BE-MOD-READING
+
+#### 2.5.2.3 Message
+
+Dispatch command to log the reading session.
+
+#### 2.5.2.4 Sequence Number
+
+2
+
+#### 2.5.2.5 Type
+
+🔹 In-Process Command
+
+#### 2.5.2.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7 Return Message
+
+`Result<SessionDto>`
+
+#### 2.5.2.8 Has Return
+
+✅ Yes
+
+#### 2.5.2.9 Is Activation
+
+✅ Yes
+
+#### 2.5.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Memory (MediatR) |
+| Method | mediator.Send(new LogReadingSessionCommand(...)) |
+| Parameters | `LogReadingSessionCommand` containing userId, libr... |
+| Authentication | UserId from JWT claims is passed into the command ... |
+| Error Handling | Catches `ValidationException`, `NotFoundException`... |
+| Performance | Should execute within the overall API latency budg... |
+
+### 2.5.3.0 Database Operation
+
+#### 2.5.3.1 Source Id
+
+REPO-BE-MOD-READING
+
+#### 2.5.3.2 Target Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.3.3 Message
+
+Begin transaction and validate request.
+
+#### 2.5.3.4 Sequence Number
+
+3
+
+#### 2.5.3.5 Type
+
+🔹 Database Operation
+
+#### 2.5.3.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7 Return Message
+
+Validation success/failure
+
+#### 2.5.3.8 Has Return
+
+✅ Yes
+
+#### 2.5.3.9 Is Activation
+
+✅ Yes
+
+#### 2.5.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | EF Core |
+| Method | IUnitOfWork.BeginTransactionAsync() |
+| Parameters | Validates business rules: 1. `libraryItemId` belon... |
+| Authentication | N/A |
+| Error Handling | Throws `DomainException` or `ValidationException` ... |
+| Performance | Queries should use indexed columns (UserId, Librar... |
+
+### 2.5.4.0 Database Operation
+
+#### 2.5.4.1 Source Id
+
+REPO-BE-MOD-READING
+
+#### 2.5.4.2 Target Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.4.3 Message
+
+Create `ReadingSession` entity and dispatch domain event.
+
+#### 2.5.4.4 Sequence Number
+
+4
+
+#### 2.5.4.5 Type
+
+🔹 Database Operation
+
+#### 2.5.4.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7 Return Message
+
+Entity state and event are staged.
+
+#### 2.5.4.8 Has Return
+
+✅ Yes
+
+#### 2.5.4.9 Is Activation
+
+❌ No
+
+#### 2.5.4.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | EF Core / Domain-Driven Design |
+| Method | `ReadingSession.Create(...)`; `readingSession.AddD... |
+| Parameters | The `ReadingSessionLogged` event payload contains ... |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | In-memory operation. |
+
+### 2.5.5.0 Event Dispatch
+
+#### 2.5.5.1 Source Id
+
+REPO-BE-MOD-READING
+
+#### 2.5.5.2 Target Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.5.3 Message
+
+Commit transaction and publish events.
+
+#### 2.5.5.4 Sequence Number
+
+5
+
+#### 2.5.5.5 Type
+
+🔹 Event Dispatch
+
+#### 2.5.5.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7 Return Message
+
+Commit successful.
+
+#### 2.5.5.8 Has Return
+
+✅ Yes
+
+#### 2.5.5.9 Is Activation
+
+❌ No
+
+#### 2.5.5.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | EF Core / MediatR |
+| Method | IUnitOfWork.SaveChangesAsync() |
+| Parameters | A DbContext interceptor identifies entities with d... |
+| Authentication | N/A |
+| Error Handling | If `SaveChangesAsync` fails, the transaction is ro... |
+| Performance | Event publishing is 'fire-and-forget' from the per... |
+
+### 2.5.6.0 In-Process Event Handling
+
+#### 2.5.6.1 Source Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.6.2 Target Id
+
+REPO-BE-MOD-ENGAGEMENT
+
+#### 2.5.6.3 Message
+
+Handle `ReadingSessionLogged` event.
+
+#### 2.5.6.4 Sequence Number
+
+6
+
+#### 2.5.6.5 Type
+
+🔹 In-Process Event Handling
+
+#### 2.5.6.6 Is Synchronous
+
+❌ No
+
+#### 2.5.6.7 Return Message
+
+void
+
+#### 2.5.6.8 Has Return
+
+❌ No
+
+#### 2.5.6.9 Is Activation
+
+✅ Yes
+
+#### 2.5.6.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Memory (MediatR) |
+| Method | `UpdateGoalProgressOnReadingSessionLoggedHandler.H... |
+| Parameters | `ReadingSessionLogged` event object. |
+| Authentication | N/A |
+| Error Handling | CRITICAL: The entire `Handle` method logic is wrap... |
+| Performance | Runs in a background thread, not blocking the user... |
+
+### 2.5.7.0 Database Query
+
+#### 2.5.7.1 Source Id
+
+REPO-BE-MOD-ENGAGEMENT
+
+#### 2.5.7.2 Target Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.7.3 Message
+
+Fetch user's active goals.
+
+#### 2.5.7.4 Sequence Number
+
+7
+
+#### 2.5.7.5 Type
+
+🔹 Database Query
+
+#### 2.5.7.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.7.7 Return Message
+
+List<Goal>
+
+#### 2.5.7.8 Has Return
+
+✅ Yes
+
+#### 2.5.7.9 Is Activation
+
+❌ No
+
+#### 2.5.7.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | EF Core |
+| Method | goalRepository.GetActiveGoalsByUserIdAsync(notific... |
+| Parameters | UserId from the event payload. |
+| Authentication | N/A |
+| Error Handling | Handled by the `try-catch` block in the handler. |
+| Performance | Query must be efficient, filtering by `UserId` and... |
+
+### 2.5.8.0 Internal Logic
+
+#### 2.5.8.1 Source Id
+
+REPO-BE-MOD-ENGAGEMENT
+
+#### 2.5.8.2 Target Id
+
+REPO-BE-MOD-ENGAGEMENT
+
+#### 2.5.8.3 Message
+
+[Loop] Update progress for each goal.
+
+#### 2.5.8.4 Sequence Number
+
+8
+
+#### 2.5.8.5 Type
+
+🔹 Internal Logic
+
+#### 2.5.8.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.8.7 Return Message
+
+Updated Goal entities.
+
+#### 2.5.8.8 Has Return
+
+✅ Yes
+
+#### 2.5.8.9 Is Activation
+
+❌ No
+
+#### 2.5.8.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | C# |
+| Method | foreach (var goal in activeGoals) { goal.UpdatePro... |
+| Parameters | Adds pagesRead or minutesRead to the goal's `Curre... |
+| Authentication | N/A |
+| Error Handling | Handled by the `try-catch` block in the handler. |
+| Performance | In-memory operation. |
+
+### 2.5.9.0 Database Operation
+
+#### 2.5.9.1 Source Id
+
+REPO-BE-MOD-ENGAGEMENT
+
+#### 2.5.9.2 Target Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.9.3 Message
+
+Save updated goal progress.
+
+#### 2.5.9.4 Sequence Number
+
+9
+
+#### 2.5.9.5 Type
+
+🔹 Database Operation
+
+#### 2.5.9.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.9.7 Return Message
+
+Commit successful.
+
+#### 2.5.9.8 Has Return
+
+✅ Yes
+
+#### 2.5.9.9 Is Activation
+
+❌ No
+
+#### 2.5.9.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | EF Core |
+| Method | goalRepository.UpdateRangeAsync(updatedGoals); uni... |
+| Parameters | List of updated Goal entities. This occurs in a se... |
+| Authentication | N/A |
+| Error Handling | Handled by the `try-catch` block in the handler. A... |
+| Performance | Should be a single batch update operation if possi... |
+
+### 2.5.10.0 UI Update
+
+#### 2.5.10.1 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.10.2 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.10.3 Message
+
+Update UI with new session and refresh goal progress.
+
+#### 2.5.10.4 Sequence Number
+
+10
+
+#### 2.5.10.5 Type
+
+🔹 UI Update
+
+#### 2.5.10.6 Is Synchronous
+
+❌ No
+
+#### 2.5.10.7 Return Message
+
+
+
+#### 2.5.10.8 Has Return
+
+❌ No
+
+#### 2.5.10.9 Is Activation
+
+❌ No
+
+#### 2.5.10.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Flutter State Management (BLoC/Riverpod) |
+| Method | Refreshes the session history list. Triggers a new... |
+| Parameters | N/A |
+| Authentication | N/A |
+| Error Handling | UI should show a loading indicator and handle pote... |
+| Performance | UI should remain responsive during the refresh. |
+
+## 2.6.0.0 Notes
+
+### 2.6.1.0 Content
+
+#### 2.6.1.1 Content
+
+CRITICAL IMPLEMENTATION DETAIL: The `UpdateGoalProgressOnReadingSessionLoggedHandler` must swallow any exceptions it encounters after logging them. This is a business requirement to ensure that a failure in updating goals (a secondary concern) does not cause the primary action of logging a reading session to fail. This makes the system more resilient.
+
+#### 2.6.1.2 Position
+
+bottom-right
+
+#### 2.6.1.3 Participant Id
+
+REPO-BE-MOD-ENGAGEMENT
+
+#### 2.6.1.4 Sequence Number
+
+6
+
+### 2.6.2.0 Content
+
+#### 2.6.2.1 Content
+
+The Domain Event Dispatcher pattern is used here. Events are collected on domain entities and dispatched by a DbContext interceptor only after the primary transaction has been successfully committed to the database. This ensures that event handlers do not operate on data that might be rolled back.
+
+#### 2.6.2.2 Position
+
+bottom-left
+
+#### 2.6.2.3 Participant Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.6.2.4 Sequence Number
+
+5
+
+## 2.7.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | The API endpoint `/api/v1/sessions` must be protec... |
+| Performance Targets | P95 latency for the `POST /api/v1/sessions` endpoi... |
+| Error Handling Strategy | 1. **Synchronous Path**: API Host catches exceptio... |
+| Testing Considerations | - **Unit Tests**: Test the `LogReadingSessionComma... |
+| Monitoring Requirements | - **APM**: Monitor the P95 latency and error rate ... |
+| Deployment Considerations | Since the communication is in-process via MediatR,... |
+

@@ -1,0 +1,780 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-RF-001
+
+## 1.2 Name
+
+Production Deployment Failure and Rollback
+
+## 1.3 Description
+
+During a production deployment, a critical failure is detected by automated health checks or a CloudWatch alarm. The CI/CD pipeline automatically initiates a rollback to the previous stable version of the infrastructure and application by re-deploying the last known good state via AWS CDK.
+
+## 1.4 Type
+
+🔹 RecoveryFlow
+
+## 1.5 Purpose
+
+To minimize downtime and user impact in the event of a faulty deployment, as per the contingency plan in REQ-TRN-001.
+
+## 1.6 Complexity
+
+High
+
+## 1.7 Priority
+
+🚨 Critical
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- GitHub Actions
+- AWS CDK
+
+## 1.10 Key Interactions
+
+- A new backend version is deployed.
+- Post-deployment health checks fail or a CloudWatch alarm for 5xx errors is triggered.
+- The CI/CD pipeline detects the failure status.
+- The pipeline automatically triggers a rollback step.
+- The rollback step executes an AWS CDK command to redeploy the previous stable version of the infrastructure and container images.
+- The public status page is updated to inform users of the issue.
+- An alert is sent to the development team to investigate.
+
+## 1.11 Triggers
+
+- A critical failure (failed health check, CloudWatch alarm) is detected immediately following a production deployment.
+
+## 1.12 Outcomes
+
+- The system is restored to its last known good state.
+- The impact on end-users is minimized.
+- The faulty deployment is prevented from causing a prolonged outage.
+
+## 1.13 Business Rules
+
+- The CI/CD pipeline must support automated rollback.
+- Clear criteria must be defined for what constitutes a critical deployment failure.
+
+## 1.14 Error Scenarios
+
+- The rollback process itself fails.
+- The issue is not resolved by the rollback, indicating a problem with a dependency.
+
+## 1.15 Integration Points
+
+- AWS APIs
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-RF-001-IMPL
+
+## 2.2 Name
+
+Automated Production Deployment Rollback via CI/CD Pipeline
+
+## 2.3 Description
+
+This sequence details the automated recovery flow when a production deployment introduces a critical failure. A post-deployment monitoring step within the GitHub Actions workflow detects a CloudWatch alarm (e.g., spike in 5xx errors). The workflow's error handling job is triggered, which updates the public status page, checks out the previous stable git tag, and executes 'cdk deploy' to restore the last known good infrastructure and application state, thereby minimizing user impact and downtime.
+
+## 2.4 Participants
+
+### 2.4.1 CI/CD Orchestrator
+
+#### 2.4.1.1 Repository Id
+
+CICD-GITHUB-ACTIONS
+
+#### 2.4.1.2 Display Name
+
+GitHub Actions
+
+#### 2.4.1.3 Type
+
+🔹 CI/CD Orchestrator
+
+#### 2.4.1.4 Technology
+
+GitHub Actions YAML Workflow
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #2088FF |
+| Stereotype | CI/CD |
+
+### 2.4.2.0 Infrastructure as Code Service
+
+#### 2.4.2.1 Repository Id
+
+AWS-CLOUDFORMATION
+
+#### 2.4.2.2 Display Name
+
+AWS CloudFormation
+
+#### 2.4.2.3 Type
+
+🔹 Infrastructure as Code Service
+
+#### 2.4.2.4 Technology
+
+AWS Service
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #FF9900 |
+| Stereotype | IaaS |
+
+### 2.4.3.0 Monitoring Service
+
+#### 2.4.3.1 Repository Id
+
+AWS-CLOUDWATCH
+
+#### 2.4.3.2 Display Name
+
+AWS CloudWatch
+
+#### 2.4.3.3 Type
+
+🔹 Monitoring Service
+
+#### 2.4.3.4 Technology
+
+AWS Service
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #FF9900 |
+| Stereotype | Monitoring |
+
+### 2.4.4.0 External SaaS
+
+#### 2.4.4.1 Repository Id
+
+EXT-STATUSPAGE
+
+#### 2.4.4.2 Display Name
+
+Public Status Page Service
+
+#### 2.4.4.3 Type
+
+🔹 External SaaS
+
+#### 2.4.4.4 Technology
+
+HTTPS/REST API
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | boundary |
+| Color | #4CAF50 |
+| Stereotype | External |
+
+### 2.4.5.0 Internal Notification Bus
+
+#### 2.4.5.1 Repository Id
+
+INT-NOTIFICATION-SERVICE
+
+#### 2.4.5.2 Display Name
+
+Team Notification Service
+
+#### 2.4.5.3 Type
+
+🔹 Internal Notification Bus
+
+#### 2.4.5.4 Technology
+
+Slack Webhook/Amazon SNS
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | boundary |
+| Color | #9C27B0 |
+| Stereotype | Internal |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 Command
+
+#### 2.5.1.1 Source Id
+
+CICD-GITHUB-ACTIONS
+
+#### 2.5.1.2 Target Id
+
+AWS-CLOUDFORMATION
+
+#### 2.5.1.3 Message
+
+Executes 'npx aws-cdk deploy ReadTrackProdStack --require-approval never' for new version (v1.1.0)
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 Command
+
+#### 2.5.1.6 Is Synchronous
+
+❌ No
+
+#### 2.5.1.7 Return Message
+
+Deployment in progress...
+
+#### 2.5.1.8 Has Return
+
+✅ Yes
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | AWS SDK/CLI |
+| Method | CloudFormation:CreateChangeSet, CloudFormation:Exe... |
+| Parameters | StackName: 'ReadTrackProdStack', TemplateBody: '..... |
+| Authentication | Assumed AWS IAM Role via GitHub OIDC provider |
+| Error Handling | Job fails if CDK command exits with non-zero code ... |
+| Performance | Deployment duration target: < 10 minutes. |
+
+### 2.5.2.0 Callback/Status Check
+
+#### 2.5.2.1 Source Id
+
+AWS-CLOUDFORMATION
+
+#### 2.5.2.2 Target Id
+
+CICD-GITHUB-ACTIONS
+
+#### 2.5.2.3 Message
+
+Deployment v1.1.0 completes
+
+#### 2.5.2.4 Sequence Number
+
+2
+
+#### 2.5.2.5 Type
+
+🔹 Callback/Status Check
+
+#### 2.5.2.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7 Return Message
+
+
+
+#### 2.5.2.8 Has Return
+
+❌ No
+
+#### 2.5.2.9 Is Activation
+
+❌ No
+
+#### 2.5.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | AWS SDK/CLI |
+| Method | CloudFormation:DescribeStacks |
+| Parameters | StackName: 'ReadTrackProdStack' |
+| Authentication | Assumed AWS IAM Role via GitHub OIDC provider |
+| Error Handling | The GitHub Actions job waits for the stack status ... |
+| Performance | Polling interval: 30 seconds. |
+
+### 2.5.3.0 Notification
+
+#### 2.5.3.1 Source Id
+
+AWS-CLOUDWATCH
+
+#### 2.5.3.2 Target Id
+
+INT-NOTIFICATION-SERVICE
+
+#### 2.5.3.3 Message
+
+Fires alarm: 'API_5xx_Error_Rate_High' state changes to ALARM
+
+#### 2.5.3.4 Sequence Number
+
+3
+
+#### 2.5.3.5 Type
+
+🔹 Notification
+
+#### 2.5.3.6 Is Synchronous
+
+❌ No
+
+#### 2.5.3.7 Return Message
+
+
+
+#### 2.5.3.8 Has Return
+
+❌ No
+
+#### 2.5.3.9 Is Activation
+
+❌ No
+
+#### 2.5.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Amazon SNS |
+| Method | SNS:Publish |
+| Parameters | TopicArn: 'on-call-alerts-topic', Message: 'Alarm ... |
+| Authentication | IAM permissions for CloudWatch Alarms to publish t... |
+| Error Handling | SNS retries on failure. |
+| Performance | Near real-time. |
+
+### 2.5.4.0 Request
+
+#### 2.5.4.1 Source Id
+
+CICD-GITHUB-ACTIONS
+
+#### 2.5.4.2 Target Id
+
+AWS-CLOUDWATCH
+
+#### 2.5.4.3 Message
+
+Post-deployment step: Polls for alarm state for 5 minutes
+
+#### 2.5.4.4 Sequence Number
+
+4
+
+#### 2.5.4.5 Type
+
+🔹 Request
+
+#### 2.5.4.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7 Return Message
+
+Alarm State: 'ALARM'
+
+#### 2.5.4.8 Has Return
+
+✅ Yes
+
+#### 2.5.4.9 Is Activation
+
+✅ Yes
+
+#### 2.5.4.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | AWS SDK/CLI |
+| Method | CloudWatch:DescribeAlarms |
+| Parameters | AlarmNames: ['API_5xx_Error_Rate_High'] |
+| Authentication | Assumed AWS IAM Role via GitHub OIDC provider |
+| Error Handling | If the alarm enters the 'ALARM' state during the p... |
+| Performance | Polling interval: 15 seconds. |
+
+### 2.5.5.0 Internal Trigger
+
+#### 2.5.5.1 Source Id
+
+CICD-GITHUB-ACTIONS
+
+#### 2.5.5.2 Target Id
+
+CICD-GITHUB-ACTIONS
+
+#### 2.5.5.3 Message
+
+Detects failure status and triggers 'on-failure' rollback job
+
+#### 2.5.5.4 Sequence Number
+
+5
+
+#### 2.5.5.5 Type
+
+🔹 Internal Trigger
+
+#### 2.5.5.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7 Return Message
+
+
+
+#### 2.5.5.8 Has Return
+
+❌ No
+
+#### 2.5.5.9 Is Activation
+
+❌ No
+
+#### 2.5.5.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | GitHub Actions Internals |
+| Method | if: failure() |
+| Parameters | N/A |
+| Authentication | N/A |
+| Error Handling | If the rollback job itself is not defined, the wor... |
+| Performance | Immediate. |
+
+### 2.5.6.0 Request
+
+#### 2.5.6.1 Source Id
+
+CICD-GITHUB-ACTIONS
+
+#### 2.5.6.2 Target Id
+
+EXT-STATUSPAGE
+
+#### 2.5.6.3 Message
+
+POST /api/incidents - Create incident: 'Investigating issues with a recent deployment.'
+
+#### 2.5.6.4 Sequence Number
+
+6
+
+#### 2.5.6.5 Type
+
+🔹 Request
+
+#### 2.5.6.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7 Return Message
+
+201 Created { incidentId: 'inc-123' }
+
+#### 2.5.6.8 Has Return
+
+✅ Yes
+
+#### 2.5.6.9 Is Activation
+
+❌ No
+
+#### 2.5.6.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS/REST |
+| Method | POST |
+| Parameters | Headers: { 'Authorization': 'Bearer $STATUSPAGE_AP... |
+| Authentication | API Key stored as a GitHub Actions Secret. |
+| Error Handling | Best-effort. A failure here is logged but does not... |
+| Performance | Target response time < 2s. |
+
+### 2.5.7.0 Command
+
+#### 2.5.7.1 Source Id
+
+CICD-GITHUB-ACTIONS
+
+#### 2.5.7.2 Target Id
+
+AWS-CLOUDFORMATION
+
+#### 2.5.7.3 Message
+
+Executes 'cdk deploy' for previous stable version (v1.0.0)
+
+#### 2.5.7.4 Sequence Number
+
+7
+
+#### 2.5.7.5 Type
+
+🔹 Command
+
+#### 2.5.7.6 Is Synchronous
+
+❌ No
+
+#### 2.5.7.7 Return Message
+
+Rollback deployment in progress...
+
+#### 2.5.7.8 Has Return
+
+✅ Yes
+
+#### 2.5.7.9 Is Activation
+
+✅ Yes
+
+#### 2.5.7.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | AWS SDK/CLI |
+| Method | CloudFormation:CreateChangeSet, CloudFormation:Exe... |
+| Parameters | The job checks out the git tag of the last success... |
+| Authentication | Assumed AWS IAM Role via GitHub OIDC provider |
+| Error Handling | CRITICAL: If this command fails, the job fails and... |
+| Performance | Rollback duration target: < 10 minutes. |
+
+### 2.5.8.0 Callback/Status Check
+
+#### 2.5.8.1 Source Id
+
+AWS-CLOUDFORMATION
+
+#### 2.5.8.2 Target Id
+
+CICD-GITHUB-ACTIONS
+
+#### 2.5.8.3 Message
+
+Rollback to v1.0.0 completes successfully
+
+#### 2.5.8.4 Sequence Number
+
+8
+
+#### 2.5.8.5 Type
+
+🔹 Callback/Status Check
+
+#### 2.5.8.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.8.7 Return Message
+
+
+
+#### 2.5.8.8 Has Return
+
+❌ No
+
+#### 2.5.8.9 Is Activation
+
+❌ No
+
+#### 2.5.8.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | AWS SDK/CLI |
+| Method | CloudFormation:DescribeStacks |
+| Parameters | StackName: 'ReadTrackProdStack' |
+| Authentication | Assumed AWS IAM Role via GitHub OIDC provider |
+| Error Handling | Job waits for stack status 'UPDATE_COMPLETE'. If i... |
+| Performance | Polling interval: 30 seconds. |
+
+### 2.5.9.0 Request
+
+#### 2.5.9.1 Source Id
+
+CICD-GITHUB-ACTIONS
+
+#### 2.5.9.2 Target Id
+
+EXT-STATUSPAGE
+
+#### 2.5.9.3 Message
+
+PATCH /api/incidents/inc-123 - Update incident status to 'resolved'
+
+#### 2.5.9.4 Sequence Number
+
+9
+
+#### 2.5.9.5 Type
+
+🔹 Request
+
+#### 2.5.9.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.9.7 Return Message
+
+200 OK
+
+#### 2.5.9.8 Has Return
+
+✅ Yes
+
+#### 2.5.9.9 Is Activation
+
+❌ No
+
+#### 2.5.9.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS/REST |
+| Method | PATCH |
+| Parameters | Headers: { 'Authorization': 'Bearer $STATUSPAGE_AP... |
+| Authentication | API Key stored as a GitHub Actions Secret. |
+| Error Handling | Best-effort. A failure is logged. |
+| Performance | Target response time < 2s. |
+
+### 2.5.10.0 Notification
+
+#### 2.5.10.1 Source Id
+
+CICD-GITHUB-ACTIONS
+
+#### 2.5.10.2 Target Id
+
+INT-NOTIFICATION-SERVICE
+
+#### 2.5.10.3 Message
+
+Posts message: 'CRITICAL: Production deployment v1.1.0 failed and was automatically rolled back to v1.0.0.'
+
+#### 2.5.10.4 Sequence Number
+
+10
+
+#### 2.5.10.5 Type
+
+🔹 Notification
+
+#### 2.5.10.6 Is Synchronous
+
+❌ No
+
+#### 2.5.10.7 Return Message
+
+
+
+#### 2.5.10.8 Has Return
+
+❌ No
+
+#### 2.5.10.9 Is Activation
+
+❌ No
+
+#### 2.5.10.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS (Slack Webhook) |
+| Method | POST |
+| Parameters | Body: { text: '...', blocks: [...] } |
+| Authentication | Webhook URL stored as a GitHub Actions Secret. |
+| Error Handling | Best-effort. Failure is logged. |
+| Performance | Near real-time. |
+
+## 2.6.0.0 Notes
+
+### 2.6.1.0 Content
+
+#### 2.6.1.1 Content
+
+The 'failure' trigger is critical. It's not just a failed command, but a semantic failure detected by monitoring (e.g., CloudWatch Synthetics canary tests or metric alarms) in a dedicated 'smoke test' or 'monitor' stage of the deployment workflow.
+
+#### 2.6.1.2 Position
+
+top
+
+#### 2.6.1.3 Participant Id
+
+CICD-GITHUB-ACTIONS
+
+#### 2.6.1.4 Sequence Number
+
+4
+
+### 2.6.2.0 Content
+
+#### 2.6.2.1 Content
+
+The rollback mechanism relies on the immutability of git tags to ensure the exact code of the previous stable version is deployed. The CDK stack must be designed to handle rollbacks gracefully (e.g., avoiding destructive changes).
+
+#### 2.6.2.2 Position
+
+bottom
+
+#### 2.6.2.3 Participant Id
+
+AWS-CLOUDFORMATION
+
+#### 2.6.2.4 Sequence Number
+
+7
+
+## 2.7.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | The GitHub Actions workflow must authenticate to A... |
+| Performance Targets | Recovery Time Objective (RTO): < 15 minutes from f... |
+| Error Handling Strategy | Primary Failure: If the rollback deployment itself... |
+| Testing Considerations | This entire recovery flow must be validated quarte... |
+| Monitoring Requirements | The duration of the rollback job must be tracked a... |
+| Deployment Considerations | The `on-failure` logic must be robust. The workflo... |
+

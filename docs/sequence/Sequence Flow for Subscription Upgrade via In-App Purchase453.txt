@@ -1,0 +1,797 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-BP-001
+
+## 1.2 Name
+
+Subscription Upgrade via In-App Purchase
+
+## 1.3 Description
+
+A 'Free User' initiates an upgrade to the 'Premium User' tier. The process involves a native in-app purchase flow. The backend relies exclusively on a server-to-server webhook from the payment platform (Apple/Google) as the source of truth to update the user's subscription status.
+
+## 1.4 Type
+
+🔹 BusinessProcess
+
+## 1.5 Purpose
+
+To implement the core monetization strategy of the application by allowing users to purchase premium features, as defined in REQ-FRE-001.
+
+## 1.6 Complexity
+
+Critical
+
+## 1.7 Priority
+
+🚨 Critical
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-FE-MOBILE
+- REPO-BE-HOST
+- Apple App Store / Google Play Store
+
+## 1.10 Key Interactions
+
+- User taps 'Upgrade to Premium'.
+- Client initiates the native in-app purchase flow.
+- User confirms the purchase with the platform's billing system.
+- The platform processes the payment and notifies the client.
+- The platform sends a `SUBSCRIPTION_PURCHASED` server-to-server webhook to a dedicated endpoint on the backend.
+- The MOD-MONETIZATION service validates the webhook's authenticity and token.
+- The service idempotently processes the webhook, updating the user's record to 'Premium User' and setting the subscription expiry date.
+- Client fetches the user's updated profile, unlocking premium features in the UI.
+
+## 1.11 Triggers
+
+- A user decides to upgrade their subscription.
+
+## 1.12 Outcomes
+
+- The user's account is successfully upgraded to the Premium tier.
+- The user gains access to all premium features.
+- A subscription record is created in the database.
+
+## 1.13 Business Rules
+
+- The backend must rely on server-to-server webhooks as the source of truth for subscription status to prevent client-side tampering.
+- The webhook handler must be idempotent to handle potential duplicate events from the provider.
+
+## 1.14 Error Scenarios
+
+- The webhook from the platform is delayed or never arrives (a reconciliation job may be needed).
+- The client-side confirmation succeeds, but the server-side update fails.
+
+## 1.15 Integration Points
+
+- Apple App Store / Google Play Billing webhooks (SI-006)
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-BP-001
+
+## 2.2 Name
+
+Implementation: Subscription Upgrade via Server-to-Server Webhook
+
+## 2.3 Description
+
+Comprehensive technical sequence for a 'Free User' upgrading to the 'Premium User' tier. This business process involves the mobile client initiating a native in-app purchase, while the backend API (`REPO-BE-HOST`) exclusively trusts a server-to-server webhook from the payment platform as the authoritative source for updating the subscription status. This design ensures transaction integrity and prevents client-side fraud, directly implementing REQ-FRE-001.
+
+## 2.4 Participants
+
+### 2.4.1 Mobile Client
+
+#### 2.4.1.1 Repository Id
+
+REPO-FE-MOBILE
+
+#### 2.4.1.2 Display Name
+
+Flutter Mobile Client
+
+#### 2.4.1.3 Type
+
+🔹 Mobile Client
+
+#### 2.4.1.4 Technology
+
+Flutter 3.22+ with in_app_purchase library
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #4CAF50 |
+| Stereotype | UI/Client |
+
+### 2.4.2.0 External System
+
+#### 2.4.2.1 Repository Id
+
+Apple App Store / Google Play Store
+
+#### 2.4.2.2 Display Name
+
+External Payment Platform
+
+#### 2.4.2.3 Type
+
+🔹 External System
+
+#### 2.4.2.4 Technology
+
+Native Billing APIs & HTTPS Webhooks
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | boundary |
+| Color | #9E9E9E |
+| Stereotype | External |
+
+### 2.4.3.0 Application Service
+
+#### 2.4.3.1 Repository Id
+
+REPO-BE-HOST
+
+#### 2.4.3.2 Display Name
+
+.NET 8 Modular Monolith
+
+#### 2.4.3.3 Type
+
+🔹 Application Service
+
+#### 2.4.3.4 Technology
+
+ASP.NET Core 8, C# 12
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | participant |
+| Color | #2196F3 |
+| Stereotype | API/Backend |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 User Interaction
+
+#### 2.5.1.1 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.1.2 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.1.3 Message
+
+User taps 'Upgrade to Premium' button.
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 User Interaction
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+
+
+#### 2.5.1.8 Has Return
+
+❌ No
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | UI Event |
+| Method | onTap() |
+| Parameters | Selected subscription plan ID. |
+| Authentication | User is authenticated with a valid JWT. |
+| Error Handling | UI button is disabled if no subscription plans are... |
+| Performance | Immediate response required. |
+
+### 2.5.2.0 API Call (Native SDK)
+
+#### 2.5.2.1 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.2.2 Target Id
+
+Apple App Store / Google Play Store
+
+#### 2.5.2.3 Message
+
+InitiateInAppPurchase(planId)
+
+#### 2.5.2.4 Sequence Number
+
+2
+
+#### 2.5.2.5 Type
+
+🔹 API Call (Native SDK)
+
+#### 2.5.2.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7 Return Message
+
+PurchaseResult (Success, Canceled, Failed)
+
+#### 2.5.2.8 Has Return
+
+✅ Yes
+
+#### 2.5.2.9 Is Activation
+
+✅ Yes
+
+#### 2.5.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Native SDK Call |
+| Method | PlatformBilling.purchase(planId) |
+| Parameters | The identifier for the subscription plan. |
+| Authentication | Handled by the OS and the user's logged-in store a... |
+| Error Handling | Handle platform-specific errors (e.g., invalid pla... |
+| Performance | Platform dependent, typically < 1 second to show p... |
+
+### 2.5.3.0 User Interaction
+
+#### 2.5.3.1 Source Id
+
+Apple App Store / Google Play Store
+
+#### 2.5.3.2 Target Id
+
+Apple App Store / Google Play Store
+
+#### 2.5.3.3 Message
+
+User completes the purchase via native payment sheet.
+
+#### 2.5.3.4 Sequence Number
+
+3
+
+#### 2.5.3.5 Type
+
+🔹 User Interaction
+
+#### 2.5.3.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7 Return Message
+
+
+
+#### 2.5.3.8 Has Return
+
+❌ No
+
+#### 2.5.3.9 Is Activation
+
+❌ No
+
+#### 2.5.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Native UI |
+| Method | User authentication (FaceID, fingerprint, password... |
+| Parameters | N/A |
+| Authentication | Managed by the OS. |
+| Error Handling | The platform handles payment failures (e.g., decli... |
+| Performance | User dependent. |
+
+### 2.5.4.0 SDK Callback
+
+#### 2.5.4.1 Source Id
+
+Apple App Store / Google Play Store
+
+#### 2.5.4.2 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.4.3 Message
+
+Return PurchaseResult: Success
+
+#### 2.5.4.4 Sequence Number
+
+4
+
+#### 2.5.4.5 Type
+
+🔹 SDK Callback
+
+#### 2.5.4.6 Is Synchronous
+
+❌ No
+
+#### 2.5.4.7 Return Message
+
+
+
+#### 2.5.4.8 Has Return
+
+❌ No
+
+#### 2.5.4.9 Is Activation
+
+❌ No
+
+#### 2.5.4.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Async Callback/Future |
+| Method | onPurchaseResult(result) |
+| Parameters | Purchase result object containing a purchase token... |
+| Authentication | N/A |
+| Error Handling | If the result is 'Canceled' or 'Failed', revert th... |
+| Performance | Immediate. |
+
+### 2.5.5.0 Webhook
+
+#### 2.5.5.1 Source Id
+
+Apple App Store / Google Play Store
+
+#### 2.5.5.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.5.3 Message
+
+POST /api/v1/webhooks/subscriptions
+
+#### 2.5.5.4 Sequence Number
+
+5
+
+#### 2.5.5.5 Type
+
+🔹 Webhook
+
+#### 2.5.5.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7 Return Message
+
+200 OK | 4xx/5xx Error
+
+#### 2.5.5.8 Has Return
+
+✅ Yes
+
+#### 2.5.5.9 Is Activation
+
+✅ Yes
+
+#### 2.5.5.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | POST |
+| Parameters | JSON body containing event type (e.g., `SUBSCRIPTI... |
+| Authentication | None (public endpoint). Authorization is done by v... |
+| Error Handling | The payment platform will retry the webhook delive... |
+| Performance | The call is asynchronous from the user's perspecti... |
+
+### 2.5.6.0 Internal Service Call
+
+#### 2.5.6.1 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.6.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.6.3 Message
+
+ValidateWebhookSignature(payload)
+
+#### 2.5.6.4 Sequence Number
+
+6
+
+#### 2.5.6.5 Type
+
+🔹 Internal Service Call
+
+#### 2.5.6.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7 Return Message
+
+ValidationResult (Valid/Invalid)
+
+#### 2.5.6.8 Has Return
+
+✅ Yes
+
+#### 2.5.6.9 Is Activation
+
+❌ No
+
+#### 2.5.6.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | MonetizationService.ValidateWebhook() |
+| Parameters | The full webhook payload and headers. |
+| Authentication | N/A |
+| Error Handling | If validation fails, log the attempt with 'Warning... |
+| Performance | < 10ms |
+
+#### 2.5.6.11 Nested Interactions
+
+*No items available*
+
+### 2.5.7.0 Internal Service Call
+
+#### 2.5.7.1 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.7.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.7.3 Message
+
+ProcessSubscriptionEvent(event)
+
+#### 2.5.7.4 Sequence Number
+
+7
+
+#### 2.5.7.5 Type
+
+🔹 Internal Service Call
+
+#### 2.5.7.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.7.7 Return Message
+
+ProcessingResult
+
+#### 2.5.7.8 Has Return
+
+✅ Yes
+
+#### 2.5.7.9 Is Activation
+
+❌ No
+
+#### 2.5.7.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | MonetizationService.ProcessEventAsync() |
+| Parameters | Validated and deserialized webhook event object. |
+| Authentication | N/A |
+| Error Handling | Use transaction ID from the event to check for dup... |
+| Performance | < 100ms |
+
+#### 2.5.7.11 Nested Interactions
+
+- {'sourceId': 'REPO-BE-HOST', 'targetId': 'REPO-BE-HOST', 'message': "DB: Find User, Update SubscriptionTier='Premium', Set ExpiryDate, Log Audit Event", 'sequenceNumber': 7.1, 'type': 'Database Transaction', 'isSynchronous': True, 'returnMessage': 'Success/Failure', 'hasReturn': True, 'isActivation': False, 'technicalDetails': {'protocol': 'EF Core / SQL', 'method': 'DbContext.SaveChangesAsync() within a TransactionScope', 'parameters': 'UserId, new subscription data.', 'authentication': 'Database connection string credentials.', 'errorHandling': 'Transaction rollback on any failure.', 'performance': 'P95 < 50ms'}}
+
+### 2.5.8.0 HTTP Response
+
+#### 2.5.8.1 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.8.2 Target Id
+
+Apple App Store / Google Play Store
+
+#### 2.5.8.3 Message
+
+HTTP 200 OK
+
+#### 2.5.8.4 Sequence Number
+
+8
+
+#### 2.5.8.5 Type
+
+🔹 HTTP Response
+
+#### 2.5.8.6 Is Synchronous
+
+❌ No
+
+#### 2.5.8.7 Return Message
+
+
+
+#### 2.5.8.8 Has Return
+
+❌ No
+
+#### 2.5.8.9 Is Activation
+
+❌ No
+
+#### 2.5.8.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | Response to POST |
+| Parameters | Empty body. |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | Immediate. |
+
+### 2.5.9.0 API Call
+
+#### 2.5.9.1 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.9.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.9.3 Message
+
+GET /api/v1/users/me
+
+#### 2.5.9.4 Sequence Number
+
+9
+
+#### 2.5.9.5 Type
+
+🔹 API Call
+
+#### 2.5.9.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.9.7 Return Message
+
+User Profile DTO (with Premium status)
+
+#### 2.5.9.8 Has Return
+
+✅ Yes
+
+#### 2.5.9.9 Is Activation
+
+✅ Yes
+
+#### 2.5.9.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | GET |
+| Parameters | N/A |
+| Authentication | Requires valid JWT in `Authorization: Bearer` head... |
+| Error Handling | Client should implement a polling or refresh mecha... |
+| Performance | P95 < 200ms |
+
+### 2.5.10.0 HTTP Response
+
+#### 2.5.10.1 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.10.2 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.10.3 Message
+
+Return User Profile DTO
+
+#### 2.5.10.4 Sequence Number
+
+10
+
+#### 2.5.10.5 Type
+
+🔹 HTTP Response
+
+#### 2.5.10.6 Is Synchronous
+
+❌ No
+
+#### 2.5.10.7 Return Message
+
+
+
+#### 2.5.10.8 Has Return
+
+❌ No
+
+#### 2.5.10.9 Is Activation
+
+❌ No
+
+#### 2.5.10.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | Response to GET |
+| Parameters | JSON payload with user data, including `subscripti... |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | Immediate. |
+
+### 2.5.11.0 UI Update
+
+#### 2.5.11.1 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.11.2 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.11.3 Message
+
+Update UI to unlock premium features.
+
+#### 2.5.11.4 Sequence Number
+
+11
+
+#### 2.5.11.5 Type
+
+🔹 UI Update
+
+#### 2.5.11.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.11.7 Return Message
+
+
+
+#### 2.5.11.8 Has Return
+
+❌ No
+
+#### 2.5.11.9 Is Activation
+
+❌ No
+
+#### 2.5.11.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | UI Event |
+| Method | setState() / BLoC state change |
+| Parameters | Updated user profile object. |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | Must be smooth and without jank. |
+
+## 2.6.0.0 Notes
+
+### 2.6.1.0 Content
+
+#### 2.6.1.1 Content
+
+Client-side success is only provisional. The UI must show a 'Verifying...' or similar state until the user's profile is confirmed as 'Premium' from the backend. This prevents granting features before payment is verified server-side.
+
+#### 2.6.1.2 Position
+
+top
+
+#### 2.6.1.3 Participant Id
+
+REPO-FE-MOBILE
+
+#### 2.6.1.4 Sequence Number
+
+4
+
+### 2.6.2.0 Content
+
+#### 2.6.2.1 Content
+
+Idempotency is CRITICAL. The webhook handler in MOD-MONETIZATION must use the unique transaction ID from the webhook to prevent processing duplicate events, which payment platforms may send.
+
+#### 2.6.2.2 Position
+
+right
+
+#### 2.6.2.3 Participant Id
+
+REPO-BE-HOST
+
+#### 2.6.2.4 Sequence Number
+
+7
+
+### 2.6.3.0 Content
+
+#### 2.6.3.1 Content
+
+Webhook is the single source of truth for all subscription lifecycle events (purchase, renewal, cancellation, refund) as per REQ-FRE-001.
+
+#### 2.6.3.2 Position
+
+right
+
+#### 2.6.3.3 Participant Id
+
+REPO-BE-HOST
+
+#### 2.6.3.4 Sequence Number
+
+5
+
+## 2.7.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | The webhook endpoint `/api/v1/webhooks/subscriptio... |
+| Performance Targets | The webhook endpoint must respond with a 2xx statu... |
+| Error Handling Strategy | If webhook processing fails due to a transient iss... |
+| Testing Considerations | End-to-end testing requires using the platform-spe... |
+| Monitoring Requirements | Monitor the webhook endpoint for a high rate of 4x... |
+| Deployment Considerations | The public URL of the webhook endpoint must be reg... |
+

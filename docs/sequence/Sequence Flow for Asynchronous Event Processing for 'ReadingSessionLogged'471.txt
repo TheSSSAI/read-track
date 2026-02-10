@@ -1,0 +1,806 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-EP-001
+
+## 1.2 Name
+
+Asynchronous Event Processing for 'ReadingSessionLogged'
+
+## 1.3 Description
+
+After a reading session is successfully saved, a `ReadingSessionLogged` domain event is published within the backend. Multiple, independent handlers from different modules subscribe to this event and execute their own logic in a decoupled, asynchronous manner.
+
+## 1.4 Type
+
+🔹 EventProcessing
+
+## 1.5 Purpose
+
+To demonstrate the decoupling of business logic between modules (e.g., Reading and Engagement) and to handle side effects of a core action without impacting the initial request's performance.
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🔴 High
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-BE-MOD-READING
+- REPO-BE-MOD-ENGAGEMENT
+- REPO-BE-LIB-INFRA
+
+## 1.10 Key Interactions
+
+- The Reading module's service successfully saves a new `ReadingSession`.
+- Before committing the transaction, it raises a `ReadingSessionLogged` event containing the session details.
+- The MediatR library receives the event.
+- MediatR dispatches the event to all registered `INotificationHandler`s for this event type.
+- Handler 1 (in the Engagement module) updates the user's goal progress.
+- Handler 2 (in the Engagement module) updates the user's daily/weekly reading streak.
+- Handler 3 (in the Recommendations module) flags the user's profile as 'stale' for the next vector embedding job.
+- The original database transaction is committed.
+- The API response is returned to the user, without waiting for the handlers to complete.
+
+## 1.11 Triggers
+
+- A `ReadingSession` entity is successfully created.
+
+## 1.12 Outcomes
+
+- Multiple downstream business processes are triggered from a single action.
+- Modules remain loosely coupled, improving maintainability.
+- The user receives a fast API response.
+
+## 1.13 Business Rules
+
+- Event handlers should be idempotent.
+- Failure in one event handler should not prevent other handlers from executing.
+
+## 1.14 Error Scenarios
+
+- A single event handler fails and logs an error, but the main transaction has already committed.
+
+## 1.15 Integration Points
+
+*No items available*
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-EP-001
+
+## 2.2 Name
+
+Implementation of Asynchronous, In-Process Event Handling for ReadingSessionLogged
+
+## 2.3 Description
+
+This sequence details the technical implementation of an in-process, asynchronous event processing pattern using MediatR's INotification. When a ReadingSession is created and saved within a database transaction, a 'ReadingSessionLogged' domain event is published. This publication is non-blocking, allowing the initial API request to complete and return a response immediately. MediatR then dispatches this event to multiple, independent handlers running on background threads, effectively decoupling downstream business logic (like updating goals and streaks) from the core transaction.
+
+## 2.4 Participants
+
+### 2.4.1 Business Domain Module
+
+#### 2.4.1.1 Repository Id
+
+REPO-BE-MOD-READING
+
+#### 2.4.1.2 Display Name
+
+Reading Module
+
+#### 2.4.1.3 Type
+
+🔹 Business Domain Module
+
+#### 2.4.1.4 Technology
+
+.NET 8, C# 12
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #1f77b4 |
+| Stereotype | Module |
+
+### 2.4.2.0 Database
+
+#### 2.4.2.1 Repository Id
+
+db-primary-001
+
+#### 2.4.2.2 Display Name
+
+Primary Database
+
+#### 2.4.2.3 Type
+
+🔹 Database
+
+#### 2.4.2.4 Technology
+
+PostgreSQL 16, EF Core 8
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #ff7f0e |
+| Stereotype | Persistence |
+
+### 2.4.3.0 Shared Library
+
+#### 2.4.3.1 Repository Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.4.3.2 Display Name
+
+Infrastructure (MediatR)
+
+#### 2.4.3.3 Type
+
+🔹 Shared Library
+
+#### 2.4.3.4 Technology
+
+MediatR 12.2+
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #2ca02c |
+| Stereotype | EventBus |
+
+### 2.4.4.0 Business Domain Module
+
+#### 2.4.4.1 Repository Id
+
+REPO-BE-MOD-ENGAGEMENT
+
+#### 2.4.4.2 Display Name
+
+Engagement Module
+
+#### 2.4.4.3 Type
+
+🔹 Business Domain Module
+
+#### 2.4.4.4 Technology
+
+.NET 8, C# 12
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #d62728 |
+| Stereotype | Module |
+
+### 2.4.5.0 Business Domain Module
+
+#### 2.4.5.1 Repository Id
+
+REPO-BE-MOD-RECOMMENDATIONS
+
+#### 2.4.5.2 Display Name
+
+Recommendations Module
+
+#### 2.4.5.3 Type
+
+🔹 Business Domain Module
+
+#### 2.4.5.4 Technology
+
+.NET 8, C# 12
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #9467bd |
+| Stereotype | Module |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 Command Handling
+
+#### 2.5.1.1 Source Id
+
+REPO-BE-MOD-READING
+
+#### 2.5.1.2 Target Id
+
+REPO-BE-MOD-READING
+
+#### 2.5.1.3 Message
+
+Handles `LogReadingSessionCommand`
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 Command Handling
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+
+
+#### 2.5.1.8 Has Return
+
+❌ No
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process (MediatR) |
+| Method | Handle(LogReadingSessionCommand command, Cancellat... |
+| Parameters | Command object with UserId, BookId, PagesRead, etc... |
+| Authentication | User context (ClaimsPrincipal) is already establis... |
+| Error Handling | Standard command handler validation and exception ... |
+| Performance | Entry point for the transaction; overall latency i... |
+
+### 2.5.2.0 Database Interaction
+
+#### 2.5.2.1 Source Id
+
+REPO-BE-MOD-READING
+
+#### 2.5.2.2 Target Id
+
+db-primary-001
+
+#### 2.5.2.3 Message
+
+Begin Database Transaction
+
+#### 2.5.2.4 Sequence Number
+
+2
+
+#### 2.5.2.5 Type
+
+🔹 Database Interaction
+
+#### 2.5.2.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7 Return Message
+
+Transaction object
+
+#### 2.5.2.8 Has Return
+
+✅ Yes
+
+#### 2.5.2.9 Is Activation
+
+❌ No
+
+#### 2.5.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | EF Core |
+| Method | dbContext.Database.BeginTransactionAsync() |
+| Parameters | N/A |
+| Authentication | N/A (Connection string) |
+| Error Handling | Throws if connection fails. |
+| Performance | < 5ms |
+
+### 2.5.3.0 Database Write
+
+#### 2.5.3.1 Source Id
+
+REPO-BE-MOD-READING
+
+#### 2.5.3.2 Target Id
+
+db-primary-001
+
+#### 2.5.3.3 Message
+
+```sql
+INSERT INTO ReadingSession
+```
+
+#### 2.5.3.4 Sequence Number
+
+3
+
+#### 2.5.3.5 Type
+
+🔹 Database Write
+
+#### 2.5.3.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7 Return Message
+
+New Session ID
+
+#### 2.5.3.8 Has Return
+
+✅ Yes
+
+#### 2.5.3.9 Is Activation
+
+❌ No
+
+#### 2.5.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | EF Core |
+| Method | dbContext.ReadingSessions.Add(entity); |
+| Parameters | ReadingSession entity object |
+| Authentication | N/A |
+| Error Handling | Throws on constraint violation. |
+| Performance | < 10ms |
+
+### 2.5.4.0 Domain Event Raising
+
+#### 2.5.4.1 Source Id
+
+REPO-BE-MOD-READING
+
+#### 2.5.4.2 Target Id
+
+REPO-BE-MOD-READING
+
+#### 2.5.4.3 Message
+
+Raise `ReadingSessionLogged` event
+
+#### 2.5.4.4 Sequence Number
+
+4
+
+#### 2.5.4.5 Type
+
+🔹 Domain Event Raising
+
+#### 2.5.4.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7 Return Message
+
+
+
+#### 2.5.4.8 Has Return
+
+❌ No
+
+#### 2.5.4.9 Is Activation
+
+❌ No
+
+#### 2.5.4.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | domainEntity.AddDomainEvent(new ReadingSessionLogg... |
+| Parameters | Event object containing UserId, SessionId, PagesRe... |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | Minimal overhead, adds event to an in-memory colle... |
+
+### 2.5.5.0 Database Interaction
+
+#### 2.5.5.1 Source Id
+
+REPO-BE-MOD-READING
+
+#### 2.5.5.2 Target Id
+
+db-primary-001
+
+#### 2.5.5.3 Message
+
+Commit Transaction
+
+#### 2.5.5.4 Sequence Number
+
+5
+
+#### 2.5.5.5 Type
+
+🔹 Database Interaction
+
+#### 2.5.5.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7 Return Message
+
+Success confirmation
+
+#### 2.5.5.8 Has Return
+
+✅ Yes
+
+#### 2.5.5.9 Is Activation
+
+❌ No
+
+#### 2.5.5.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | EF Core |
+| Method | transaction.CommitAsync() |
+| Parameters | N/A |
+| Authentication | N/A |
+| Error Handling | Throws on failure, triggers rollback. |
+| Performance | Variable, depends on DB load. |
+
+### 2.5.6.0 Event Publication
+
+#### 2.5.6.1 Source Id
+
+REPO-BE-MOD-READING
+
+#### 2.5.6.2 Target Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.6.3 Message
+
+Publish `ReadingSessionLogged` event
+
+#### 2.5.6.4 Sequence Number
+
+6
+
+#### 2.5.6.5 Type
+
+🔹 Event Publication
+
+#### 2.5.6.6 Is Synchronous
+
+❌ No
+
+#### 2.5.6.7 Return Message
+
+
+
+#### 2.5.6.8 Has Return
+
+❌ No
+
+#### 2.5.6.9 Is Activation
+
+❌ No
+
+#### 2.5.6.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process (MediatR) |
+| Method | mediator.Publish(event) |
+| Parameters | The `ReadingSessionLogged` INotification object. |
+| Authentication | N/A |
+| Error Handling | The publish call itself is fire-and-forget. Mediat... |
+| Performance | Extremely fast (< 1ms). The call returns immediate... |
+
+### 2.5.7.0 API Response
+
+#### 2.5.7.1 Source Id
+
+REPO-BE-MOD-READING
+
+#### 2.5.7.2 Target Id
+
+REPO-BE-MOD-READING
+
+#### 2.5.7.3 Message
+
+Return `200 OK` API Response
+
+#### 2.5.7.4 Sequence Number
+
+7
+
+#### 2.5.7.5 Type
+
+🔹 API Response
+
+#### 2.5.7.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.7.7 Return Message
+
+JSON payload with new Session ID
+
+#### 2.5.7.8 Has Return
+
+✅ Yes
+
+#### 2.5.7.9 Is Activation
+
+❌ No
+
+#### 2.5.7.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTP/1.1 |
+| Method | N/A |
+| Parameters | N/A |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | Response is sent without waiting for event handler... |
+
+### 2.5.8.0 Event Dispatch
+
+#### 2.5.8.1 Source Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.8.2 Target Id
+
+REPO-BE-MOD-ENGAGEMENT
+
+#### 2.5.8.3 Message
+
+Dispatch event to `UpdateGoalProgressHandler`
+
+#### 2.5.8.4 Sequence Number
+
+8
+
+#### 2.5.8.5 Type
+
+🔹 Event Dispatch
+
+#### 2.5.8.6 Is Synchronous
+
+❌ No
+
+#### 2.5.8.7 Return Message
+
+
+
+#### 2.5.8.8 Has Return
+
+❌ No
+
+#### 2.5.8.9 Is Activation
+
+✅ Yes
+
+#### 2.5.8.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process (MediatR) |
+| Method | Handle(ReadingSessionLogged notification, Cancella... |
+| Parameters | The event object. |
+| Authentication | N/A |
+| Error Handling | Execution is wrapped in a global try-catch pipelin... |
+| Performance | Handler should be idempotent and complete quickly ... |
+
+#### 2.5.8.11 Nested Interactions
+
+- {'sourceId': 'REPO-BE-MOD-ENGAGEMENT', 'targetId': 'db-primary-001', 'message': 'UPDATE Goals SET Progress = Progress + X', 'sequenceNumber': 8.1, 'type': 'Database Write', 'isSynchronous': True, 'returnMessage': 'Success', 'hasReturn': True, 'isActivation': False, 'technicalDetails': {'protocol': 'EF Core', 'method': 'dbContext.SaveChangesAsync()', 'parameters': 'Updated Goal entity', 'authentication': 'N/A', 'errorHandling': "Handled within the handler's logic; logged as an error.", 'performance': 'Runs in a separate, short-lived transaction.'}}
+
+### 2.5.9.0 Event Dispatch
+
+#### 2.5.9.1 Source Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.9.2 Target Id
+
+REPO-BE-MOD-ENGAGEMENT
+
+#### 2.5.9.3 Message
+
+Dispatch event to `UpdateReadingStreakHandler`
+
+#### 2.5.9.4 Sequence Number
+
+9
+
+#### 2.5.9.5 Type
+
+🔹 Event Dispatch
+
+#### 2.5.9.6 Is Synchronous
+
+❌ No
+
+#### 2.5.9.7 Return Message
+
+
+
+#### 2.5.9.8 Has Return
+
+❌ No
+
+#### 2.5.9.9 Is Activation
+
+✅ Yes
+
+#### 2.5.9.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process (MediatR) |
+| Method | Handle(ReadingSessionLogged notification, Cancella... |
+| Parameters | The event object. |
+| Authentication | N/A |
+| Error Handling | Execution is wrapped in a global try-catch pipelin... |
+| Performance | Handler should be idempotent and complete quickly ... |
+
+### 2.5.10.0 Event Dispatch
+
+#### 2.5.10.1 Source Id
+
+REPO-BE-LIB-INFRA
+
+#### 2.5.10.2 Target Id
+
+REPO-BE-MOD-RECOMMENDATIONS
+
+#### 2.5.10.3 Message
+
+Dispatch event to `InvalidateUserProfileHandler`
+
+#### 2.5.10.4 Sequence Number
+
+10
+
+#### 2.5.10.5 Type
+
+🔹 Event Dispatch
+
+#### 2.5.10.6 Is Synchronous
+
+❌ No
+
+#### 2.5.10.7 Return Message
+
+
+
+#### 2.5.10.8 Has Return
+
+❌ No
+
+#### 2.5.10.9 Is Activation
+
+✅ Yes
+
+#### 2.5.10.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process (MediatR) |
+| Method | Handle(ReadingSessionLogged notification, Cancella... |
+| Parameters | The event object. |
+| Authentication | N/A |
+| Error Handling | Execution is wrapped in a global try-catch pipelin... |
+| Performance | Could involve a cache invalidation operation (e.g.... |
+
+## 2.6.0.0 Notes
+
+### 2.6.1.0 Content
+
+#### 2.6.1.1 Content
+
+Key Design: The initial API response (Step 7) is sent BEFORE the asynchronous event handlers (Steps 8-10) have completed. This ensures the user-facing request is fast, while side-effects are processed in the background.
+
+#### 2.6.1.2 Position
+
+bottom
+
+#### 2.6.1.3 Participant Id
+
+*Not specified*
+
+#### 2.6.1.4 Sequence Number
+
+7
+
+### 2.6.2.0 Content
+
+#### 2.6.2.1 Content
+
+Transactional Boundary: The main database transaction commits at Step 5. Any database operations within the event handlers (e.g., Step 8.1) run in their OWN, separate transactions. This is a crucial aspect of eventual consistency in this pattern.
+
+#### 2.6.2.2 Position
+
+bottom
+
+#### 2.6.2.3 Participant Id
+
+*Not specified*
+
+#### 2.6.2.4 Sequence Number
+
+5
+
+### 2.6.3.0 Content
+
+#### 2.6.3.1 Content
+
+Idempotency: All handlers must be designed to be idempotent. It's possible for an event to be processed more than once in a complex recovery scenario. Logic should check if the action has already been performed.
+
+#### 2.6.3.2 Position
+
+bottom
+
+#### 2.6.3.3 Participant Id
+
+REPO-BE-MOD-ENGAGEMENT
+
+#### 2.6.3.4 Sequence Number
+
+8
+
+## 2.7.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | Event handlers execute within the same process and... |
+| Performance Targets | The `mediator.Publish()` call must add less than 1... |
+| Error Handling Strategy | Implement a custom MediatR `IPipelineBehavior` to ... |
+| Testing Considerations | Unit Test: Each `INotificationHandler` must be uni... |
+| Monitoring Requirements | Instrument the event handler pipeline behavior to ... |
+| Deployment Considerations | Since this is an in-process pattern, publishers an... |
+

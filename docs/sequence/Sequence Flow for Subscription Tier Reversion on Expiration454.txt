@@ -1,0 +1,995 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-BP-002
+
+## 1.2 Name
+
+Subscription Tier Reversion on Expiration
+
+## 1.3 Description
+
+When a premium subscription ends, the system automatically reverts the account to the 'Free User' tier. This is triggered either by a webhook from the payment provider or a daily scheduled job that finds expired subscriptions. The user retains their data but is subject to free tier limitations.
+
+## 1.4 Type
+
+🔹 BusinessProcess
+
+## 1.5 Purpose
+
+To manage the subscription lifecycle and correctly enforce feature limitations for users who are no longer paying, as per REQ-BUS-001.
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🔴 High
+
+## 1.8 Frequency
+
+Daily
+
+## 1.9 Participants
+
+- REPO-BE-HOST
+- Apple App Store / Google Play Store
+
+## 1.10 Key Interactions
+
+- A webhook (e.g., `SUBSCRIPTION_EXPIRED`) is received OR a scheduled daily job runs.
+- The MOD-MONETIZATION service identifies a user whose subscription has ended.
+- The service publishes a `SubscriptionTerminated` domain event.
+- A handler in the MOD-USERS service consumes this event.
+- The handler updates the user's role from 'Premium User' to 'Free User' in the database.
+- The next time the user's JWT is refreshed, it will contain the new 'free_user' role, and the UI will apply the corresponding limitations.
+
+## 1.11 Triggers
+
+- A scheduled daily job executes.
+- A server-to-server webhook for subscription cancellation/expiration is received.
+
+## 1.12 Outcomes
+
+- The user's account is correctly downgraded to the Free tier.
+- Free tier limitations are applied on the user's next session.
+- No user data (e.g., books over the limit) is deleted.
+
+## 1.13 Business Rules
+
+- Users retain premium access until the end of the current billing period, even if they cancel early.
+- Existing data that exceeds free limits is not deleted, but the user is blocked from adding new data until they are within limits.
+
+## 1.14 Error Scenarios
+
+- The scheduled job fails to run.
+- An error occurs while updating a user's role, leaving them in an incorrect state.
+
+## 1.15 Integration Points
+
+- Apple App Store / Google Play Billing webhooks (SI-006)
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-BP-002
+
+## 2.2 Name
+
+Implementation: Subscription Tier Reversion on Expiration
+
+## 2.3 Description
+
+A detailed technical sequence for the automated business process of reverting a user's subscription tier from 'Premium' to 'Free' upon expiration. The process is triggered by one of two mechanisms: a server-to-server webhook from an external payment provider (e.g., Apple/Google) or a daily recurring background job. The Monetization module identifies the terminated subscription and publishes a 'SubscriptionTerminated' domain event via an in-process message bus (MediatR). A handler in the Users module consumes this event to update the user's role in the primary database, ensuring a decoupled and resilient workflow. All tier changes are logged to an immutable audit trail for compliance.
+
+## 2.4 Participants
+
+### 2.4.1 External System
+
+#### 2.4.1.1 Repository Id
+
+External-Payment-Provider
+
+#### 2.4.1.2 Display Name
+
+External Payment Provider
+
+#### 2.4.1.3 Type
+
+🔹 External System
+
+#### 2.4.1.4 Technology
+
+Apple App Store / Google Play Billing
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #999999 |
+| Stereotype | <<External>> |
+
+### 2.4.2.0 Scheduler
+
+#### 2.4.2.1 Repository Id
+
+REPO-BE-HOST-Scheduler
+
+#### 2.4.2.2 Display Name
+
+Scheduled Job Runner
+
+#### 2.4.2.3 Type
+
+🔹 Scheduler
+
+#### 2.4.2.4 Technology
+
+Hangfire
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | boundary |
+| Color | #C0C0C0 |
+| Stereotype | <<Scheduler>> |
+
+### 2.4.3.0 API Gateway
+
+#### 2.4.3.1 Repository Id
+
+REPO-BE-HOST
+
+#### 2.4.3.2 Display Name
+
+API Host (Presentation)
+
+#### 2.4.3.3 Type
+
+🔹 API Gateway
+
+#### 2.4.3.4 Technology
+
+ASP.NET Core 8
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #82b3a6 |
+| Stereotype | <<Controller>> |
+
+### 2.4.4.0 Business Module
+
+#### 2.4.4.1 Repository Id
+
+REPO-BE-MOD-MONETIZATION
+
+#### 2.4.4.2 Display Name
+
+Monetization Module
+
+#### 2.4.4.3 Type
+
+🔹 Business Module
+
+#### 2.4.4.4 Technology
+
+.NET 8 / MediatR
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #3b82f6 |
+| Stereotype | <<Service>> |
+
+### 2.4.5.0 Messaging
+
+#### 2.4.5.1 Repository Id
+
+REPO-BE-EventBus
+
+#### 2.4.5.2 Display Name
+
+In-Process Event Bus
+
+#### 2.4.5.3 Type
+
+🔹 Messaging
+
+#### 2.4.5.4 Technology
+
+MediatR
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | queue |
+| Color | #f59e0b |
+| Stereotype | <<MediatR>> |
+
+### 2.4.6.0 Business Module
+
+#### 2.4.6.1 Repository Id
+
+REPO-BE-MOD-USERS
+
+#### 2.4.6.2 Display Name
+
+Users Module
+
+#### 2.4.6.3 Type
+
+🔹 Business Module
+
+#### 2.4.6.4 Technology
+
+.NET 8 / MediatR
+
+#### 2.4.6.5 Order
+
+6
+
+#### 2.4.6.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #10b981 |
+| Stereotype | <<Handler>> |
+
+### 2.4.7.0 Database
+
+#### 2.4.7.1 Repository Id
+
+Primary-Database
+
+#### 2.4.7.2 Display Name
+
+Primary Database
+
+#### 2.4.7.3 Type
+
+🔹 Database
+
+#### 2.4.7.4 Technology
+
+PostgreSQL (Aurora)
+
+#### 2.4.7.5 Order
+
+7
+
+#### 2.4.7.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #6366f1 |
+| Stereotype | <<EF Core>> |
+
+### 2.4.8.0 Service
+
+#### 2.4.8.1 Repository Id
+
+Audit-Log-Service
+
+#### 2.4.8.2 Display Name
+
+Audit Log Service
+
+#### 2.4.8.3 Type
+
+🔹 Service
+
+#### 2.4.8.4 Technology
+
+AWS SQS -> Lambda -> S3
+
+#### 2.4.8.5 Order
+
+8
+
+#### 2.4.8.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #ef4444 |
+| Stereotype | <<Auditing>> |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 Alternative Fragment Start
+
+#### 2.5.1.1 Source Id
+
+External-Payment-Provider
+
+#### 2.5.1.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.1.3 Message
+
+alt: Trigger via Webhook
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 Alternative Fragment Start
+
+#### 2.5.1.6 Is Synchronous
+
+❌ No
+
+#### 2.5.1.7 Has Return
+
+❌ No
+
+### 2.5.2.0 HTTP Request
+
+#### 2.5.2.1 Source Id
+
+External-Payment-Provider
+
+#### 2.5.2.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.2.3 Message
+
+POST /api/v1/webhooks/billing (event: SUBSCRIPTION_EXPIRED)
+
+#### 2.5.2.4 Sequence Number
+
+1.1
+
+#### 2.5.2.5 Type
+
+🔹 HTTP Request
+
+#### 2.5.2.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7 Return Message
+
+200 OK or 4xx/5xx Error
+
+#### 2.5.2.8 Has Return
+
+✅ Yes
+
+#### 2.5.2.9 Is Activation
+
+✅ Yes
+
+#### 2.5.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | POST /api/v1/webhooks/billing |
+| Parameters | Body: JSON payload from provider. Headers: HMAC si... |
+| Authentication | Signature validation using a shared secret. |
+| Error Handling | If signature is invalid, return '400 Bad Request'.... |
+| Performance | Must respond within 2 seconds to avoid provider ti... |
+
+### 2.5.3.0 Method Call
+
+#### 2.5.3.1 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.3.2 Target Id
+
+REPO-BE-MOD-MONETIZATION
+
+#### 2.5.3.3 Message
+
+ProcessWebhook(payload)
+
+#### 2.5.3.4 Sequence Number
+
+1.2
+
+#### 2.5.3.5 Type
+
+🔹 Method Call
+
+#### 2.5.3.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7 Return Message
+
+void
+
+#### 2.5.3.8 Has Return
+
+✅ Yes
+
+#### 2.5.3.9 Is Activation
+
+✅ Yes
+
+#### 2.5.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | ISubscriptionService.ProcessWebhook(SubscriptionEv... |
+| Parameters | Deserialized webhook payload object. |
+| Authentication | N/A (Internal Call) |
+| Error Handling | Throws exception on parsing failure or if user/sub... |
+| Performance | Should complete within 100ms. |
+
+### 2.5.4.0 Self-Message
+
+#### 2.5.4.1 Source Id
+
+REPO-BE-MOD-MONETIZATION
+
+#### 2.5.4.2 Target Id
+
+REPO-BE-MOD-MONETIZATION
+
+#### 2.5.4.3 Message
+
+Business Rule: Verify subscription state and locate user.
+
+#### 2.5.4.4 Sequence Number
+
+1.3
+
+#### 2.5.4.5 Type
+
+🔹 Self-Message
+
+#### 2.5.4.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | Internal validation logic |
+| Parameters | User ID, Subscription ID from payload |
+| Authentication | N/A |
+| Error Handling | Throws `SubscriptionNotFoundException` if no match... |
+| Performance | N/A |
+
+### 2.5.5.0 Alternative Fragment Start
+
+#### 2.5.5.1 Source Id
+
+REPO-BE-HOST-Scheduler
+
+#### 2.5.5.2 Target Id
+
+REPO-BE-MOD-MONETIZATION
+
+#### 2.5.5.3 Message
+
+alt: Trigger via Scheduled Job
+
+#### 2.5.5.4 Sequence Number
+
+2
+
+#### 2.5.5.5 Type
+
+🔹 Alternative Fragment Start
+
+#### 2.5.5.6 Is Synchronous
+
+❌ No
+
+#### 2.5.5.7 Has Return
+
+❌ No
+
+### 2.5.6.0 Job Execution
+
+#### 2.5.6.1 Source Id
+
+REPO-BE-HOST-Scheduler
+
+#### 2.5.6.2 Target Id
+
+REPO-BE-MOD-MONETIZATION
+
+#### 2.5.6.3 Message
+
+Execute daily job: CheckForExpiredSubscriptionsJob
+
+#### 2.5.6.4 Sequence Number
+
+2.1
+
+#### 2.5.6.5 Type
+
+🔹 Job Execution
+
+#### 2.5.6.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7 Return Message
+
+Job completion status.
+
+#### 2.5.6.8 Has Return
+
+✅ Yes
+
+#### 2.5.6.9 Is Activation
+
+✅ Yes
+
+#### 2.5.6.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Hangfire |
+| Method | RecurringJob.AddOrUpdate("check-expired-subs", job... |
+| Parameters | N/A |
+| Authentication | N/A (Internal Process) |
+| Error Handling | Job failures are automatically retried by Hangfire... |
+| Performance | Job should be configured to run during off-peak ho... |
+
+### 2.5.7.0 Database Query
+
+#### 2.5.7.1 Source Id
+
+REPO-BE-MOD-MONETIZATION
+
+#### 2.5.7.2 Target Id
+
+Primary-Database
+
+#### 2.5.7.3 Message
+
+```sql
+SELECT * FROM Subscriptions WHERE EndDate <= NOW() AND Status = 'Active'
+```
+
+#### 2.5.7.4 Sequence Number
+
+2.2
+
+#### 2.5.7.5 Type
+
+🔹 Database Query
+
+#### 2.5.7.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.7.7 Return Message
+
+List<Subscription>
+
+#### 2.5.7.8 Has Return
+
+✅ Yes
+
+#### 2.5.7.9 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Npgsql |
+| Method | EF Core LINQ Query: dbContext.Subscriptions.Where(... |
+| Parameters | Current UTC timestamp. |
+| Authentication | Database connection string credentials. |
+| Error Handling | Database connection errors are transient and will ... |
+| Performance | Requires an index on `(Status, EndDate)` for effic... |
+
+### 2.5.8.0 Loop Fragment Start
+
+#### 2.5.8.1 Source Id
+
+REPO-BE-MOD-MONETIZATION
+
+#### 2.5.8.2 Target Id
+
+REPO-BE-MOD-MONETIZATION
+
+#### 2.5.8.3 Message
+
+loop: For each expired subscription
+
+#### 2.5.8.4 Sequence Number
+
+3
+
+#### 2.5.8.5 Type
+
+🔹 Loop Fragment Start
+
+#### 2.5.8.6 Is Synchronous
+
+❌ No
+
+#### 2.5.8.7 Has Return
+
+❌ No
+
+### 2.5.9.0 Event Publication
+
+#### 2.5.9.1 Source Id
+
+REPO-BE-MOD-MONETIZATION
+
+#### 2.5.9.2 Target Id
+
+REPO-BE-EventBus
+
+#### 2.5.9.3 Message
+
+Publish(new SubscriptionTerminatedEvent(...))
+
+#### 2.5.9.4 Sequence Number
+
+3.1
+
+#### 2.5.9.5 Type
+
+🔹 Event Publication
+
+#### 2.5.9.6 Is Synchronous
+
+❌ No
+
+#### 2.5.9.7 Return Message
+
+
+
+#### 2.5.9.8 Has Return
+
+❌ No
+
+#### 2.5.9.9 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | IMediator.Publish(new SubscriptionTerminatedEvent ... |
+| Parameters | Event object containing UserId, SubscriptionId, Te... |
+| Authentication | N/A |
+| Error Handling | If event bus fails, error is logged and process fo... |
+| Performance | Publishing is near-instantaneous. |
+
+### 2.5.10.0 Asynchronous Message
+
+#### 2.5.10.1 Source Id
+
+REPO-BE-MOD-MONETIZATION
+
+#### 2.5.10.2 Target Id
+
+Audit-Log-Service
+
+#### 2.5.10.3 Message
+
+LogAuditEvent('SUBSCRIPTION_CHANGE', ...)
+
+#### 2.5.10.4 Sequence Number
+
+3.2
+
+#### 2.5.10.5 Type
+
+🔹 Asynchronous Message
+
+#### 2.5.10.6 Is Synchronous
+
+❌ No
+
+#### 2.5.10.7 Return Message
+
+
+
+#### 2.5.10.8 Has Return
+
+❌ No
+
+#### 2.5.10.9 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | AWS SQS |
+| Method | IAuditLogger.LogAsync(auditEvent) |
+| Parameters | Structured JSON payload: { eventType: 'SUBSCRIPTIO... |
+| Authentication | IAM role credentials for SQS. |
+| Error Handling | Failure to queue the audit event must not fail the... |
+| Performance | Enqueue should complete in < 50ms. |
+
+### 2.5.11.0 Event Dispatch
+
+#### 2.5.11.1 Source Id
+
+REPO-BE-EventBus
+
+#### 2.5.11.2 Target Id
+
+REPO-BE-MOD-USERS
+
+#### 2.5.11.3 Message
+
+Dispatch SubscriptionTerminatedEvent
+
+#### 2.5.11.4 Sequence Number
+
+3.3
+
+#### 2.5.11.5 Type
+
+🔹 Event Dispatch
+
+#### 2.5.11.6 Is Synchronous
+
+❌ No
+
+#### 2.5.11.7 Return Message
+
+
+
+#### 2.5.11.8 Has Return
+
+❌ No
+
+#### 2.5.11.9 Is Activation
+
+✅ Yes
+
+#### 2.5.11.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | Calls INotificationHandler<SubscriptionTerminatedE... |
+| Parameters | The published event object. |
+| Authentication | N/A |
+| Error Handling | Exceptions in handlers are caught, logged, and wil... |
+| Performance | N/A |
+
+### 2.5.12.0 Database Update
+
+#### 2.5.12.1 Source Id
+
+REPO-BE-MOD-USERS
+
+#### 2.5.12.2 Target Id
+
+Primary-Database
+
+#### 2.5.12.3 Message
+
+```sql
+UPDATE Users SET Role = 'FreeUser' WHERE UserId = @p0
+```
+
+#### 2.5.12.4 Sequence Number
+
+3.4
+
+#### 2.5.12.5 Type
+
+🔹 Database Update
+
+#### 2.5.12.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.12.7 Return Message
+
+Rows affected
+
+#### 2.5.12.8 Has Return
+
+✅ Yes
+
+#### 2.5.12.9 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Npgsql |
+| Method | EF Core: user.Role = UserRole.Free; await dbContex... |
+| Parameters | User ID from the event. |
+| Authentication | Database connection string credentials. |
+| Error Handling | Update is performed within a database transaction.... |
+| Performance | Update on a primary key is highly performant. |
+
+### 2.5.13.0 Loop Fragment End
+
+#### 2.5.13.1 Source Id
+
+REPO-BE-MOD-USERS
+
+#### 2.5.13.2 Target Id
+
+REPO-BE-EventBus
+
+#### 2.5.13.3 Message
+
+end loop
+
+#### 2.5.13.4 Sequence Number
+
+4
+
+#### 2.5.13.5 Type
+
+🔹 Loop Fragment End
+
+#### 2.5.13.6 Is Synchronous
+
+❌ No
+
+#### 2.5.13.7 Has Return
+
+❌ No
+
+### 2.5.14.0 HTTP Response
+
+#### 2.5.14.1 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.14.2 Target Id
+
+External-Payment-Provider
+
+#### 2.5.14.3 Message
+
+200 OK
+
+#### 2.5.14.4 Sequence Number
+
+5
+
+#### 2.5.14.5 Type
+
+🔹 HTTP Response
+
+#### 2.5.14.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.14.7 Has Return
+
+❌ No
+
+### 2.5.15.0 Alternative Fragment End
+
+#### 2.5.15.1 Source Id
+
+REPO-BE-HOST-Scheduler
+
+#### 2.5.15.2 Target Id
+
+REPO-BE-MOD-MONETIZATION
+
+#### 2.5.15.3 Message
+
+end alt
+
+#### 2.5.15.4 Sequence Number
+
+6
+
+#### 2.5.15.5 Type
+
+🔹 Alternative Fragment End
+
+#### 2.5.15.6 Is Synchronous
+
+❌ No
+
+#### 2.5.15.7 Has Return
+
+❌ No
+
+## 2.6.0.0 Notes
+
+### 2.6.1.0 Content
+
+#### 2.6.1.1 Content
+
+Business Rule (REQ-BUS-001): Existing user data that exceeds the new free tier limits (e.g., >20 books) is NOT deleted. Logic in other modules will prevent adding new items until the user is within limits.
+
+#### 2.6.1.2 Position
+
+bottom
+
+#### 2.6.1.3 Participant Id
+
+*Not specified*
+
+#### 2.6.1.4 Sequence Number
+
+*Not specified*
+
+### 2.6.2.0 Content
+
+#### 2.6.2.1 Content
+
+Webhook Idempotency: The webhook handler must be idempotent. It should check the current subscription status before processing to safely handle duplicate events from the payment provider.
+
+#### 2.6.2.2 Position
+
+top
+
+#### 2.6.2.3 Participant Id
+
+REPO-BE-HOST
+
+#### 2.6.2.4 Sequence Number
+
+1.1
+
+### 2.6.3.0 Content
+
+#### 2.6.3.1 Content
+
+The user's JWT is not immediately invalidated. The new 'FreeUser' role will be reflected in the JWT payload the next time it is refreshed, applying the UI and API limitations on their next session.
+
+#### 2.6.3.2 Position
+
+bottom
+
+#### 2.6.3.3 Participant Id
+
+REPO-BE-MOD-USERS
+
+#### 2.6.3.4 Sequence Number
+
+3.4
+
+## 2.7.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | Webhook endpoints must be protected against CSRF a... |
+| Performance Targets | Webhook endpoint P99 latency must be under 500ms t... |
+| Error Handling Strategy | The scheduled job must use Hangfire's built-in ret... |
+| Testing Considerations | Integration tests should simulate webhook posts wi... |
+| Monitoring Requirements | A dashboard in CloudWatch should monitor: 1) Hangf... |
+| Deployment Considerations | The Hangfire recurring job schedule must be config... |
+

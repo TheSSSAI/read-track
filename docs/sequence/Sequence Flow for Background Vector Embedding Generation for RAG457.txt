@@ -1,0 +1,606 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-DF-002
+
+## 1.2 Name
+
+Background Vector Embedding Generation for RAG
+
+## 1.3 Description
+
+A periodic background job generates vector embeddings from a user's recent reading history, goals, and vocabulary using an OpenAI model (e.g., text-embedding-ada-002). These embeddings are stored in Amazon OpenSearch Serverless to power the k-NN search for the recommendation generation process.
+
+## 1.4 Type
+
+🔹 DataFlow
+
+## 1.5 Purpose
+
+To prepare and maintain the contextual data required for the AI recommendation engine to perform efficient similarity searches, as per REQ-AIS-001.
+
+## 1.6 Complexity
+
+High
+
+## 1.7 Priority
+
+🟡 Medium
+
+## 1.8 Frequency
+
+Daily
+
+## 1.9 Participants
+
+- REPO-BE-HOST
+- OpenAI Embedding API
+- Amazon OpenSearch Serverless
+
+## 1.10 Key Interactions
+
+- A scheduled job is triggered for a user whose data has recently changed.
+- The service fetches the user's reading history, goals, and vocabulary.
+- This information is concatenated into text chunks.
+- The service calls the OpenAI text-embedding API to get a vector representation for each chunk.
+- The service indexes the resulting vector and metadata (UserId, source text) into the UserContextEmbedding index in Amazon OpenSearch.
+
+## 1.11 Triggers
+
+- A user logs a new reading session or updates a goal.
+- A scheduled daily or weekly job runs.
+
+## 1.12 Outcomes
+
+- The vector database is populated with up-to-date embeddings representing the user's interests.
+- The AI recommendation system can perform relevant context retrieval.
+
+## 1.13 Business Rules
+
+- Embeddings should be regenerated when a user's reading patterns change significantly.
+- The process must handle rate limits of the embedding API.
+
+## 1.14 Error Scenarios
+
+- The OpenAI embedding API call fails.
+- The write operation to OpenSearch fails.
+
+## 1.15 Integration Points
+
+- OpenAI Embedding API
+- Amazon OpenSearch Serverless
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-DF-002-IMPL
+
+## 2.2 Name
+
+Implementation: Periodic Generation of User Context Vector Embeddings
+
+## 2.3 Description
+
+Technical sequence for a scheduled background job that generates and stores vector embeddings for user-specific context. The job is triggered by a scheduler (Hangfire), fetches relevant user data from the primary PostgreSQL database, transforms it into text, calls the OpenAI Embedding API to generate vectors, and indexes the resulting embeddings into an Amazon OpenSearch Serverless index. The process is designed for resilience, using Polly policies for external API calls, and includes detailed logging and monitoring.
+
+## 2.4 Participants
+
+### 2.4.1 Scheduler
+
+#### 2.4.1.1 Repository Id
+
+HangfireScheduler
+
+#### 2.4.1.2 Display Name
+
+Hangfire Scheduler
+
+#### 2.4.1.3 Type
+
+🔹 Scheduler
+
+#### 2.4.1.4 Technology
+
+Hangfire 1.8+
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #C0C0C0 |
+| Stereotype | <<System>> |
+
+### 2.4.2.0 Application Service
+
+#### 2.4.2.1 Repository Id
+
+REPO-BE-HOST
+
+#### 2.4.2.2 Display Name
+
+Backend Service Host
+
+#### 2.4.2.3 Type
+
+🔹 Application Service
+
+#### 2.4.2.4 Technology
+
+ASP.NET Core 8 on AWS Fargate
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | participant |
+| Color | #ADD8E6 |
+| Stereotype | <<Application Service>> |
+
+### 2.4.3.0 Database
+
+#### 2.4.3.1 Repository Id
+
+PrimaryDatabase
+
+#### 2.4.3.2 Display Name
+
+Primary Database
+
+#### 2.4.3.3 Type
+
+🔹 Database
+
+#### 2.4.3.4 Technology
+
+Amazon Aurora (PostgreSQL)
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #D3D3D3 |
+| Stereotype | <<Database>> |
+
+### 2.4.4.0 External API
+
+#### 2.4.4.1 Repository Id
+
+OpenAIEmbeddingAPI
+
+#### 2.4.4.2 Display Name
+
+OpenAI Embedding API
+
+#### 2.4.4.3 Type
+
+🔹 External API
+
+#### 2.4.4.4 Technology
+
+REST/HTTPS
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | participant |
+| Color | #90EE90 |
+| Stereotype | <<External System>> |
+
+### 2.4.5.0 Vector Database
+
+#### 2.4.5.1 Repository Id
+
+AmazonOpenSearch
+
+#### 2.4.5.2 Display Name
+
+Amazon OpenSearch Serverless
+
+#### 2.4.5.3 Type
+
+🔹 Vector Database
+
+#### 2.4.5.4 Technology
+
+OpenSearch.Client (AWS SDK)
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #FFD700 |
+| Stereotype | <<Vector Database>> |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 Asynchronous Invocation
+
+#### 2.5.1.1 Source Id
+
+HangfireScheduler
+
+#### 2.5.1.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.1.3 Message
+
+1. Trigger recurring job: `IUserEmbeddingJob.ProcessBatch()`
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 Asynchronous Invocation
+
+#### 2.5.1.6 Is Synchronous
+
+❌ No
+
+#### 2.5.1.7 Return Message
+
+
+
+#### 2.5.1.8 Has Return
+
+❌ No
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-process |
+| Method | Hangfire recurring job execution |
+| Parameters | CRON expression (e.g., '0 2 * * *' for daily at 2 ... |
+| Authentication | N/A |
+| Error Handling | Job failures are logged and retried according to H... |
+| Performance | Triggering latency is negligible. |
+
+#### 2.5.1.11 Nested Interactions
+
+- {'sourceId': 'REPO-BE-HOST', 'targetId': 'REPO-BE-HOST', 'message': '1.1. Identify batch of users requiring embedding updates', 'sequenceNumber': 2, 'type': 'Internal Method Call', 'isSynchronous': True, 'returnMessage': 'List<Guid> userIds', 'hasReturn': True, 'isActivation': False, 'technicalDetails': {'protocol': 'In-process', 'method': '`UserMetadataRepository.GetUsersForEmbeddingUpdateAsync()`', 'parameters': 'batchSize: 1000, lastProcessedTimestamp', 'authentication': 'N/A', 'errorHandling': 'Database exceptions are caught, logged, and the job is failed for retry.', 'performance': "Query should use an index on the user's 'last activity' timestamp to be efficient (<5s for a batch)."}}
+
+### 2.5.2.0 Database Query
+
+#### 2.5.2.1 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.2.2 Target Id
+
+PrimaryDatabase
+
+#### 2.5.2.3 Message
+
+2. FOR EACH userId: `FetchUserContextDataAsync(userId)`
+
+#### 2.5.2.4 Sequence Number
+
+3
+
+#### 2.5.2.5 Type
+
+🔹 Database Query
+
+#### 2.5.2.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7 Return Message
+
+UserContextData (ReadingHistory, Goals, Vocabulary)
+
+#### 2.5.2.8 Has Return
+
+✅ Yes
+
+#### 2.5.2.9 Is Activation
+
+❌ No
+
+#### 2.5.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | TCP/IP (Npgsql) |
+| Method | Executes optimized SQL queries via EF Core Reposit... |
+| Parameters | `userId`: Guid |
+| Authentication | Database connection string credentials |
+| Error Handling | Handled by EF Core connection resilience policies ... |
+| Performance | Queries must be optimized with appropriate indexes... |
+
+### 2.5.3.0 Data Transformation
+
+#### 2.5.3.1 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.3.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.3.3 Message
+
+3. Transform and concatenate fetched data into text chunks
+
+#### 2.5.3.4 Sequence Number
+
+4
+
+#### 2.5.3.5 Type
+
+🔹 Data Transformation
+
+#### 2.5.3.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7 Return Message
+
+List<string> textChunks
+
+#### 2.5.3.8 Has Return
+
+✅ Yes
+
+#### 2.5.3.9 Is Activation
+
+❌ No
+
+#### 2.5.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-process |
+| Method | `TextProcessingService.CreateChunksFromUserData()` |
+| Parameters | UserContextData object |
+| Authentication | N/A |
+| Error Handling | Standard null checks and data validation. |
+| Performance | CPU-bound operation, should be highly efficient. |
+
+### 2.5.4.0 API Call
+
+#### 2.5.4.1 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.4.2 Target Id
+
+OpenAIEmbeddingAPI
+
+#### 2.5.4.3 Message
+
+4. FOR EACH chunk: `POST /v1/embeddings`
+
+#### 2.5.4.4 Sequence Number
+
+5
+
+#### 2.5.4.5 Type
+
+🔹 API Call
+
+#### 2.5.4.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7 Return Message
+
+200 OK with JSON body containing embedding vector
+
+#### 2.5.4.8 Has Return
+
+✅ Yes
+
+#### 2.5.4.9 Is Activation
+
+❌ No
+
+#### 2.5.4.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS/REST |
+| Method | POST |
+| Parameters | Request Body: `{"input": "<text_chunk>", "model": ... |
+| Authentication | `Authorization: Bearer $OPENAI_API_KEY`. Key retri... |
+| Error Handling | Wrapped in a Polly resilience policy: Retry (3 att... |
+| Performance | Network-bound. Latency is subject to external API ... |
+
+### 2.5.5.0 Database Write
+
+#### 2.5.5.1 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.5.2 Target Id
+
+AmazonOpenSearch
+
+#### 2.5.5.3 Message
+
+5. `client.IndexDocumentAsync(embeddingDocument)`
+
+#### 2.5.5.4 Sequence Number
+
+6
+
+#### 2.5.5.5 Type
+
+🔹 Database Write
+
+#### 2.5.5.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7 Return Message
+
+IndexResponse (Success/Failure)
+
+#### 2.5.5.8 Has Return
+
+✅ Yes
+
+#### 2.5.5.9 Is Activation
+
+❌ No
+
+#### 2.5.5.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS (AWS SDK) |
+| Method | Indexing operation against the `ai_recommendation_... |
+| Parameters | `UserContextEmbedding` document containing: `embed... |
+| Authentication | AWS IAM Role associated with the Fargate task, pro... |
+| Error Handling | SDK exceptions are caught. The operation is retrie... |
+| Performance | Batch indexing should be used if multiple embeddin... |
+
+### 2.5.6.0 Logging
+
+#### 2.5.6.1 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.6.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.6.3 Message
+
+6. Log job completion status and metrics
+
+#### 2.5.6.4 Sequence Number
+
+7
+
+#### 2.5.6.5 Type
+
+🔹 Logging
+
+#### 2.5.6.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7 Return Message
+
+
+
+#### 2.5.6.8 Has Return
+
+❌ No
+
+#### 2.5.6.9 Is Activation
+
+✅ Yes
+
+#### 2.5.6.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-process (Serilog) |
+| Method | Log structured event to CloudWatch |
+| Parameters | LogLevel: Information, `jobName`, `status`: Succes... |
+| Authentication | N/A |
+| Error Handling | Logging failures should not fail the primary opera... |
+| Performance | Asynchronous logging sink to minimize performance ... |
+
+## 2.6.0.0 Notes
+
+### 2.6.1.0 Content
+
+#### 2.6.1.1 Content
+
+Rate Limiting: A client-side rate limiter (e.g., using a token bucket algorithm) must be implemented before calling the OpenAI API to avoid hitting 429 errors and to manage costs effectively.
+
+#### 2.6.1.2 Position
+
+top-right
+
+#### 2.6.1.3 Participant Id
+
+REPO-BE-HOST
+
+#### 2.6.1.4 Sequence Number
+
+5
+
+### 2.6.2.0 Content
+
+#### 2.6.2.1 Content
+
+Idempotency: The embedding documents in OpenSearch should have a unique ID derived from the user and source content to ensure that re-running the job is idempotent and does not create duplicate entries.
+
+#### 2.6.2.2 Position
+
+bottom-right
+
+#### 2.6.2.3 Participant Id
+
+AmazonOpenSearch
+
+#### 2.6.2.4 Sequence Number
+
+6
+
+### 2.6.3.0 Content
+
+#### 2.6.3.1 Content
+
+Credential Management: The OpenAI API Key and Database connection strings must be securely stored in AWS Secrets Manager and accessed at runtime, never hardcoded or checked into source control.
+
+#### 2.6.3.2 Position
+
+top-left
+
+#### 2.6.3.3 Participant Id
+
+*Not specified*
+
+#### 2.6.3.4 Sequence Number
+
+*Not specified*
+
+## 2.7.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | All communication must use TLS 1.2+. The Fargate t... |
+| Performance Targets | The entire batch job (e.g., for 1000 users) should... |
+| Error Handling Strategy | For OpenAI API failures after all retries, the job... |
+| Testing Considerations | Unit tests should cover the data transformation lo... |
+| Monitoring Requirements | Key metrics to be published to CloudWatch: `job.du... |
+| Deployment Considerations | The Hangfire job must be registered in the applica... |
+

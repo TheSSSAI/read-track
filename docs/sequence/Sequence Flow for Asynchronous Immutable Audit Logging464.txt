@@ -1,0 +1,705 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-CF-003
+
+## 1.2 Name
+
+Asynchronous Immutable Audit Logging
+
+## 1.3 Description
+
+When a security-sensitive event occurs, the backend service sends a structured audit event to an SQS queue. This decouples the audit process from the user request. A dedicated Lambda function then processes the event and writes it to an immutable storage location (e.g., S3 with Object Lock), ensuring a tamper-proof audit trail.
+
+## 1.4 Type
+
+🔹 ComplianceFlow
+
+## 1.5 Purpose
+
+To maintain a tamper-proof audit trail for accountability, security investigations, and compliance, fulfilling the requirements of US-111 and REQ-MON-001.
+
+## 1.6 Complexity
+
+High
+
+## 1.7 Priority
+
+🚨 Critical
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-BE-HOST
+- Amazon SQS
+- AWS Lambda
+- Amazon S3 / CloudWatch Logs
+
+## 1.10 Key Interactions
+
+- A user logs in, triggering an action in the MOD-USERS service.
+- The service constructs a structured JSON payload for the `USER_LOGIN_SUCCESS` audit event.
+- The service sends this event as a message to a dedicated SQS 'audit-events' queue.
+- The primary user request completes and returns a response immediately.
+- An AWS Lambda function consumes the message from the SQS queue.
+- The Lambda validates the event schema and writes the event to an S3 bucket with Object Lock enabled.
+- If writing fails, the message is sent to a Dead-Letter Queue (DLQ) for investigation.
+
+## 1.11 Triggers
+
+- A security-sensitive event occurs: User Login Success/Failure, Subscription Change, Account Deletion Request, Data Export Request.
+
+## 1.12 Outcomes
+
+- A secure, immutable record of the security-sensitive event is created.
+- The audit trail is logically and physically separate from application logs.
+- The performance of the user-facing request is not impacted.
+
+## 1.13 Business Rules
+
+- Audit logs must be retained for a minimum of 1 year (BR-AUD-002).
+- The audit trail storage must be configured to be immutable (WORM - Write Once, Read Many).
+- Failures in the audit pipeline must not cause the primary user action to fail.
+
+## 1.14 Error Scenarios
+
+- The message fails to be published to SQS.
+- The Lambda processor fails, and the message is moved to the DLQ.
+
+## 1.15 Integration Points
+
+- Amazon SQS
+- AWS Lambda
+- Amazon S3 (with Object Lock)
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-CF-003
+
+## 2.2 Name
+
+Implementation: Asynchronous Immutable Audit Logging for Security-Sensitive Events
+
+## 2.3 Description
+
+Provides a detailed technical specification for an asynchronous, decoupled audit logging system. A backend service publishes security-sensitive events to an AWS SQS queue, ensuring the primary user request is not blocked. A dedicated AWS Lambda function consumes these events, validates their schema, and persists them to an immutable AWS S3 bucket configured with Object Lock. This design guarantees a tamper-proof audit trail for compliance (US-111, REQ-MON-001) without impacting application performance or reliability.
+
+## 2.4 Participants
+
+### 2.4.1 Application Service
+
+#### 2.4.1.1 Repository Id
+
+REPO-BE-HOST
+
+#### 2.4.1.2 Display Name
+
+Backend Service (ASP.NET Core)
+
+#### 2.4.1.3 Type
+
+🔹 Application Service
+
+#### 2.4.1.4 Technology
+
+ASP.NET Core 8 on AWS Fargate
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #232F3E |
+| Stereotype | «Microservice» |
+
+### 2.4.2.0 Message Queue
+
+#### 2.4.2.1 Repository Id
+
+aws-sqs-audit-events-queue
+
+#### 2.4.2.2 Display Name
+
+Audit Events Queue
+
+#### 2.4.2.3 Type
+
+🔹 Message Queue
+
+#### 2.4.2.4 Technology
+
+AWS SQS (FIFO)
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | queue |
+| Color | #FF9900 |
+| Stereotype | «SQS» |
+
+### 2.4.3.0 Serverless Function
+
+#### 2.4.3.1 Repository Id
+
+aws-lambda-audit-processor
+
+#### 2.4.3.2 Display Name
+
+Audit Processor
+
+#### 2.4.3.3 Type
+
+🔹 Serverless Function
+
+#### 2.4.3.4 Technology
+
+AWS Lambda (Node.js 18.x)
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #FF4F8B |
+| Stereotype | «Lambda» |
+
+### 2.4.4.0 Object Storage
+
+#### 2.4.4.1 Repository Id
+
+aws-s3-audit-log-bucket
+
+#### 2.4.4.2 Display Name
+
+Immutable Audit Store
+
+#### 2.4.4.3 Type
+
+🔹 Object Storage
+
+#### 2.4.4.4 Technology
+
+AWS S3 with Object Lock
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #539E43 |
+| Stereotype | «S3» |
+
+### 2.4.5.0 Message Queue
+
+#### 2.4.5.1 Repository Id
+
+aws-sqs-audit-events-dlq
+
+#### 2.4.5.2 Display Name
+
+Audit Events DLQ
+
+#### 2.4.5.3 Type
+
+🔹 Message Queue
+
+#### 2.4.5.4 Technology
+
+AWS SQS
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | queue |
+| Color | #D32F2F |
+| Stereotype | «SQS-DLQ» |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 Internal Method Call
+
+#### 2.5.1.1 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.1.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.1.3 Message
+
+1. Process user request (e.g., successful login)
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 Internal Method Call
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+Generates audit event context
+
+#### 2.5.1.8 Has Return
+
+✅ Yes
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | UserService.LoginUser() -> AuditService.QueueAudit... |
+| Parameters | User context, request metadata (IP, User-Agent) |
+| Authentication | N/A (Internal) |
+| Error Handling | Standard try-catch blocks for internal errors. |
+| Performance | Included in overall request latency. |
+
+### 2.5.2.0 Asynchronous Message
+
+#### 2.5.2.1 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.2.2 Target Id
+
+aws-sqs-audit-events-queue
+
+#### 2.5.2.3 Message
+
+2. SendMessageAsync(auditEvent)
+
+#### 2.5.2.4 Sequence Number
+
+2
+
+#### 2.5.2.5 Type
+
+🔹 Asynchronous Message
+
+#### 2.5.2.6 Is Synchronous
+
+❌ No
+
+#### 2.5.2.7 Return Message
+
+MessageId, MD5OfMessageBody
+
+#### 2.5.2.8 Has Return
+
+✅ Yes
+
+#### 2.5.2.9 Is Activation
+
+❌ No
+
+#### 2.5.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | AWS SDK for .NET |
+| Method | AmazonSQSClient.SendMessageAsync |
+| Parameters | QueueUrl, MessageBody (JSON string), MessageGroupI... |
+| Authentication | IAM Role for Service (Fargate Task Role) |
+| Error Handling | Retry policy (3 attempts, exponential backoff) for... |
+| Performance | Must complete in < 20ms to avoid impacting user re... |
+
+### 2.5.3.0 HTTP Response
+
+#### 2.5.3.1 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.3.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.3.3 Message
+
+3. Return successful response to user
+
+#### 2.5.3.4 Sequence Number
+
+3
+
+#### 2.5.3.5 Type
+
+🔹 HTTP Response
+
+#### 2.5.3.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7 Return Message
+
+200 OK
+
+#### 2.5.3.8 Has Return
+
+❌ No
+
+#### 2.5.3.9 Is Activation
+
+❌ No
+
+#### 2.5.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTP/1.1 |
+| Method | N/A |
+| Parameters | JWT tokens, user profile data |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | P95 latency < 200ms for the entire user-facing ope... |
+
+### 2.5.4.0 Event Trigger
+
+#### 2.5.4.1 Source Id
+
+aws-sqs-audit-events-queue
+
+#### 2.5.4.2 Target Id
+
+aws-lambda-audit-processor
+
+#### 2.5.4.3 Message
+
+4. [Async] Invoke with SQS message batch
+
+#### 2.5.4.4 Sequence Number
+
+4
+
+#### 2.5.4.5 Type
+
+🔹 Event Trigger
+
+#### 2.5.4.6 Is Synchronous
+
+❌ No
+
+#### 2.5.4.7 Return Message
+
+N/A
+
+#### 2.5.4.8 Has Return
+
+❌ No
+
+#### 2.5.4.9 Is Activation
+
+✅ Yes
+
+#### 2.5.4.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | SQS-Lambda Integration |
+| Method | Event Source Mapping Poll |
+| Parameters | Batch of SQS records (size configured, e.g., 1-10) |
+| Authentication | IAM Role for Service (Lambda Execution Role) |
+| Error Handling | Lambda service polls SQS. If invocation fails, mes... |
+| Performance | Polling latency is managed by AWS. |
+
+### 2.5.5.0 Internal Processing
+
+#### 2.5.5.1 Source Id
+
+aws-lambda-audit-processor
+
+#### 2.5.5.2 Target Id
+
+aws-lambda-audit-processor
+
+#### 2.5.5.3 Message
+
+5. For each message: validate event schema
+
+#### 2.5.5.4 Sequence Number
+
+5
+
+#### 2.5.5.5 Type
+
+🔹 Internal Processing
+
+#### 2.5.5.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7 Return Message
+
+Valid/Invalid
+
+#### 2.5.5.8 Has Return
+
+✅ Yes
+
+#### 2.5.5.9 Is Activation
+
+❌ No
+
+#### 2.5.5.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | validate(event) |
+| Parameters | Audit event JSON object |
+| Authentication | N/A |
+| Error Handling | If schema is invalid, throw a non-retryable error ... |
+| Performance | Schema validation should be < 5ms. |
+
+### 2.5.6.0 API Call
+
+#### 2.5.6.1 Source Id
+
+aws-lambda-audit-processor
+
+#### 2.5.6.2 Target Id
+
+aws-s3-audit-log-bucket
+
+#### 2.5.6.3 Message
+
+6. PutObjectAsync(validatedEvent)
+
+#### 2.5.6.4 Sequence Number
+
+6
+
+#### 2.5.6.5 Type
+
+🔹 API Call
+
+#### 2.5.6.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7 Return Message
+
+ETag, VersionId
+
+#### 2.5.6.8 Has Return
+
+✅ Yes
+
+#### 2.5.6.9 Is Activation
+
+❌ No
+
+#### 2.5.6.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | AWS SDK for Node.js |
+| Method | S3Client.send(PutObjectCommand) |
+| Parameters | Bucket, Key (e.g., 'YYYY/MM/DD/event-id.json'), Bo... |
+| Authentication | IAM Role for Service (Lambda Execution Role) |
+| Error Handling | SDK default retry mechanism for transient S3 error... |
+| Performance | P99 latency should be < 200ms. |
+
+### 2.5.7.0 API Call
+
+#### 2.5.7.1 Source Id
+
+aws-lambda-audit-processor
+
+#### 2.5.7.2 Target Id
+
+aws-sqs-audit-events-queue
+
+#### 2.5.7.3 Message
+
+7. [On Success] Delete message from queue
+
+#### 2.5.7.4 Sequence Number
+
+7
+
+#### 2.5.7.5 Type
+
+🔹 API Call
+
+#### 2.5.7.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.7.7 Return Message
+
+Success confirmation
+
+#### 2.5.7.8 Has Return
+
+✅ Yes
+
+#### 2.5.7.9 Is Activation
+
+❌ No
+
+#### 2.5.7.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | SQS-Lambda Integration |
+| Method | Managed by Lambda Runtime |
+| Parameters | ReceiptHandle of the successfully processed messag... |
+| Authentication | IAM Role for Service (Lambda Execution Role) |
+| Error Handling | If deletion fails, the message may be reprocessed,... |
+| Performance | Managed by AWS. |
+
+### 2.5.8.0 Asynchronous Message
+
+#### 2.5.8.1 Source Id
+
+aws-lambda-audit-processor
+
+#### 2.5.8.2 Target Id
+
+aws-sqs-audit-events-dlq
+
+#### 2.5.8.3 Message
+
+8. [On Failure] Move message to DLQ
+
+#### 2.5.8.4 Sequence Number
+
+8
+
+#### 2.5.8.5 Type
+
+🔹 Asynchronous Message
+
+#### 2.5.8.6 Is Synchronous
+
+❌ No
+
+#### 2.5.8.7 Return Message
+
+N/A
+
+#### 2.5.8.8 Has Return
+
+❌ No
+
+#### 2.5.8.9 Is Activation
+
+❌ No
+
+#### 2.5.8.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | SQS Redrive Policy |
+| Method | Managed by SQS-Lambda Integration |
+| Parameters | The original failed message |
+| Authentication | N/A (Service-level configuration) |
+| Error Handling | The SQS redrive policy is configured on the source... |
+| Performance | Managed by AWS. |
+
+## 2.6.0.0 Notes
+
+### 2.6.1.0 Content
+
+#### 2.6.1.1 Content
+
+Asynchronous Boundary: The user's request (1-3) completes independently of the audit processing (4-8), ensuring no performance impact.
+
+#### 2.6.1.2 Position
+
+top
+
+#### 2.6.1.3 Participant Id
+
+*Not specified*
+
+#### 2.6.1.4 Sequence Number
+
+3
+
+### 2.6.2.0 Content
+
+#### 2.6.2.1 Content
+
+Immutability is enforced by S3 Object Lock in 'COMPLIANCE' mode, preventing deletion or modification by any user, including the root account, for the duration of the retention period (1 year).
+
+#### 2.6.2.2 Position
+
+right
+
+#### 2.6.2.3 Participant Id
+
+aws-s3-audit-log-bucket
+
+#### 2.6.2.4 Sequence Number
+
+6
+
+### 2.6.3.0 Content
+
+#### 2.6.3.1 Content
+
+A CloudWatch Alarm must be configured on `ApproximateNumberOfMessagesVisible` for the DLQ. A value > 0 triggers a critical alert to the DevOps team for manual investigation.
+
+#### 2.6.3.2 Position
+
+right
+
+#### 2.6.3.3 Participant Id
+
+aws-sqs-audit-events-dlq
+
+#### 2.6.3.4 Sequence Number
+
+8
+
+## 2.7.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | 1. **IAM Roles**: The `REPO-BE-HOST` Fargate Task ... |
+| Performance Targets | 1. **Backend**: The `SendMessageAsync` call must a... |
+| Error Handling Strategy | 1. **Publish Failure**: The backend service must t... |
+| Testing Considerations | 1. **Unit Tests**: Verify the correct generation a... |
+| Monitoring Requirements | 1. **CloudWatch Alarms**: `ApproximateNumberOfMess... |
+| Deployment Considerations | All AWS resources (SQS Queues, DLQ, Lambda, S3 Buc... |
+
