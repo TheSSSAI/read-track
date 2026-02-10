@@ -1,0 +1,3 @@
+"gate_id","gate_name","sprint","gate_type","criteria","responsible_team","gate_date","approval_required","approver","bypass_criteria","automation_level","tools_used","success_metrics"
+"QG-001","Infrastructure Base Gate","Sprint 1","Security","VPC Flow Logs enabled; DB encrypted at rest; No public access to DB","DevOps","2024-06-03","true","security.lead@company.com","None","Automated","AWS Config,CDK Nag","0 High/Critical findings"
+"QG-002","Auth Integration Gate","Sprint 2","Integration","Successful login with Google/Apple on physical device; Token refresh works","Mobile Team","2024-06-17","true","product.owner@company.com","Critical fix needed, manual regression test passes","Manual","Physical Devices","Auth success rate > 99%"

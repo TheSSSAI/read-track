@@ -1,0 +1,3 @@
+"gate_id","gate_name","sprint","criteria","responsible_team"
+"QG-SPRINT-2","Sync Logic Validation","Sprint 2","Unit tests for Conflict Resolution must pass 100%; Mobile offline queue must persist across app restarts","Backend Lead & Mobile Lead"
+"QG-SPRINT-3","Monetization Integrity","Sprint 3","Webhook handlers must process valid payloads and gracefully handle duplicates; DLQ alarms must be active","QA Engineer"

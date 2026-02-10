@@ -1,0 +1,4 @@
+"performance_area","benchmark_type","target_value","measurement_unit","measurement_conditions","load_profile","monitoring_tools","baseline_value","alert_threshold","business_relevance"
+"Backend API Latency","Latency","200","milliseconds","P95 under load of 1000 concurrent users","Read-heavy (80% reads / 20% writes)","AWS CloudWatch, X-Ray","150","300","Direct correlation to user retention"
+"Mobile Dashboard Load","Time to Interactive","1.5","seconds","Cold start on mid-range Android device (4G)","","Firebase Performance Monitoring","1.2","2","First impression and session frequency"
+"Offline Sync Throughput","Throughput","50","records/second","Batch sync processing after 24h offline","","Server-side Logs","100","20","Data integrity and battery usage"

@@ -1,0 +1,82 @@
+stateDiagram-v2
+    classDef default fill:#f9f9f9,stroke:#333,stroke-width:1px;
+    classDef active fill:#e3f2fd,stroke:#1976d2,stroke-width:2px;
+    classDef success fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
+    classDef error fill:#ffebee,stroke:#d32f2f,stroke-width:2px;
+    classDef data fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
+
+    [*] --> SelectingBook: Entry from Dashboard/Library
+    
+    state SelectingBook {
+        [*] --> BrowsingLibrary
+        BrowsingLibrary --> BookSelected: User Taps Item
+    }
+
+    BookSelected --> InputMode: Initialize Logger
+
+    state InputMode {
+        [*] --> ManualEntry
+        
+        state ManualEntry {
+            [*] --> Idle
+            Idle --> ValidatingInput: User Types
+            ValidatingInput --> Idle: Valid
+            ValidatingInput --> inputError: Invalid (e.g., Page > Total)
+        }
+
+        state TimerMode {
+            [*] --> TimerIdle
+            TimerIdle --> TimerRunning: Start Tap
+            TimerRunning --> TimerPaused: Pause Tap
+            TimerPaused --> TimerRunning: Resume Tap
+            TimerRunning --> Backgrounded: App Minimizes
+            Backgrounded --> TimerRunning: App Resumes (Calc Delta)
+            TimerRunning --> TimerStopped: Stop Tap
+            TimerStopped --> ManualEntry: Populate Duration & Switch
+        }
+
+        ManualEntry --> TimerMode: Switch Tab
+        TimerMode --> ManualEntry: Switch Tab / Stop Timer
+    }
+
+    InputMode --> ValidationCheck: User Taps 'Save'
+
+    state ValidationCheck {
+        [*] --> CheckingRules
+        CheckingRules --> Valid: Rules Passed
+        CheckingRules --> Invalid: Rules Failed
+    }
+
+    Invalid --> InputMode: Show Error Toast\n(e.g., "Duration > 0")
+    
+    Valid --> PersistingLocal: Trigger Save
+
+    state PersistingLocal {
+        [*] --> WritingToIsar
+        WritingToIsar --> QueueingSync: Success
+        WritingToIsar --> WriteError: DB Failure
+    }
+
+    WriteError --> InputMode: Show DB Error
+    
+    state QueueingSync {
+        [*] --> CheckConnectivity
+        CheckConnectivity --> SyncNow: Online
+        CheckConnectivity --> SyncLater: Offline
+    }
+
+    PersistingLocal --> OptimisticUpdate: Write Success
+
+    state OptimisticUpdate {
+        [*] --> UpdateDashboardUI
+        UpdateDashboardUI --> ShowSuccessFeedback
+    }
+
+    ShowSuccessFeedback --> [*]: Navigate Back
+
+    %% Styling Application
+    class InputMode active
+    class OptimisticUpdate success
+    class WriteError error
+    class Invalid error
+    class PersistingLocal data

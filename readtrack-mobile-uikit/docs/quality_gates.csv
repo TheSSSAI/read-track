@@ -1,0 +1,3 @@
+"gate_id","gate_name","sprint","gate_type","criteria","responsible_team","gate_date","approval_required","approver","bypass_criteria","automation_level","tools_used","success_metrics"
+"QG-001","Sprint 1 Infrastructure Gate","Sprint 1","Infrastructure","CDK Synth clean; Security groups restricted; ALB responds","DevOps","2024-06-01","true","architect@project.com","None","Fully Automated","CDK, AWS Config","Zero public access to DB subnets"
+"QG-002","Sprint 2 Offline Sync Gate","Sprint 2","Integration","Sync recovers after 50% packet loss; No data duplication","QA","2024-06-15","true","mobile.lead@project.com","None","Partially Automated","Flutter Integration Test, Network Link Conditioner","100% data consistency in offline-online transition"

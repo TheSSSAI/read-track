@@ -1,0 +1,3 @@
+"gate_id","gate_name","sprint","gate_type","criteria","responsible_team","gate_date","approval_required","approver","bypass_criteria","automation_level","tools_used","success_metrics"
+"QG-001","Sprint 1 Infrastructure Gate","Sprint 1","Security","cdk-nag checks pass; IAM roles least privilege verified","DevOps","2025-05-14","true","security.lead@company.com","None","Automated","cdk-nag","Zero security errors"
+"QG-002","Sprint 2 Sync Verification","Sprint 2","Integration","Offline sync conflict resolution verified with automated tests","Backend","2025-05-28","true","tech.lead@company.com","Manual testing passed","Automated","xUnit, WireMock","100% pass rate on sync scenarios"

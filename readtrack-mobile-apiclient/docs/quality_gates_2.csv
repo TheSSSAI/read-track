@@ -1,0 +1,4 @@
+"gate_name","gate_type","trigger_event","success_criteria","failure_action","responsible_team","tools_used","business_impact"
+"PR Merge Gate","Automated","Pull Request Creation","Build Success; Unit Tests Pass; No New Security Vulnerabilities; Code Coverage >= 80%","Block Merge","DevOps / Lead Dev","GitHub Actions, SonarCloud","Prevents broken code from entering main branch"
+"Performance Gate","Automated","Release Candidate Creation","API P95 Latency < 200ms; Dashboard Load < 1.5s; Database CPU < 60% under load","Halt Release","Backend Team","k6, AWS CloudWatch","Ensures scalability and user experience standards"
+"App Store Compliance Gate","Manual/Automated","Pre-submission","IAP Sandbox Verified; Data Deletion (GDPR) Functional; Privacy Policy Accessible; No Private API Usage","Delay Submission","Mobile Team","Manual Checklist, Static Analysis","Prevents App Store rejection"

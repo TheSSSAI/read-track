@@ -1,0 +1,4 @@
+"gate_id","gate_name","sprint","gate_type","criteria","responsible_team","gate_date","approval_required","approver","bypass_criteria","automation_level","tools_used","success_metrics"
+"QG-001","Infrastructure Security Gate","Sprint 1","Security","cdk-nag checks pass; No open security groups","DevOps","2024-05-30","true","security.lead@company.com","None","Fully Automated","cdk-nag","Zero high severity findings"
+"QG-002","Auth Integration Gate","Sprint 1","Integration","Mobile can authenticate and call protected backend endpoint","Backend & Mobile","2024-05-31","true","tech.lead@company.com","None","Manual","Device Testing","Successful E2E login"
+"QG-003","Offline Data Gate","Sprint 3","Performance","Sync completes under 2s for 100 items; No data loss on app kill","Mobile","2024-06-28","true","tech.lead@company.com","Performance deviation < 10%","Partially Automated","Integration Tests","100% data consistency"

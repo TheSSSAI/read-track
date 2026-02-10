@@ -1,0 +1,5 @@
+"gate_id","gate_name","sprint","criteria","responsible_team","gate_date"
+"QG-SPRINT-1","Infrastructure Readiness","Sprint 1","CDK deploy successful in Staging; DB connectivity verified","DevOps","2024-01-19"
+"QG-SPRINT-2","Sync Reliability","Sprint 2","Offline CRUD tests pass; Sync conflict resolution verified via integration tests","Mobile Team","2024-02-02"
+"QG-SPRINT-3","Monetization Validation","Sprint 3","Successful purchase in Sandbox; Webhook received and processed; Ad consent flow compliant","Backend Team","2024-02-16"
+"QG-SPRINT-4","AI Feature Acceptance","Sprint 4","Recommendations returned within 5s; Vector update job runs successfully","Backend Team","2024-03-01"
