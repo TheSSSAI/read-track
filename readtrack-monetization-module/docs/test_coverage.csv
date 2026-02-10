@@ -1,0 +1,4 @@
+"component_name","business_criticality","technical_complexity","change_frequency","test_types_required","unit_test_coverage","integration_test_coverage","e2e_test_coverage","automation_percentage","manual_test_effort","automated_test_effort","total_test_cases","risk_mitigation_score","quality_confidence","maintenance_overhead","tool_compatibility","team_skill_alignment"
+"Mobile Client (Flutter)","Critical","High","High","[""Unit"",""Widget"",""Integration"",""Accessibility""]","85","70","40","80","24","96","85","0.88","High","Medium","Native (flutter_test)","High"
+"Backend API (.NET 8)","Critical","Medium","Medium","[""Unit"",""Integration"",""Contract"",""Performance""]","92","85","60","90","8","72","65","0.95","Very High","Low","Excellent (xUnit, TestContainers)","High"
+"AI Engine (OpenSearch/OpenAI)","High","High","Low","[""Integration"",""Performance"",""Cost""]","60","75","30","50","16","20","20","0.75","Medium","High","Medium","Medium"

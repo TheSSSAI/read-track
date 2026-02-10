@@ -1,0 +1,4 @@
+"component_name","business_criticality","technical_complexity","change_frequency","test_types_required","unit_test_coverage","integration_test_coverage","e2e_test_coverage","automation_percentage","manual_test_effort","automated_test_effort","total_test_cases","risk_mitigation_score","quality_confidence","maintenance_overhead","tool_compatibility","team_skill_alignment"
+"Mobile App (Flutter)","Critical","High","High","[""Widget"",""Integration"",""Golden"",""State Management""]","90","75","40","80","20","80","85","0.95","High","Medium","Native (flutter_test)","High"
+"Backend API (.NET 8)","Critical","Medium","Medium","[""Unit"",""Integration"",""Contract"",""Load""]","95","85","30","90","5","60","70","0.98","Very High","Low","Excellent (xUnit)","High"
+"AI Recommendation Engine","Medium","High","Low","[""Unit (Logic)"",""Integration (OpenAI/Vector)"",""Performance""]","80","60","20","60","15","25","30","0.85","Medium","High","Good","Medium"

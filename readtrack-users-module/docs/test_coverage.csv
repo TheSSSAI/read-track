@@ -1,0 +1,4 @@
+"component_name","business_criticality","technical_complexity","change_frequency","test_types_required","unit_test_coverage","integration_test_coverage","e2e_test_coverage","automation_percentage","manual_test_effort","automated_test_effort","total_test_cases","risk_mitigation_score","quality_confidence","maintenance_overhead","tool_compatibility","team_skill_alignment"
+"Mobile Client (Flutter)","Critical","High","High","[""Widget"",""Integration"",""Golden UI"",""Offline Simulation""]","85","70","40","75","40","120","150","0.9","High","Medium","Native Flutter Tools","Medium"
+"Backend API (.NET 8)","Critical","Medium","Medium","[""Unit"",""API Contract"",""Security"",""Load""]","95","85","20","90","10","80","200","0.95","Very High","Low","xUnit/TestContainers","High"
+"Infrastructure (AWS CDK)","High","Medium","Low","[""Snapshot"",""Security Scan (cdk-nag)""]","100","","","100","2","10","20","0.98","High","Very Low","AWS CDK Assertions","High"

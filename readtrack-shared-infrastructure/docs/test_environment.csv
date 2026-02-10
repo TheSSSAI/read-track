@@ -1,0 +1,2 @@
+"environment_name","environment_type","deployment_frequency","data_refresh_frequency","infrastructure_stack","service_dependencies","monitoring_tools","access_control","backup_strategy","disaster_recovery","cost_optimization","maintenance_window"
+"Staging (Pre-Prod)","Mirror","Continuous (post-merge)","Monthly (Sanitized)","AWS Fargate, Aurora Serverless, OpenSearch (Dev tier)","Google Books (Live), OpenAI (Live), Apple/Google Sandbox","CloudWatch, Sentry","Internal Team VPN","Snapshot before deploy","N/A","Scale down off-hours","Ad-hoc"

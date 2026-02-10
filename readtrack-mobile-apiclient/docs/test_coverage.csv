@@ -1,0 +1,4 @@
+"component_name","business_criticality","technical_complexity","change_frequency","test_types_required","unit_test_coverage","integration_test_coverage","e2e_test_coverage","automation_percentage","risk_mitigation_score","maintenance_overhead","tool_compatibility"
+"Mobile Client (Flutter)","Critical","High","High","[""Widget"",""Integration"",""Accessibility"",""Offline Simulation""]","85","70","40","75","0.88","Medium","Native Flutter Tools"
+"Backend API (.NET 8)","Critical","Medium","Medium","[""Unit"",""Integration"",""Contract"",""Performance""]","95","90","50","95","0.95","Low","xUnit, TestContainers"
+"AI Recommendation Engine","High","Very High","High","[""Unit (Logic)"",""Integration (Vector DB)"",""Cost Monitoring""]","80","60","30","60","0.75","High","Python Scripts, k6"

@@ -1,0 +1,2 @@
+"environment_name","environment_type","deployment_frequency","data_refresh_frequency","infrastructure_stack","service_dependencies","monitoring_tools","access_control","backup_strategy","disaster_recovery","cost_optimization","maintenance_window"
+"Staging","Clone of Production","Continuous (On Merge)","Monthly (Sanitized)","AWS Fargate (Spot); Aurora Serverless v2 (Min ACU); OpenSearch (Dev)","Auth0 (Dev Tenant); Google Books API; OpenAI API","CloudWatch; Sentry","Internal Team VPN","Daily Snapshots (Retention 7 days)","N/A","Scale to zero off-hours; Spot Instances","Ad-hoc"

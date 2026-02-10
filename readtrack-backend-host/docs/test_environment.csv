@@ -1,0 +1,4 @@
+"environment_name","environment_type","deployment_frequency","data_refresh_frequency","infrastructure_stack","service_dependencies","monitoring_tools","access_control","backup_strategy","disaster_recovery","cost_optimization","maintenance_window"
+"Local Dev","Ephemeral","On Demand","None","Local Docker (Postgres, LocalStack)","Mocks for OpenAI/Google Books","Console Logs","Developer Local","None","Rebuild Container","Runs only when active","N/A"
+"Staging","Persistent","On Merge to Main","Monthly (Sanitized)","AWS (Fargate, Aurora, OpenSearch)","Real External APIs (Sandbox)","CloudWatch; X-Ray","Dev Team + QA","Daily Snapshots","Point-in-time Recovery","Scale down at night","Weekends"
+"Production","Persistent","On Release Tag","Never","AWS Production Account","Real External APIs (Prod)","CloudWatch; PagerDuty; Sentry","Ops Team (Read Only)","Continuous + Cross-Region","Multi-Region Failover (Manual)","Savings Plans; Budgets","Zero Downtime Deployments"

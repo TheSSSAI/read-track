@@ -1,0 +1,3 @@
+"environment_name","environment_type","deployment_frequency","data_refresh_frequency","infrastructure_stack","service_dependencies","monitoring_tools","access_control","backup_strategy","disaster_recovery","cost_optimization","maintenance_window"
+"Development (Local)","Ephemeral","On Demand","N/A","Docker Compose (DB, Redis, Mock APIs)","Local Mocks","Console Logs","Developer Local","None","Rebuild Container","Runs only when active","None"
+"Staging (AWS)","Persistent","Continuous (Main Branch)","Weekly (Sanitized Prod Data)","AWS Fargate, Aurora Serverless, OpenSearch","Sandbox External APIs (Stripe/Apple/Google)","CloudWatch; X-Ray","Team VPN / IP Whitelist","Daily Snapshot","IaC Redeploy","Scale down off-hours","Flexible"

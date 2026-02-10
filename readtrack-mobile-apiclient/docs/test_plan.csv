@@ -1,0 +1,2 @@
+"project_name","architecture_type","total_test_scenarios","automation_target","risk_profile","testing_phases","environments_required","tools_stack"
+"reading-tracker-app","Modular Monolith (.NET 8) + Flutter Mobile Client","450","80","High (Monetization, Data Sync, AI Costs)","[""Unit"",""Integration"",""Contract"",""E2E"",""Performance"",""Security""]","[""Local/Dev"",""Staging (AWS)"",""Production""]","[""xUnit"",""flutter_test"",""integration_test"",""Maestro"",""k6"",""OWASP ZAP""]"

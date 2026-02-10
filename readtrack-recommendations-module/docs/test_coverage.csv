@@ -1,0 +1,4 @@
+"component_name","business_criticality","technical_complexity","change_frequency","test_types_required","unit_test_coverage","integration_test_coverage","e2e_test_coverage","automation_percentage","manual_test_effort","automated_test_effort","total_test_cases","risk_mitigation_score","quality_confidence","maintenance_overhead","tool_compatibility","team_skill_alignment"
+"Mobile Sync Module (Flutter)","Critical","High","Medium","[""Unit"",""Widget"",""Integration"",""Network Simulation""]","90","85","60","80","20","80","65","0.95","High","Medium","Good","Medium"
+"Subscription/Billing Service (.NET)","Critical","High","Low","[""Unit"",""Integration"",""Security"",""Contract""]","95","95","40","90","15","60","45","0.98","Very High","Low","Excellent","High"
+"AI Recommendation Engine","High","High","High","[""Unit"",""Performance"",""Integration""]","80","70","50","70","10","40","30","0.85","Medium","High","Medium","Medium"

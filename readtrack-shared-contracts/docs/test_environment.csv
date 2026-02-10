@@ -1,0 +1,3 @@
+"environment_name","environment_type","deployment_frequency","data_refresh_frequency","infrastructure_stack","service_dependencies","monitoring_tools","access_control","backup_strategy","disaster_recovery","cost_optimization","maintenance_window"
+"Local Development","Ephemeral","On Demand","Reset on start","Docker Compose (Postgres, LocalStack)","Mocked External APIs","Console Logs","Developer Local","None","Rebuild Container","Runs on dev machine","N/A"
+"Staging","Persistent","Per Merge to Main","Monthly (Sanitized Prod Data)","AWS (Fargate, Aurora Serverless)","Auth0 Sandbox; Stripe/Apple Sandbox","CloudWatch; Sentry","Dev Team + QA","Daily Snapshot","CDK Redeploy","Scale to 0 at night","Ad-hoc"

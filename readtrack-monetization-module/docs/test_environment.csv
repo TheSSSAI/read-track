@@ -1,0 +1,3 @@
+"environment_name","environment_type","deployment_frequency","data_refresh_frequency","infrastructure_stack","service_dependencies","monitoring_tools","access_control","backup_strategy","disaster_recovery","cost_optimization","maintenance_window"
+"Local (Dev)","Ephemeral","On Demand","On Demand","Docker Compose (DB, Redis, API)","Mocks for OpenAI/Google Books","Console Logs, Local Dashboard","Open","None","Rebuild container","Runs on dev machine","None"
+"Staging","Persistent","On Merge to Main","Weekly (Sanitized)","AWS (Fargate, Aurora Serverless)","Real External APIs (Sandbox/Test Keys)","CloudWatch, X-Ray","VPN / IP Allowlist","Daily Snapshot","CDK Redeploy","Aurora Auto-pause enabled","Weekends"

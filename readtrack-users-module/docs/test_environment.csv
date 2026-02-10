@@ -1,0 +1,2 @@
+"environment_name","environment_type","deployment_frequency","data_refresh_frequency","infrastructure_stack","service_dependencies","monitoring_tools","access_control","backup_strategy","disaster_recovery","cost_optimization","maintenance_window"
+"Staging (Sandbox)","Replica","Continuous","Monthly","AWS Fargate / Aurora Serverless","Apple Sandbox; Google Play Test; Auth0 Dev Tenant","CloudWatch; Sentry","Internal Team VPN","Point-in-time Recovery","N/A","Scale down off-hours","Ad-hoc"

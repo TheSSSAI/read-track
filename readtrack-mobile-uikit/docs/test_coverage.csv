@@ -1,0 +1,4 @@
+"component_name","business_criticality","technical_complexity","change_frequency","test_types_required","unit_test_coverage","integration_test_coverage","e2e_test_coverage","automation_percentage","manual_test_effort","automated_test_effort","total_test_cases","risk_mitigation_score","quality_confidence","maintenance_overhead","tool_compatibility","team_skill_alignment"
+"Mobile Offline Sync Engine","Critical","Very High","Medium","[""Unit"",""Integration"",""Resilience""]","95","90","75","90","20","80","120","0.95","High","High","Flutter Integration Test","Medium"
+"Monetization Backend (.NET)","Critical","High","Low","[""Unit"",""API Contract"",""Security""]","98","95","50","95","5","40","60","0.98","Very High","Low","xUnit","High"
+"AI Recommendation Service","High","Medium","High","[""Performance"",""Unit"",""Cost""]","85","70","40","70","10","20","40","0.85","Medium","Medium","K6 (Load Testing)","Low"

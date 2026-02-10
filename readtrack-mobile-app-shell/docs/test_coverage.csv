@@ -1,0 +1,4 @@
+"component_name","business_criticality","technical_complexity","change_frequency","test_types_required","unit_test_coverage","integration_test_coverage","e2e_test_coverage","automation_percentage","manual_test_effort","automated_test_effort","total_test_cases","risk_mitigation_score","quality_confidence","maintenance_overhead","tool_compatibility","team_skill_alignment"
+"Mobile App (Flutter)","Critical","High","High","[""Unit (BLoC)"",""Widget"",""Integration (Isar)""]","90","85","60","90","20","80","200","0.95","High","Medium","Native (flutter_test)","Excellent"
+"Backend API (.NET 8)","Critical","Medium","Medium","[""Unit (xUnit)"",""Integration (Testcontainers)"",""Contract""]","95","90","70","95","5","60","150","0.98","Very High","Low","Excellent","Good"
+"Infrastructure (AWS CDK)","High","Medium","Low","[""Static Analysis (cdk-nag)"",""Snapshot""]","100","50","20","100","2","10","40","0.9","High","Low","Good","Medium"

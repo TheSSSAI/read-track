@@ -1,0 +1,3 @@
+"environment_name","environment_type","deployment_frequency","infrastructure_stack","service_dependencies","data_refresh_frequency","access_control","cost_optimization","monitoring_tools"
+"Staging (Pre-Prod)","Cloud Replica","Per Merge to Main","AWS (Aurora Serverless, Redis, Fargate)","App Store Sandbox, Google Play Internal Track, OpenAI Test Key","Monthly (Sanitized)","Internal Team Only","Scale to zero at night; Reduced redundancy","CloudWatch, Sentry"
+"Development (Local)","Local/Docker","Continuous","Docker Compose (Postgres, Redis, WireMock)","Mocked External APIs","On Demand (Seeder Scripts)","Developer Local Machine","N/A","Console Logs, IDE Debugger"
