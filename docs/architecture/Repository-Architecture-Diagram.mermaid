@@ -1,0 +1,117 @@
+mermaid
+graph TD
+    subgraph "CI/CD Pipeline" as CICD
+        CICD_Repo[REPO-CI-CD]
+    end
+
+    subgraph "Frontend Application" as FE
+        subgraph "App Shell"
+            FE_App[REPO-FE-APP]
+        end
+        subgraph "Shared Libraries"
+            FE_Lib_UI[REPO-FE-LIB-UIKIT]
+            FE_Lib_API[REPO-FE-LIB-APICLIENT]
+        end
+    end
+
+    subgraph "Backend Application (Modular Monolith)" as BE
+        subgraph "Host"
+            BE_Host[REPO-BE-HOST]
+        end
+        subgraph "Business Modules"
+            BE_Mod_Users[REPO-BE-MOD-USERS]
+            BE_Mod_Monetization[REPO-BE-MOD-MONETIZATION]
+            BE_Mod_Reading[REPO-BE-MOD-READING]
+            BE_Mod_Engagement[REPO-BE-MOD-ENGAGEMENT]
+            BE_Mod_Recs[REPO-BE-MOD-RECOMMENDATIONS]
+        end
+        subgraph "Shared Libraries"
+            BE_Lib_Contracts[REPO-BE-LIB-CONTRACTS]
+            BE_Lib_Infra[REPO-BE-LIB-INFRA]
+        end
+    end
+
+    subgraph "Infrastructure as Code" as IA
+        IA_IaC[REPO-IA-IAC]
+    end
+
+    %% Frontend Dependencies
+    FE_App --> FE_Lib_UI
+    FE_App --> FE_Lib_API
+
+    %% Backend Dependencies
+    BE_Host --> BE_Mod_Users
+    BE_Host --> BE_Mod_Monetization
+    BE_Host --> BE_Mod_Reading
+    BE_Host --> BE_Mod_Engagement
+    BE_Host --> BE_Mod_Recs
+    BE_Host --> BE_Lib_Infra
+
+    BE_Mod_Users --> BE_Lib_Contracts
+    BE_Mod_Users --> BE_Lib_Infra
+    
+    BE_Mod_Monetization --> BE_Lib_Contracts
+    BE_Mod_Monetization --> BE_Lib_Infra
+    BE_Mod_Monetization --> BE_Mod_Users
+
+    BE_Mod_Reading --> BE_Lib_Contracts
+    BE_Mod_Reading --> BE_Lib_Infra
+    BE_Mod_Reading --> BE_Mod_Monetization
+
+    BE_Mod_Engagement --> BE_Lib_Contracts
+    BE_Mod_Engagement --> BE_Lib_Infra
+    BE_Mod_Engagement --> BE_Mod_Monetization
+    BE_Mod_Engagement --> BE_Mod_Reading
+
+    BE_Mod_Recs --> BE_Lib_Contracts
+    BE_Mod_Recs --> BE_Lib_Infra
+    BE_Mod_Recs --> BE_Mod_Monetization
+    BE_Mod_Recs --> BE_Mod_Reading
+
+    BE_Lib_Infra --> BE_Lib_Contracts
+
+    %% Integration & Deployment Dependencies
+    FE_Lib_API -.->|Consumes API| BE_Host
+    CICD_Repo -.->|Deploys| BE_Host
+    CICD_Repo -.->|Provisions| IA_IaC
+
+    %% Styling
+    classDef app fill:#e6f3ff,stroke:#007bff,stroke-width:2px
+    classDef module fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    classDef library fill:#fff8e1,stroke:#ffc107,stroke-width:2px
+    classDef infra fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
+    
+    class FE_App,BE_Host app
+    class BE_Mod_Users,BE_Mod_Monetization,BE_Mod_Reading,BE_Mod_Engagement,BE_Mod_Recs module
+    class FE_Lib_UI,FE_Lib_API,BE_Lib_Contracts,BE_Lib_Infra library
+    class IA_IaC,CICD_Repo infra
+
+
+mermaid
+sequenceDiagram
+    participant Client as Mobile Client
+    participant Host as API Host
+    participant Reading as Reading Module
+    participant MediatR as Event Bus
+    participant Engagement as Engagement Module
+    participant Recs as Recommendations Module
+
+    Client->>+Host: POST /api/v1/reading/sessions
+    Note right of Host: Request authorized and routed
+    Host->>+Reading: Handle(LogReadingSessionCommand)
+    Reading->>Reading: Validate request & save ReadingSession to DB
+    Note over Reading: Business logic for session logging
+    Reading->>+MediatR: Publish(ReadingSessionLogged Event)
+    MediatR-->>-Reading: Acknowledge
+    Reading-->>-Host: Return Success Response
+    Host-->>-Client: 200 OK
+
+    par
+        MediatR->>+Engagement: Handle(ReadingSessionLogged Event)
+        Engagement->>Engagement: Update Goal progress in DB
+        Engagement-->>-MediatR: Complete
+    and
+        MediatR->>+Recs: Handle(ReadingSessionLogged Event)
+        Recs->>Recs: Enqueue background job to update user's AI vector embeddings
+        Recs-->>-MediatR: Complete
+    end
