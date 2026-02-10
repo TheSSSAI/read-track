@@ -1,0 +1,2 @@
+"optimization_area","current_state","recommended_action","expected_benefit","implementation_cost","timeline","success_metrics","roi_calculation"
+"Workload Balancing","Backend utilization ~37%, Mobile utilization ~49%","Move TASK-LIB-001 (10h) from Backlog to Sprint 2 for Backend Dev","Increases Backend utilization to ~61%, de-risks Sprint 3","","Sprint 2 Planning","Balanced burn-down chart across all roles","Zero cost, high value delivery acceleration"

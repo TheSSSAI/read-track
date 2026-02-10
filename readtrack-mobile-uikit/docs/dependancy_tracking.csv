@@ -1,0 +1,4 @@
+"dependency_id","from_task","to_task","dependency_type","description","critical_path","lead_time_days","responsible_team","coordination_required","risk_level","mitigation_plan","status","resolution_date","impact_if_delayed","escalation_required"
+"DEP-001","TSK-INFRA-001","TSK-INFRA-002","Technical","Compute requires Network","true","2","DevOps","","Low","Standard patterns used","Active","2024-05-24","Delays ECS deployment",""
+"DEP-002","TSK-MOB-002","TSK-MOB-003","Technical","Queue requires DB Schema","true","3","Mobile","true","Medium","Define schema interface early","Active","2024-06-07","Delays sync implementation",""
+"DEP-003","TSK-AI-001","TSK-AI-002","Technical","RAG requires Index","true","4","Backend","true","High","Mock vector DB for service dev","Active","2024-07-08","Delays AI feature testing",""

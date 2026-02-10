@@ -1,0 +1,3 @@
+"optimization_area","current_state","recommended_action","expected_benefit","implementation_cost","timeline","success_metrics","roi_calculation"
+"Sprint 3 Balancing","Backend Dev overloaded (100% capacity on complex tasks)","Move WI-AI-001 (Embedding Job) analysis and design to Sprint 2 where Backend Dev has 16% utilization","Reduces Sprint 3 risk; Utilizes Sprint 2 slack","","Immediate","Sprint 3 Backend utilization < 80%","Prevents potential 1-week slip ($3000 value)"
+"Frontend Dev Utilization","Underutilized (~45%) across project","Assign responsibility for all Integration Tests and UI Polish tasks","Higher quality release; Faster velocity for Leads","","Sprint 2","Frontend Dev utilization > 70%","Better resource efficiency"

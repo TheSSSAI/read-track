@@ -1,0 +1,4 @@
+"dependency_id","from_task","to_task","dependency_type","description","critical_path","lead_time_days","responsible_team","coordination_required","risk_level","mitigation_plan","status","resolution_date","impact_if_delayed","escalation_required"
+"DEP-001","TSK-INFRA-001","TSK-INFRA-002","Technical","DB stack requires VPC","true","1","DevOps","","Low","Standard pattern","Active","2024-05-22","DB provisioning delayed",""
+"DEP-002","TSK-BE-007","TSK-AUTH-004","Technical","User Service requires User Entity","true","2","Backend","","Medium","Mock entity if needed","Active","2024-05-27","Auth logic delayed",""
+"DEP-003","TSK-MOB-004","TSK-SYNC-001","Technical","Sync Queue requires Isar schema setup","true","3","Mobile","","Medium","Define schema early","Active","2024-06-04","Offline sync delayed",""

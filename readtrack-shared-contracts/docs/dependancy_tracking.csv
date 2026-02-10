@@ -1,0 +1,4 @@
+"dependency_id","from_task","to_task","dependency_type","description","risk_level","mitigation_plan"
+"DEP-001","TASK-INFRA-002-02","TASK-BE-004-05","Technical","Integration tests require DB infrastructure or TestContainers configuration","Low","Use TestContainers to decouple from AWS Infra during dev"
+"DEP-002","TASK-BE-004-01","TASK-MOB-004-02","Technical","Mobile sync queue logic depends on Backend API contract definition","Medium","Finalize OpenAPI spec in Sprint 1 day 2"
+"DEP-003","TASK-MON-001-01","TASK-MON-001-03","Technical","Subscription Service depends on validated payload structure from Apple/Google handlers","High","Define internal domain event schema for subscriptions early"

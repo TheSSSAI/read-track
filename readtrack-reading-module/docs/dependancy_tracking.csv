@@ -1,0 +1,4 @@
+"dependency_id","from_task","to_task","dependency_type","description","critical_path","lead_time_days","responsible_team","coordination_required","risk_level","mitigation_plan","status","resolution_date","impact_if_delayed","escalation_required"
+"DEP-001","TASK-INFRA-001","TASK-INFRA-002","Technical","VPC must exist before ECS Cluster","true","1","DevOps","","Low","Design phase validation","Active","2025-05-05","Compute provisioning blocked",""
+"DEP-002","TASK-BE-004","TASK-MOB-002","Integration","Backend Sync Endpoint required for Mobile Sync Service","true","3","Backend Team","true","High","Define API contract (Swagger) first","Active","2025-05-20","Mobile offline features blocked","true"
+"DEP-003","TASK-MOB-001","TASK-MOB-002","Technical","Local DB models required for Sync Worker","true","1","Mobile Team","","Low","None","Active","2025-05-07","Sync implementation blocked",""

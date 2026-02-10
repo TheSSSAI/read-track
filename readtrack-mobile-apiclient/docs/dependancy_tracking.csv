@@ -1,0 +1,5 @@
+"dependency_id","from_task","to_task","dependency_type","description","critical_path","lead_time_days","responsible_team","risk_level","status"
+"DEP-001","TASK-INFRA-002","TASK-BE-SYNC-001","Technical","Database must be provisioned before backend API can connect","true","2","Backend Team","Low","Active"
+"DEP-002","TASK-BE-SYNC-001","TASK-MOB-003","Technical","Mobile sync logic requires backend endpoint contract","true","3","Mobile Team","Medium","Active"
+"DEP-003","TASK-MON-001","TASK-MON-004","Technical","Receipt validation requires a purchase token from client","","1","Backend Team","Low","Active"
+"DEP-004","TASK-AI-002","TASK-AI-004","Technical","Recommendation API requires vector store index","true","2","Backend Team","High","Active"

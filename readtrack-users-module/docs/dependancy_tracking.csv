@@ -1,0 +1,4 @@
+"dependency_id","from_task","to_task","dependency_type","description","critical_path","lead_time_days","responsible_team","coordination_required","risk_level","mitigation_plan","status","resolution_date","impact_if_delayed","escalation_required"
+"DEP-001","TASK-INF-001","TASK-INF-002","Technical","VPC must exist before Database creation","true","1","DevOps","","Low","Automate sequence in CDK","Active","2024-05-24","DB provisioning blocked",""
+"DEP-002","TASK-BE-001","TASK-AUTH-001","Technical","Backend shell required for Auth service","true","2","Backend","","Low","None","Active","2024-05-24","Auth blocked",""
+"DEP-003","TASK-INF-004","TASK-AI-001","Infrastructure","OpenSearch must be active for Embedding Job","","5","DevOps","true","Medium","Mock OpenSearch interface for dev","Active","2024-06-12","AI Feature delayed",""
