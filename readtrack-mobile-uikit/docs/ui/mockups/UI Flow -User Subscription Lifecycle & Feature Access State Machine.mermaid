@@ -1,0 +1,69 @@
+stateDiagram-v2
+    direction TB
+
+    %% State Definitions
+    state "Free Tier User" as Free {
+        [*] --> Unsubscribed
+        Unsubscribed : <b>Features</b>
+        Unsubscribed : • Ads Displayed
+        Unsubscribed : • Limit: 20 Library Items
+        Unsubscribed : • Limit: 1 Active Goal
+        Unsubscribed : • Limit: 5 AI Suggestions
+    }
+
+    state "Premium Tier" as Premium {
+        state "Active Subscription" as Active {
+            [*] --> AutoRenewOn
+            AutoRenewOn : <b>Features</b>
+            AutoRenewOn : • No Ads
+            AutoRenewOn : • Unlimited Items/Goals
+            AutoRenewOn : • Advanced Stats
+        }
+
+        state "Cancelled (Grace Period)" as Cancelled {
+            [*] --> AutoRenewOff
+            AutoRenewOff : <b>Status</b>
+            AutoRenewOff : • Access Retained until Period End
+            AutoRenewOff : • UI Shows "Re-subscribe" option
+        }
+    }
+
+    %% Transitions
+    [*] --> Free
+
+    %% Upgrade Path
+    Free --> Active : <b>User Action</b><br/>Purchase Success (US-019)
+
+    %% Cancellation Path
+    Active --> Cancelled : <b>Webhook/User Action</b><br/>Cancel Auto-Renewal (US-022)
+    
+    %% Recovery Path
+    Cancelled --> Active : <b>User Action</b><br/>Re-subscribe before expiry (US-022)
+
+    %% Expiration Paths
+    Active --> Free : <b>Webhook</b><br/>Payment Failed / Expired
+    Cancelled --> Free : <b>Webhook/Job</b><br/>Billing Period Ends (US-020)<br/><i>(Data Preserved, Limits Applied)</i>
+
+    %% Edge Cases / Handling
+    note right of Free
+        <b>On Downgrade (US-021):</b>
+        Existing data > limits is 
+        PRESERVED (Read-Only).
+        Adding NEW items is blocked.
+    end note
+
+    note left of Cancelled
+        <b>Source of Truth:</b>
+        Backend DB validates status
+        via App Store/Play Store
+        Server Notifications.
+    end note
+
+    %% Styling
+    classDef free fill:#f1f5f9,stroke:#64748b,stroke-width:2px,color:#0f172a
+    classDef premium fill:#fff7ed,stroke:#f97316,stroke-width:2px,color:#7c2d12
+    classDef cancelled fill:#fef2f2,stroke:#ef4444,stroke-width:2px,stroke-dasharray: 5 5,color:#991b1b
+
+    class Free free
+    class Active premium
+    class Cancelled cancelled

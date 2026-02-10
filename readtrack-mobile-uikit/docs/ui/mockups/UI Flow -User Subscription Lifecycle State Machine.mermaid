@@ -1,0 +1,76 @@
+stateDiagram-v2
+    direction TB
+
+    %% Initial State
+    [*] --> FreeUser : Account Creation
+
+    %% Free Tier State
+    state FreeUser {
+        [*] --> FreeActive
+        FreeActive --> FreeActive : Usage (Ads Shown)
+        note right of FreeActive
+            LIMITATIONS:
+            - Max 20 Books
+            - Max 1 Active Goal
+            - Max 5 AI Suggestions
+            - Ads Enabled
+        end note
+    }
+
+    %% Transition to Premium
+    FreeUser --> PremiumUser : Upgrade Purchase (IAP) \n[Webhook: SUBSCRIBED]
+
+    %% Premium Tier Composite State
+    state PremiumUser {
+        [*] --> Active
+
+        state Active {
+            [*] --> AutoRenewOn
+            note right of AutoRenewOn
+                BENEFITS:
+                - Unlimited Books/Goals
+                - No Ads
+                - Adv. Stats & AI
+            end note
+        }
+
+        state CancelledButActive {
+            [*] --> AutoRenewOff
+            note right of AutoRenewOff
+                Status: Pending Expiry
+                Access: FULL PREMIUM
+                (Until CurrentPeriodEnd)
+            end note
+        }
+
+        state PaymentIssue {
+            [*] --> InGracePeriod
+            note right of InGracePeriod
+                Status: Past Due
+                Access: FULL PREMIUM
+                (Platform Retry Logic)
+            end note
+        }
+
+        %% Internal Premium Transitions
+        Active --> CancelledButActive : User Cancels \n[Webhook: DID_CHANGE_RENEWAL_STATUS]
+        CancelledButActive --> Active : User Resubscribes \n[Webhook: DID_RECOVER/RENEW]
+        
+        Active --> PaymentIssue : Payment Failed \n[Webhook: DID_FAIL_TO_RENEW]
+        PaymentIssue --> Active : Payment Recovered \n[Webhook: DID_RECOVER]
+    }
+
+    %% Downgrade Transitions
+    CancelledButActive --> FreeUser : Subscription Expired \n[Webhook: EXPIRED / Daily Job]
+    PaymentIssue --> FreeUser : Grace Period Ended \n[Webhook: EXPIRED]
+
+    %% Styling
+    classDef free fill:#f1f5f9,stroke:#64748b,stroke-width:2px,color:#0f172a
+    classDef premium fill:#fff7ed,stroke:#f97316,stroke-width:2px,color:#7c2d12
+    classDef error fill:#fef2f2,stroke:#ef4444,stroke-width:2px,color:#7f1d1d
+    classDef warning fill:#fffbeb,stroke:#f59e0b,stroke-width:2px,color:#78350f
+
+    class FreeUser free
+    class PremiumUser, Active, CancelledButActive premium
+    class PaymentIssue error
+    class CancelledButActive warning

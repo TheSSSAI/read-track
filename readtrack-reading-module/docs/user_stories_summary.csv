@@ -1,0 +1,2 @@
+"total_stories","total_story_points","must_have_stories","should_have_stories","could_have_stories","epics_identified","estimated_sprints","key_dependencies"
+"6","47","5","1","0","[""Authentication & Onboarding"",""Library Management"",""Reading Tracking"",""AI & Personalization"",""Monetization"",""Infrastructure & Operations""]","4","[""Infrastructure (US-006) blocks Backend deployment"",""Backend Auth (US-001) blocks Library (US-002) and Monetization (US-005)"",""Mobile Core (WI-MOB-001/002) blocks all Mobile Features""]"

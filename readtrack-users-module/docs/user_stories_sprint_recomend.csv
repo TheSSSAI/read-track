@@ -1,0 +1,3 @@
+"sprint_number","story_ids","total_points","sprint_goal","dependencies_resolved"
+"1","[""US-INF-001"",""US-SYS-001""]","11","Establish the cloud infrastructure foundation and the basic mobile application shell with theming.","true"
+"2","[""US-SEC-001"",""US-LIB-001""]","13","Enable secure user authentication and the core capability to search for books via the proxy service.","true"

@@ -1,0 +1,2 @@
+"total_stories","total_story_points","must_have_stories","should_have_stories","could_have_stories","epics_identified","estimated_sprints","key_dependencies"
+"6","60","4","1","0","[""Core Authentication & User Management"",""Library Management & Offline Synchronization"",""Monetization & Subscription Management"",""AI Recommendations & RAG Pipeline"",""Infrastructure & DevOps""]","3","[""Authentication (US-002) blocks Library (US-037) and Subscription (US-019)"",""Library (US-037) blocks Sync (US-101) and AI (US-091)""]"

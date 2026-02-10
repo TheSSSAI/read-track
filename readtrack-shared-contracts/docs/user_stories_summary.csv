@@ -1,0 +1,2 @@
+"total_stories","total_story_points","must_have_stories","should_have_stories","could_have_stories","epics_identified","estimated_sprints","key_dependencies"
+"6","52","4","1","0","[""Infrastructure & Security"",""Core Features"",""User Experience"",""Data Management"",""Monetization""]","4","[""Infrastructure setup (US-001) blocks Backend deployment"",""Authentication (US-002) blocks all user-specific features"",""Library logic (US-003) blocks sync implementation""]"

@@ -1,0 +1,2 @@
+"total_stories","total_story_points","must_have_stories","should_have_stories","could_have_stories","epics_identified","estimated_sprints","key_dependencies"
+"6","55","5","1","0","[""Cloud Infrastructure & DevOps Foundation"",""Identity & User Management"",""Core Library & Offline Sync"",""AI Recommendation Engine""]","3","[""US-INFRA-01 blocks deployment of all other backend services"",""US-AUTH-01 is required for secure API access in Core and AI features""]"

@@ -1,0 +1,2 @@
+"total_stories","total_story_points","must_have_stories","should_have_stories","could_have_stories","epics_identified","estimated_sprints","key_dependencies"
+"6","42","5","1","0","[""Mobile Core & Offline Architecture"",""AI Recommendation Engine"",""Monetization & Subscriptions"",""Security & Compliance"",""Mobile Authentication"",""User Management & Privacy""]","4","[""WI-INFRA-001 (Core Infra)"",""WI-BE-001 (Backend Shell)"",""WI-MOB-001 (Flutter Setup)""]"

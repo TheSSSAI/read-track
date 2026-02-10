@@ -1,0 +1,5 @@
+"sprint_number","story_ids","total_points","sprint_goal","dependencies_resolved"
+"1","[""US-001"",""US-002""]","18","Establish secure cloud infrastructure and enable user authentication to support feature development.","true"
+"2","[""US-003"",""US-004""]","13","Deliver core value: Enable users to manage their library and view their dashboard.","true"
+"3","[""US-005""]","13","Implement robust offline-first capability and data synchronization.","true"
+"4","[""US-006""]","8","Enable monetization features with In-App Purchases.","true"
