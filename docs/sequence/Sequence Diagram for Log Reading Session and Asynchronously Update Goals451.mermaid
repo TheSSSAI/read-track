@@ -1,0 +1,37 @@
+sequenceDiagram
+    actor "Flutter Mobile Client" as FlutterMobileClient
+    participant "Backend API Host" as BackendAPIHost
+    participant "Reading Module" as ReadingModule
+    participant "Infrastructure & Persistence" as InfrastructurePersistence
+    participant "Engagement Module" as EngagementModule
+
+    activate BackendAPIHost
+    FlutterMobileClient->>BackendAPIHost: 1. User submits reading session progress.
+    BackendAPIHost-->>FlutterMobileClient: 200 OK with SessionDto
+    activate ReadingModule
+    BackendAPIHost->>ReadingModule: 2. Dispatch command to log the reading session.
+    ReadingModule-->>BackendAPIHost: Result<SessionDto>
+    activate InfrastructurePersistence
+    ReadingModule->>InfrastructurePersistence: 3. Begin transaction and validate request.
+    InfrastructurePersistence-->>ReadingModule: Validation success/failure
+    ReadingModule->>InfrastructurePersistence: 4. Create ReadingSession entity and dispatch domain event.
+    InfrastructurePersistence-->>ReadingModule: Entity state and event are staged.
+    ReadingModule->>InfrastructurePersistence: 5. Commit transaction and publish events.
+    InfrastructurePersistence-->>ReadingModule: Commit successful.
+    activate EngagementModule
+    InfrastructurePersistence->>EngagementModule: 6. Handle ReadingSessionLogged event.
+    EngagementModule->>InfrastructurePersistence: 7. Fetch user's active goals.
+    InfrastructurePersistence-->>EngagementModule: List<Goal>
+    EngagementModule->>EngagementModule: 8. [Loop] Update progress for each goal.
+    EngagementModule-->>EngagementModule: Updated Goal entities.
+    EngagementModule->>InfrastructurePersistence: 9. Save updated goal progress.
+    InfrastructurePersistence-->>EngagementModule: Commit successful.
+    FlutterMobileClient->>FlutterMobileClient: 10. Update UI with new session and refresh goal progress.
+
+    note over EngagementModule: CRITICAL IMPLEMENTATION DETAIL: The UpdateGoalProgressOnReadingSessionLoggedHandler must swallow ...
+    note over InfrastructurePersistence: The Domain Event Dispatcher pattern is used here. Events are collected on domain entities and dis...
+
+    deactivate EngagementModule
+    deactivate InfrastructurePersistence
+    deactivate ReadingModule
+    deactivate BackendAPIHost

@@ -1,0 +1,28 @@
+sequenceDiagram
+    actor "Flutter Mobile Client" as FlutterMobileClient
+    participant "ASP.NET Core Backend" as ASPNETCoreBackend
+    participant "Polly Resilience Policy" as PollyResiliencePolicy
+    participant "Google Books API" as GoogleBooksAPI
+
+    ASPNETCoreBackend->>GoogleBooksAPI: 1. Initial requests fail, tripping the circuit breaker
+    activate PollyResiliencePolicy
+    ASPNETCoreBackend->>PollyResiliencePolicy: 1.1. ExecuteAsync(apiCall)
+    PollyResiliencePolicy-->>ASPNETCoreBackend: Failure Response
+    activate GoogleBooksAPI
+    PollyResiliencePolicy->>GoogleBooksAPI: 1.2. GET /books/v1/volumes?q=isbn:...
+    GoogleBooksAPI-->>PollyResiliencePolicy: 503 Service Unavailable
+    PollyResiliencePolicy->>PollyResiliencePolicy: 2. Circuit state transitions to 'Open'
+    activate ASPNETCoreBackend
+    FlutterMobileClient->>ASPNETCoreBackend: 3. GET /api/v1/books/search?isbn=978-0321765723
+    ASPNETCoreBackend-->>FlutterMobileClient: 424 Failed Dependency with fallback payload
+    ASPNETCoreBackend->>PollyResiliencePolicy: 4. ExecuteAsync(apiCall)
+    PollyResiliencePolicy-->>ASPNETCoreBackend: Throws BrokenCircuitException
+    ASPNETCoreBackend->>ASPNETCoreBackend: 5. Catch BrokenCircuitException and execute fallback logic
+    FlutterMobileClient->>FlutterMobileClient: 6. Render manual entry form
+    PollyResiliencePolicy->>PollyResiliencePolicy: 7. After break duration, circuit transitions to 'Half-Open'
+
+    note over PollyResiliencePolicy: The transition to 'Half-Open' state and the subsequent trial request are critical for automatic r...
+
+    deactivate ASPNETCoreBackend
+    deactivate GoogleBooksAPI
+    deactivate PollyResiliencePolicy

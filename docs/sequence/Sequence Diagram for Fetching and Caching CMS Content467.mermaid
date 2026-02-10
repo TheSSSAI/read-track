@@ -1,0 +1,29 @@
+sequenceDiagram
+    actor "Flutter Mobile Client" as FlutterMobileClient
+    participant "Backend API Host" as BackendAPIHost
+    participant "Redis Cache" as RedisCache
+    participant "Contentful CMS API" as ContentfulCMSAPI
+
+    activate BackendAPIHost
+    FlutterMobileClient->>BackendAPIHost: 1. GET /api/v1/tips
+    BackendAPIHost-->>FlutterMobileClient: Returns 200 OK with TipDto[] on success, or 503 Service Unavailable on critical failure.
+    activate RedisCache
+    BackendAPIHost->>RedisCache: 2. Attempt to retrieve cached content
+    RedisCache-->>BackendAPIHost: Returns a serialized JSON string if found, otherwise returns (nil).
+    RedisCache->>BackendAPIHost: 3. alt: [Cache Hit]
+    RedisCache->>BackendAPIHost: 3.1. Return cached JSON string
+    BackendAPIHost->>FlutterMobileClient: 3.2. 200 OK
+    RedisCache->>BackendAPIHost: 4. alt: [Cache Miss]
+    RedisCache->>BackendAPIHost: 4.1. Return (nil)
+    BackendAPIHost->>ContentfulCMSAPI: 4.2. loop: [Resilience Policy: Retry 3x, Circuit Breaker 5 fails]
+    ContentfulCMSAPI->>BackendAPIHost: 4.3. alt: [Contentful call succeeds]
+    ContentfulCMSAPI->>BackendAPIHost: 4.4. alt: [Contentful call fails after all retries]
+    BackendAPIHost->>FlutterMobileClient: 4.5. 200 OK
+    FlutterMobileClient->>FlutterMobileClient: 5. Persist received content to local Isar database
+
+    note over FlutterMobileClient: Client-Side Fallback: If the mobile client receives a 5xx error from the backend, it MUST attempt...
+    note over RedisCache: Cache Invalidation Strategy: While this sequence describes the read path, cache invalidation is h...
+    note over BackendAPIHost: Stale-While-Revalidate: For enhanced resilience, the backend can be configured to serve stale dat...
+
+    deactivate RedisCache
+    deactivate BackendAPIHost

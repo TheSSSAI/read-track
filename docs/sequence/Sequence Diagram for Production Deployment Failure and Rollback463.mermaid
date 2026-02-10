@@ -1,0 +1,30 @@
+sequenceDiagram
+    participant "GitHub Actions" as GitHubActions
+    participant "AWS CloudFormation" as AWSCloudFormation
+    participant "AWS CloudWatch" as AWSCloudWatch
+    participant "Public Status Page Service" as PublicStatusPageService
+    participant "Team Notification Service" as TeamNotificationService
+
+    activate AWSCloudFormation
+    GitHubActions->>AWSCloudFormation: 1. Executes 'npx aws-cdk deploy ReadTrackProdStack --require-approval never' for new version (v1.1.0)
+    AWSCloudFormation-->>GitHubActions: Deployment in progress...
+    AWSCloudFormation->>GitHubActions: 2. Deployment v1.1.0 completes
+    AWSCloudWatch->>TeamNotificationService: 3. Fires alarm: 'API_5xx_Error_Rate_High' state changes to ALARM
+    activate AWSCloudWatch
+    GitHubActions->>AWSCloudWatch: 4. Post-deployment step: Polls for alarm state for 5 minutes
+    AWSCloudWatch-->>GitHubActions: Alarm State: 'ALARM'
+    GitHubActions->>GitHubActions: 5. Detects failure status and triggers 'on-failure' rollback job
+    GitHubActions->>PublicStatusPageService: 6. POST /api/incidents - Create incident: 'Investigating issues with a recent deployment.'
+    PublicStatusPageService-->>GitHubActions: 201 Created { incidentId: 'inc-123' }
+    GitHubActions->>AWSCloudFormation: 7. Executes 'cdk deploy' for previous stable version (v1.0.0)
+    AWSCloudFormation-->>GitHubActions: Rollback deployment in progress...
+    AWSCloudFormation->>GitHubActions: 8. Rollback to v1.0.0 completes successfully
+    GitHubActions->>PublicStatusPageService: 9. PATCH /api/incidents/inc-123 - Update incident status to 'resolved'
+    PublicStatusPageService-->>GitHubActions: 200 OK
+    GitHubActions->>TeamNotificationService: 10. Posts message: 'CRITICAL: Production deployment v1.1.0 failed and was automatically rolled back to v1.0.0.'
+
+    note over GitHubActions: The 'failure' trigger is critical. It's not just a failed command, but a semantic failure detecte...
+    note over AWSCloudFormation: The rollback mechanism relies on the immutability of git tags to ensure the exact code of the pre...
+
+    deactivate AWSCloudWatch
+    deactivate AWSCloudFormation

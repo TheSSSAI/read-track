@@ -1,0 +1,976 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-AF-001
+
+## 1.2 Name
+
+User Social Authentication and JWT Issuance
+
+## 1.3 Description
+
+Handles user sign-up and login exclusively through third-party social providers (Google/Apple) via Auth0. Upon successful authentication, the backend validates the provider's token, creates a user record if one doesn't exist, encodes their role into a custom JWT, and issues a short-lived access token and a long-lived refresh token.
+
+## 1.4 Type
+
+🔹 AuthenticationFlow
+
+## 1.5 Purpose
+
+To securely authenticate users without managing passwords, creating a seamless and secure login experience as required by REQ-USR-001 and REQ-CON-001.
+
+## 1.6 Complexity
+
+High
+
+## 1.7 Priority
+
+🚨 Critical
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-FE-MOBILE
+- REPO-BE-HOST
+- Auth0
+- Google/Apple Identity Provider
+
+## 1.10 Key Interactions
+
+- User taps 'Sign in with Google/Apple' on the mobile client.
+- Client initiates the native OAuth/OIDC flow with the social provider.
+- User authenticates with the provider, which returns an ID token to the client.
+- Client sends the provider's ID token to the backend's /auth/social endpoint.
+- Backend validates the token with Auth0 to ensure its integrity and authenticity.
+- Backend queries its database to find the user or creates a new user record with a 'Free User' role.
+- Backend generates and returns its own JWT access token (with role claims) and a secure refresh token to the client.
+- Client securely stores the tokens for subsequent API calls.
+
+## 1.11 Triggers
+
+- User initiates a login or registration action.
+
+## 1.12 Outcomes
+
+- User is successfully authenticated within the application.
+- A valid session is established, managed by JWTs.
+- A user record exists in the primary database with the correct default role.
+
+## 1.13 Business Rules
+
+- Native email/password authentication is explicitly disallowed (TC-003).
+- A user's role ('Free User' by default) must be determined and encoded as a claim into the JWT.
+
+## 1.14 Error Scenarios
+
+- The social provider token is invalid, expired, or fraudulent.
+- The backend fails to connect to Auth0 for token validation.
+- User revokes application permissions from their social provider account.
+
+## 1.15 Integration Points
+
+- Auth0 (SI-002)
+- Google Sign-In / Sign in with Apple SDKs (SI-001)
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-AF-001-IMPL
+
+## 2.2 Name
+
+Implementation: User Social Authentication and Custom JWT Issuance Flow
+
+## 2.3 Description
+
+Provides a detailed technical specification for the user authentication sequence using third-party social providers (Google/Apple) and Auth0. This sequence covers the client-side OAuth/OIDC flow, backend token validation, user record provisioning, and the generation of a custom JWT access token and refresh token. This implementation is designed to meet requirements REQ-USR-001 and TC-003.
+
+## 2.4 Participants
+
+### 2.4.1 Actor
+
+#### 2.4.1.1 Repository Id
+
+User
+
+#### 2.4.1.2 Display Name
+
+User
+
+#### 2.4.1.3 Type
+
+🔹 Actor
+
+#### 2.4.1.4 Technology
+
+Human
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #999999 |
+| Stereotype |  |
+
+### 2.4.2.0 Mobile Application
+
+#### 2.4.2.1 Repository Id
+
+REPO-FE-MOBILE
+
+#### 2.4.2.2 Display Name
+
+Flutter Mobile Client
+
+#### 2.4.2.3 Type
+
+🔹 Mobile Application
+
+#### 2.4.2.4 Technology
+
+Flutter 3.x, Dart 3.x
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | boundary |
+| Color | #1E88E5 |
+| Stereotype | REPO-FE-MOBILE |
+
+### 2.4.3.0 External Service
+
+#### 2.4.3.1 Repository Id
+
+Google-Apple-IdP
+
+#### 2.4.3.2 Display Name
+
+Google/Apple Identity Provider
+
+#### 2.4.3.3 Type
+
+🔹 External Service
+
+#### 2.4.3.4 Technology
+
+OAuth 2.0 / OIDC
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #43A047 |
+| Stereotype | External IdP |
+
+### 2.4.4.0 Application Service
+
+#### 2.4.4.1 Repository Id
+
+REPO-BE-HOST
+
+#### 2.4.4.2 Display Name
+
+Backend API Host
+
+#### 2.4.4.3 Type
+
+🔹 Application Service
+
+#### 2.4.4.4 Technology
+
+ASP.NET Core 8, C#
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | boundary |
+| Color | #F4511E |
+| Stereotype | REPO-BE-HOST |
+
+### 2.4.5.0 Identity Service
+
+#### 2.4.5.1 Repository Id
+
+Auth0-Service
+
+#### 2.4.5.2 Display Name
+
+Auth0
+
+#### 2.4.5.3 Type
+
+🔹 Identity Service
+
+#### 2.4.5.4 Technology
+
+Auth0 API
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #FB8C00 |
+| Stereotype | External Auth |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 User Interaction
+
+#### 2.5.1.1 Source Id
+
+User
+
+#### 2.5.1.2 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.1.3 Message
+
+1. Taps 'Sign in with Google' or 'Sign in with Apple' button.
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 User Interaction
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+
+
+#### 2.5.1.8 Has Return
+
+❌ No
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+##### 2.5.1.10.1 Protocol
+
+UI Event
+
+##### 2.5.1.10.2 Method
+
+onTap()
+
+##### 2.5.1.10.3 Parameters
+
+*No items available*
+
+##### 2.5.1.10.4 Authentication
+
+N/A
+
+##### 2.5.1.10.5 Error Handling
+
+UI should handle tap event correctly.
+
+##### 2.5.1.10.6 Performance
+
+###### 2.5.1.10.6.1 Latency
+
+<50ms
+
+### 2.5.2.0.0.0 SDK Call
+
+#### 2.5.2.1.0.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.2.2.0.0 Target Id
+
+Google-Apple-IdP
+
+#### 2.5.2.3.0.0 Message
+
+2. Initiates native OAuth 2.0/OIDC flow using platform SDK.
+
+#### 2.5.2.4.0.0 Sequence Number
+
+2
+
+#### 2.5.2.5.0.0 Type
+
+🔹 SDK Call
+
+#### 2.5.2.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7.0.0 Return Message
+
+4. Returns OIDC ID Token upon successful user authentication.
+
+#### 2.5.2.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.2.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.2.10.0.0 Technical Details
+
+##### 2.5.2.10.1.0 Protocol
+
+Native SDK
+
+##### 2.5.2.10.2.0 Method
+
+google_sign_in.signIn() or sign_in_with_apple.getAppleIDCredential()
+
+##### 2.5.2.10.3.0 Parameters
+
+- scopes: ['email', 'profile']
+
+##### 2.5.2.10.4.0 Authentication
+
+Client ID is configured within the app.
+
+##### 2.5.2.10.5.0 Error Handling
+
+Handle user cancellation (PlatformException with 'cancelled' code), network errors, or account errors returned by the SDK.
+
+##### 2.5.2.10.6.0 Performance
+
+###### 2.5.2.10.6.1 Latency
+
+Variable, user-dependent.
+
+### 2.5.3.0.0.0 User Interaction
+
+#### 2.5.3.1.0.0 Source Id
+
+Google-Apple-IdP
+
+#### 2.5.3.2.0.0 Target Id
+
+User
+
+#### 2.5.3.3.0.0 Message
+
+3. Presents native authentication prompt (e.g., login form, biometrics).
+
+#### 2.5.3.4.0.0 Sequence Number
+
+3
+
+#### 2.5.3.5.0.0 Type
+
+🔹 User Interaction
+
+#### 2.5.3.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7.0.0 Return Message
+
+User authenticates.
+
+#### 2.5.3.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.3.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.3.10.0.0 Technical Details
+
+##### 2.5.3.10.1.0 Protocol
+
+OS Native UI
+
+##### 2.5.3.10.2.0 Method
+
+N/A
+
+##### 2.5.3.10.3.0 Parameters
+
+*No items available*
+
+##### 2.5.3.10.4.0 Authentication
+
+User credentials (password, biometrics).
+
+##### 2.5.3.10.5.0 Error Handling
+
+Handled by the OS and identity provider.
+
+##### 2.5.3.10.6.0 Performance
+
+###### 2.5.3.10.6.1 Latency
+
+Variable.
+
+### 2.5.4.0.0.0 API Request
+
+#### 2.5.4.1.0.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.4.2.0.0 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.4.3.0.0 Message
+
+5. POST /api/v1/auth/social - Sends provider's ID Token for validation.
+
+#### 2.5.4.4.0.0 Sequence Number
+
+5
+
+#### 2.5.4.5.0.0 Type
+
+🔹 API Request
+
+#### 2.5.4.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7.0.0 Return Message
+
+12. Returns { accessToken, refreshToken, expiresIn }.
+
+#### 2.5.4.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.4.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.4.10.0.0 Technical Details
+
+##### 2.5.4.10.1.0 Protocol
+
+HTTPS
+
+##### 2.5.4.10.2.0 Method
+
+POST
+
+##### 2.5.4.10.3.0 Parameters
+
+| Property | Value |
+|----------|-------|
+| Body | {"provider": "google" \| "apple", "idToken": "<pro... |
+
+##### 2.5.4.10.4.0 Authentication
+
+N/A - This is an open endpoint.
+
+##### 2.5.4.10.5.0 Error Handling
+
+Handle HTTP status codes: 400 (Bad Request), 401 (Unauthorized if token is invalid), 500 (Server Error), 503 (Auth0 unavailable).
+
+##### 2.5.4.10.6.0 Performance
+
+###### 2.5.4.10.6.1 Latency
+
+Must adhere to overall transaction latency target.
+
+### 2.5.5.0.0.0 API Request
+
+#### 2.5.5.1.0.0 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.5.2.0.0 Target Id
+
+Auth0-Service
+
+#### 2.5.5.3.0.0 Message
+
+6. Validates received ID Token via Auth0 API.
+
+#### 2.5.5.4.0.0 Sequence Number
+
+6
+
+#### 2.5.5.5.0.0 Type
+
+🔹 API Request
+
+#### 2.5.5.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7.0.0 Return Message
+
+7. Returns success with decoded claims or failure.
+
+#### 2.5.5.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.5.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.5.10.0.0 Technical Details
+
+##### 2.5.5.10.1.0 Protocol
+
+HTTPS
+
+##### 2.5.5.10.2.0 Method
+
+Auth0 SDK's token validation method (e.g., using JWKS endpoint).
+
+##### 2.5.5.10.3.0 Parameters
+
+- ID Token string
+
+##### 2.5.5.10.4.0 Authentication
+
+Backend uses its Auth0 Client ID/Secret or API key.
+
+##### 2.5.5.10.5.0 Error Handling
+
+Implement Retry and Circuit Breaker patterns (using Polly) for network or transient Auth0 errors. A critical failure should return HTTP 503 to the client.
+
+##### 2.5.5.10.6.0 Performance
+
+###### 2.5.5.10.6.1 Latency
+
+< 200ms P95
+
+### 2.5.6.0.0.0 Database Query
+
+#### 2.5.6.1.0.0 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.6.2.0.0 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.6.3.0.0 Message
+
+8. [DB] Find user by provider ID and email claim.
+
+#### 2.5.6.4.0.0 Sequence Number
+
+8
+
+#### 2.5.6.5.0.0 Type
+
+🔹 Database Query
+
+#### 2.5.6.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7.0.0 Return Message
+
+Returns user record or null.
+
+#### 2.5.6.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.6.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.6.10.0.0 Technical Details
+
+##### 2.5.6.10.1.0 Protocol
+
+Internal/DB Connection
+
+##### 2.5.6.10.2.0 Method
+
+UsersRepository.FindByProviderAsync(provider, providerUserId)
+
+##### 2.5.6.10.3.0 Parameters
+
+- provider: string
+- providerUserId: string
+
+##### 2.5.6.10.4.0 Authentication
+
+Database connection string.
+
+##### 2.5.6.10.5.0 Error Handling
+
+Handle potential database connection errors or timeouts. Log errors and return HTTP 500.
+
+##### 2.5.6.10.6.0 Performance
+
+###### 2.5.6.10.6.1 Latency
+
+< 20ms P95
+
+### 2.5.7.0.0.0 Database Command
+
+#### 2.5.7.1.0.0 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.7.2.0.0 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.7.3.0.0 Message
+
+9. [Conditional] If user is null, create new user record with 'Free User' role.
+
+#### 2.5.7.4.0.0 Sequence Number
+
+9
+
+#### 2.5.7.5.0.0 Type
+
+🔹 Database Command
+
+#### 2.5.7.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.7.7.0.0 Return Message
+
+Returns new user record.
+
+#### 2.5.7.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.7.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.7.10.0.0 Technical Details
+
+##### 2.5.7.10.1.0 Protocol
+
+Internal/DB Connection
+
+##### 2.5.7.10.2.0 Method
+
+UsersRepository.CreateAsync(newUser)
+
+##### 2.5.7.10.3.0 Parameters
+
+- newUser: UserEntity
+
+##### 2.5.7.10.4.0 Authentication
+
+Database connection string.
+
+##### 2.5.7.10.5.0 Error Handling
+
+Handle database constraints (e.g., unique email violation). Log error and return HTTP 500.
+
+##### 2.5.7.10.6.0 Performance
+
+###### 2.5.7.10.6.1 Latency
+
+< 30ms P95
+
+### 2.5.8.0.0.0 Internal Logic
+
+#### 2.5.8.1.0.0 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.8.2.0.0 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.8.3.0.0 Message
+
+10. Generates custom short-lived JWT access token.
+
+#### 2.5.8.4.0.0 Sequence Number
+
+10
+
+#### 2.5.8.5.0.0 Type
+
+🔹 Internal Logic
+
+#### 2.5.8.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.8.7.0.0 Return Message
+
+Returns signed access token string.
+
+#### 2.5.8.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.8.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.8.10.0.0 Technical Details
+
+##### 2.5.8.10.1.0 Protocol
+
+In-Memory
+
+##### 2.5.8.10.2.0 Method
+
+TokenService.GenerateAccessToken(user)
+
+##### 2.5.8.10.3.0 Parameters
+
+- user: UserEntity
+
+##### 2.5.8.10.4.0 Authentication
+
+Uses a private signing key stored securely (e.g., AWS Secrets Manager).
+
+##### 2.5.8.10.5.0 Error Handling
+
+Handle errors in token generation logic.
+
+##### 2.5.8.10.6.0 Performance
+
+###### 2.5.8.10.6.1 Latency
+
+< 5ms
+
+### 2.5.9.0.0.0 Internal Logic & DB Command
+
+#### 2.5.9.1.0.0 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.9.2.0.0 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.9.3.0.0 Message
+
+11. Generates secure, long-lived refresh token and stores it.
+
+#### 2.5.9.4.0.0 Sequence Number
+
+11
+
+#### 2.5.9.5.0.0 Type
+
+🔹 Internal Logic & DB Command
+
+#### 2.5.9.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.9.7.0.0 Return Message
+
+Returns refresh token string.
+
+#### 2.5.9.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.9.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.9.10.0.0 Technical Details
+
+##### 2.5.9.10.1.0 Protocol
+
+In-Memory/DB Connection
+
+##### 2.5.9.10.2.0 Method
+
+TokenService.GenerateAndStoreRefreshToken(userId)
+
+##### 2.5.9.10.3.0 Parameters
+
+- userId: Guid
+
+##### 2.5.9.10.4.0 Authentication
+
+N/A
+
+##### 2.5.9.10.5.0 Error Handling
+
+Handle failure to store the refresh token in the database.
+
+##### 2.5.9.10.6.0 Performance
+
+###### 2.5.9.10.6.1 Latency
+
+< 25ms
+
+### 2.5.10.0.0.0 Internal Logic
+
+#### 2.5.10.1.0.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.10.2.0.0 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.10.3.0.0 Message
+
+13. Securely stores access and refresh tokens.
+
+#### 2.5.10.4.0.0 Sequence Number
+
+13
+
+#### 2.5.10.5.0.0 Type
+
+🔹 Internal Logic
+
+#### 2.5.10.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.10.7.0.0 Return Message
+
+
+
+#### 2.5.10.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.10.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.10.10.0.0 Technical Details
+
+##### 2.5.10.10.1.0 Protocol
+
+In-Memory/Secure Storage
+
+##### 2.5.10.10.2.0 Method
+
+SecureStorage.write(key: 'accessToken', value: ...)
+
+##### 2.5.10.10.3.0 Parameters
+
+- Tokens received from backend
+
+##### 2.5.10.10.4.0 Authentication
+
+N/A
+
+##### 2.5.10.10.5.0 Error Handling
+
+Handle potential errors writing to secure storage.
+
+##### 2.5.10.10.6.0 Performance
+
+###### 2.5.10.10.6.1 Latency
+
+< 10ms
+
+## 2.6.0.0.0.0 Notes
+
+### 2.6.1.0.0.0 Content
+
+#### 2.6.1.1.0.0 Content
+
+Security Checkpoint: The backend MUST treat the ID Token from the client as untrusted until it has been successfully validated by Auth0.
+
+#### 2.6.1.2.0.0 Position
+
+top-right
+
+#### 2.6.1.3.0.0 Participant Id
+
+REPO-BE-HOST
+
+#### 2.6.1.4.0.0 Sequence Number
+
+5
+
+### 2.6.2.0.0.0 Content
+
+#### 2.6.2.1.0.0 Content
+
+Audit Requirement: All successful and failed login attempts must be logged to a separate, immutable audit trail with user ID (if available), source IP, and user agent. Event types: 'USER_LOGIN_SUCCESS', 'USER_LOGIN_FAILURE'.
+
+#### 2.6.2.2.0.0 Position
+
+bottom-right
+
+#### 2.6.2.3.0.0 Participant Id
+
+REPO-BE-HOST
+
+#### 2.6.2.4.0.0 Sequence Number
+
+12
+
+### 2.6.3.0.0.0 Content
+
+#### 2.6.3.1.0.0 Content
+
+Data Flow: The custom JWT access token MUST contain the following claims: 'sub' (internal user ID), 'role' ('free_user' or 'premium_user'), 'iss' (issuer name), 'aud' (audience), 'exp' (expiry timestamp).
+
+#### 2.6.3.2.0.0 Position
+
+bottom-left
+
+#### 2.6.3.3.0.0 Participant Id
+
+REPO-BE-HOST
+
+#### 2.6.3.4.0.0 Sequence Number
+
+10
+
+## 2.7.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | The backend must use an asymmetric signing algorit... |
+| Performance Targets | The end-to-end latency for the backend processing ... |
+| Error Handling Strategy | If the provider's ID token is invalid (step 7), th... |
+| Testing Considerations | Integration tests should mock the responses from t... |
+| Monitoring Requirements | Key metrics to monitor: login success rate, login ... |
+| Deployment Considerations | Auth0 and social provider credentials (Client IDs/... |
+

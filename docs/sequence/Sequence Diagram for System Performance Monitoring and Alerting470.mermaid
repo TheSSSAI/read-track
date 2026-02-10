@@ -1,0 +1,23 @@
+sequenceDiagram
+    participant "Backend API Host" as BackendAPIHost
+    participant "AWS CloudWatch" as AWSCloudWatch
+    participant "Amazon SNS" as AmazonSNS
+
+    activate BackendAPIHost
+    BackendAPIHost->>BackendAPIHost: 1. Serves continuous production traffic (e.g., GET /api/v1/dashboard).
+    BackendAPIHost-->>BackendAPIHost: HTTP 200 OK with dashboard data
+    BackendAPIHost->>AWSCloudWatch: 2. [OTLP Exporter] Publishes performance metric for each completed request.
+    AWSCloudWatch->>AWSCloudWatch: 3. [Alarm Evaluation] Continuously evaluates 'ApiLatencyP95Alarm' every minute.
+    AWSCloudWatch-->>AWSCloudWatch: Evaluation Result: OK or BREACHING
+    AWSCloudWatch->>AWSCloudWatch: 4. [State Change] Transitions 'ApiLatencyP95Alarm' state to 'ALARM' after sustained threshold breach.
+    AWSCloudWatch-->>AWSCloudWatch: New State: ALARM
+    activate AmazonSNS
+    AWSCloudWatch->>AmazonSNS: 5. [Alarm Action] Publishes alert message to SNS Topic 'OnCall-Alerts-Topic'.
+    AmazonSNS->>AmazonSNS: 6. [Fan-out] Delivers notification message to all configured topic subscribers.
+
+    note over BackendAPIHost: Scenario Trigger: A slow database query is introduced in a new deployment, causing the '/api/v1/d...
+    note over AWSCloudWatch: All monitoring infrastructure (Metric Filters, Alarms, SNS Topic, Subscriptions) is defined as co...
+    note over AWSCloudWatch: The CloudWatch Alarm state change is a security-auditable event, automatically logged to AWS Clou...
+
+    deactivate AmazonSNS
+    deactivate BackendAPIHost

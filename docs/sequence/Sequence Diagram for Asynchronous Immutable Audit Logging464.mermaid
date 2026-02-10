@@ -1,0 +1,28 @@
+sequenceDiagram
+    participant "Backend Service (ASP.NET Core)" as BackendServiceASPNETCore
+    participant "Audit Events Queue" as AuditEventsQueue
+    participant "Audit Processor" as AuditProcessor
+    participant "Immutable Audit Store" as ImmutableAuditStore
+    participant "Audit Events DLQ" as AuditEventsDLQ
+
+    activate BackendServiceASPNETCore
+    BackendServiceASPNETCore->>BackendServiceASPNETCore: 1. 1. Process user request (e.g., successful login)
+    BackendServiceASPNETCore-->>BackendServiceASPNETCore: Generates audit event context
+    BackendServiceASPNETCore->>AuditEventsQueue: 2. 2. SendMessageAsync(auditEvent)
+    AuditEventsQueue-->>BackendServiceASPNETCore: MessageId, MD5OfMessageBody
+    BackendServiceASPNETCore->>BackendServiceASPNETCore: 3. 3. Return successful response to user
+    activate AuditProcessor
+    AuditEventsQueue->>AuditProcessor: 4. 4. [Async] Invoke with SQS message batch
+    AuditProcessor->>AuditProcessor: 5. 5. For each message: validate event schema
+    AuditProcessor-->>AuditProcessor: Valid/Invalid
+    AuditProcessor->>ImmutableAuditStore: 6. 6. PutObjectAsync(validatedEvent)
+    ImmutableAuditStore-->>AuditProcessor: ETag, VersionId
+    AuditProcessor->>AuditEventsQueue: 7. 7. [On Success] Delete message from queue
+    AuditEventsQueue-->>AuditProcessor: Success confirmation
+    AuditProcessor->>AuditEventsDLQ: 8. 8. [On Failure] Move message to DLQ
+
+    note over ImmutableAuditStore: Immutability is enforced by S3 Object Lock in 'COMPLIANCE' mode, preventing deletion or modificat...
+    note over AuditEventsDLQ: A CloudWatch Alarm must be configured on ApproximateNumberOfMessagesVisible for the DLQ. A value ...
+
+    deactivate AuditProcessor
+    deactivate BackendServiceASPNETCore

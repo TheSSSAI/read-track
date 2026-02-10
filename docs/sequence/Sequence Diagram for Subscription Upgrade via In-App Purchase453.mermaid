@@ -1,0 +1,34 @@
+sequenceDiagram
+    actor "Flutter Mobile Client" as FlutterMobileClient
+    participant "External Payment Platform" as ExternalPaymentPlatform
+    participant ".NET 8 Modular Monolith" as NET8ModularMonolith
+
+    activate FlutterMobileClient
+    FlutterMobileClient->>FlutterMobileClient: 1. User taps 'Upgrade to Premium' button.
+    activate ExternalPaymentPlatform
+    FlutterMobileClient->>ExternalPaymentPlatform: 2. InitiateInAppPurchase(planId)
+    ExternalPaymentPlatform-->>FlutterMobileClient: PurchaseResult (Success, Canceled, Failed)
+    ExternalPaymentPlatform->>ExternalPaymentPlatform: 3. User completes the purchase via native payment sheet.
+    ExternalPaymentPlatform->>FlutterMobileClient: 4. Return PurchaseResult: Success
+    activate NET8ModularMonolith
+    ExternalPaymentPlatform->>NET8ModularMonolith: 5. POST /api/v1/webhooks/subscriptions
+    NET8ModularMonolith-->>ExternalPaymentPlatform: 200 OK | 4xx/5xx Error
+    NET8ModularMonolith->>NET8ModularMonolith: 6. ValidateWebhookSignature(payload)
+    NET8ModularMonolith-->>NET8ModularMonolith: ValidationResult (Valid/Invalid)
+    NET8ModularMonolith->>NET8ModularMonolith: 7. ProcessSubscriptionEvent(event)
+    NET8ModularMonolith-->>NET8ModularMonolith: ProcessingResult
+    NET8ModularMonolith->>NET8ModularMonolith: 7.1. DB: Find User, Update SubscriptionTier='Premium', Set ExpiryDate, Log Audit Event
+    NET8ModularMonolith-->>NET8ModularMonolith: Success/Failure
+    NET8ModularMonolith->>ExternalPaymentPlatform: 8. HTTP 200 OK
+    FlutterMobileClient->>NET8ModularMonolith: 9. GET /api/v1/users/me
+    NET8ModularMonolith-->>FlutterMobileClient: User Profile DTO (with Premium status)
+    NET8ModularMonolith->>FlutterMobileClient: 10. Return User Profile DTO
+    FlutterMobileClient->>FlutterMobileClient: 11. Update UI to unlock premium features.
+
+    note over FlutterMobileClient: Client-side success is only provisional. The UI must show a 'Verifying...' or similar state until...
+    note over NET8ModularMonolith: Idempotency is CRITICAL. The webhook handler in MOD-MONETIZATION must use the unique transaction ...
+    note over NET8ModularMonolith: Webhook is the single source of truth for all subscription lifecycle events (purchase, renewal, c...
+
+    deactivate NET8ModularMonolith
+    deactivate ExternalPaymentPlatform
+    deactivate FlutterMobileClient

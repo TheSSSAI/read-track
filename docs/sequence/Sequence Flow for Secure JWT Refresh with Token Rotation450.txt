@@ -1,0 +1,661 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-AF-002
+
+## 1.2 Name
+
+Secure JWT Refresh with Token Rotation
+
+## 1.3 Description
+
+The mobile client transparently uses a long-lived refresh token to obtain a new short-lived JWT access token when the current one expires. The process uses refresh token rotation, where a new refresh token is issued with every request, invalidating the old one to enhance security.
+
+## 1.4 Type
+
+🔹 AuthenticationFlow
+
+## 1.5 Purpose
+
+To maintain a persistent user session securely while minimizing the exposure of a long-lived access token and preventing token reuse attacks, as per standard security practices mentioned in REQ-USR-001.
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🔴 High
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-FE-MOBILE
+- REPO-BE-HOST
+
+## 1.10 Key Interactions
+
+- Client's HTTP interceptor detects a 401 Unauthorized response from an API call.
+- Interceptor sends the stored refresh token to a dedicated /token/refresh endpoint.
+- Backend validates the refresh token against its database, ensuring it is valid and has not been used before.
+- Backend revokes the used refresh token.
+- Backend issues a new short-lived access token and a new long-lived refresh token.
+- Client securely stores the new tokens.
+- The interceptor retries the original API request with the new access token.
+
+## 1.11 Triggers
+
+- An API call is attempted with an expired access token.
+
+## 1.12 Outcomes
+
+- A new, valid access token is issued.
+- The user's session is extended without interruption.
+- The original failed API request succeeds on retry.
+
+## 1.13 Business Rules
+
+- Refresh tokens must be single-use to enhance security (refresh token rotation).
+- If an invalid or already-used refresh token is presented, all of that user's sessions should be invalidated as a security precaution.
+
+## 1.14 Error Scenarios
+
+- Refresh token is expired, stolen, or has been revoked.
+- Network error during the token refresh request.
+
+## 1.15 Integration Points
+
+*No items available*
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-AF-002
+
+## 2.2 Name
+
+Implementation: Secure JWT Refresh with Token Rotation
+
+## 2.3 Description
+
+Detailed technical sequence for a client using a long-lived refresh token to obtain a new short-lived JWT access token upon a 401 Unauthorized response. Implements refresh token rotation for enhanced security by issuing a new refresh token and revoking the old one with each use. Adheres to REQ-USR-001 security standards.
+
+## 2.4 Participants
+
+### 2.4.1 Client Application
+
+#### 2.4.1.1 Repository Id
+
+REPO-FE-MOBILE
+
+#### 2.4.1.2 Display Name
+
+Flutter Mobile Client
+
+#### 2.4.1.3 Type
+
+🔹 Client Application
+
+#### 2.4.1.4 Technology
+
+Flutter 3.x, Dio HTTP Client
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #4CAF50 |
+| Stereotype | Client |
+
+### 2.4.2.0 Application Host
+
+#### 2.4.2.1 Repository Id
+
+REPO-BE-HOST
+
+#### 2.4.2.2 Display Name
+
+Backend API Host
+
+#### 2.4.2.3 Type
+
+🔹 Application Host
+
+#### 2.4.2.4 Technology
+
+.NET 8, ASP.NET Core, EF Core
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #2196F3 |
+| Stereotype | API Host |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 Synchronous HTTP Request
+
+#### 2.5.1.1 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.1.2 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.1.3 Message
+
+1. Makes API call to a protected resource with an expired access token.
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 Synchronous HTTP Request
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+2. Responds with 401 Unauthorized, indicating token expiration.
+
+#### 2.5.1.8 Has Return
+
+✅ Yes
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+##### 2.5.1.10.1 Protocol
+
+HTTPS/1.1
+
+##### 2.5.1.10.2 Method
+
+GET /api/v1/library
+
+##### 2.5.1.10.3 Parameters
+
+| Property | Value |
+|----------|-------|
+| Headers | [{'name': 'Authorization', 'value': 'Bearer eyJhbGciOiJ...<expired_token>'}] |
+
+##### 2.5.1.10.4 Authentication
+
+JWT Bearer Token (Expired)
+
+##### 2.5.1.10.5 Error Handling
+
+Server-side authentication middleware validates the JWT. If expired, it short-circuits the request and returns 401.
+
+##### 2.5.1.10.6 Performance
+
+###### 2.5.1.10.6.1 Latency
+
+< 50ms
+
+### 2.5.2.0.0.0 Synchronous HTTP Request
+
+#### 2.5.2.1.0.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.2.2.0.0 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.2.3.0.0 Message
+
+3. HTTP interceptor catches 401, reads stored refresh token, and calls the token refresh endpoint.
+
+#### 2.5.2.4.0.0 Sequence Number
+
+3
+
+#### 2.5.2.5.0.0 Type
+
+🔹 Synchronous HTTP Request
+
+#### 2.5.2.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7.0.0 Return Message
+
+8. Responds with a new access token and a new refresh token.
+
+#### 2.5.2.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.2.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.2.10.0.0 Technical Details
+
+##### 2.5.2.10.1.0 Protocol
+
+HTTPS/1.1
+
+##### 2.5.2.10.2.0 Method
+
+POST /api/v1/auth/refresh
+
+##### 2.5.2.10.3.0 Parameters
+
+| Property | Value |
+|----------|-------|
+| Headers | [{'name': 'Content-Type', 'value': 'application/json'}] |
+| Body | {'schema': {'refreshToken': 'string (GUID)'}, 'example': {'refreshToken': 'a1b2c3d4-e5f6-...'}} |
+
+##### 2.5.2.10.4.0 Authentication
+
+None (Endpoint is anonymous but requires valid refresh token in payload)
+
+##### 2.5.2.10.5.0 Error Handling
+
+If refresh token is invalid, expired, or already used, returns 401 Unauthorized with error code 'invalid_refresh_token'. See 'Error Handling Strategy' for details.
+
+##### 2.5.2.10.6.0 Performance
+
+###### 2.5.2.10.6.1 Latency
+
+< 300ms (P95)
+
+#### 2.5.2.11.0.0 Nested Interactions
+
+##### 2.5.2.11.1.0 Internal Service Call & Database Query
+
+###### 2.5.2.11.1.1 Source Id
+
+REPO-BE-HOST
+
+###### 2.5.2.11.1.2 Target Id
+
+REPO-BE-HOST
+
+###### 2.5.2.11.1.3 Message
+
+4. Validates the provided refresh token against the `RefreshTokens` table in PostgreSQL.
+
+###### 2.5.2.11.1.4 Sequence Number
+
+4
+
+###### 2.5.2.11.1.5 Type
+
+🔹 Internal Service Call & Database Query
+
+###### 2.5.2.11.1.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.2.11.1.7 Has Return
+
+❌ No
+
+###### 2.5.2.11.1.8 Technical Details
+
+####### 2.5.2.11.1.8.1 Protocol
+
+Internal Method Call
+
+####### 2.5.2.11.1.8.2 Method
+
+TokenService.ValidateAndRotateRefreshTokenAsync(refreshToken)
+
+####### 2.5.2.11.1.8.3 Parameters
+
+| Property | Value |
+|----------|-------|
+| Sql Query | SELECT * FROM "RefreshTokens" WHERE "Token" = @p0 ... |
+
+####### 2.5.2.11.1.8.4 Authentication
+
+N/A
+
+####### 2.5.2.11.1.8.5 Error Handling
+
+Throws SecurityException if token is not found, expired, or revoked. This triggers the 'invalidate all sessions' business rule.
+
+####### 2.5.2.11.1.8.6 Performance
+
+######## 2.5.2.11.1.8.6.1 Notes
+
+The 'Token' column must have a unique index for fast lookups.
+
+##### 2.5.2.11.2.0.0.0 Database Update
+
+###### 2.5.2.11.2.1.0.0 Source Id
+
+REPO-BE-HOST
+
+###### 2.5.2.11.2.2.0.0 Target Id
+
+REPO-BE-HOST
+
+###### 2.5.2.11.2.3.0.0 Message
+
+5. Revokes the used refresh token in the database.
+
+###### 2.5.2.11.2.4.0.0 Sequence Number
+
+5
+
+###### 2.5.2.11.2.5.0.0 Type
+
+🔹 Database Update
+
+###### 2.5.2.11.2.6.0.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.2.11.2.7.0.0 Has Return
+
+❌ No
+
+###### 2.5.2.11.2.8.0.0 Technical Details
+
+####### 2.5.2.11.2.8.1.0 Protocol
+
+Internal Method Call
+
+####### 2.5.2.11.2.8.2.0 Method
+
+DbContext.SaveChangesAsync()
+
+####### 2.5.2.11.2.8.3.0 Parameters
+
+| Property | Value |
+|----------|-------|
+| Sql Query | UPDATE "RefreshTokens" SET "IsRevoked" = true WHER... |
+
+####### 2.5.2.11.2.8.4.0 Authentication
+
+N/A
+
+####### 2.5.2.11.2.8.5.0 Error Handling
+
+Database transaction ensures this update and the creation of the new token are atomic.
+
+####### 2.5.2.11.2.8.6.0 Performance
+
+*No data available*
+
+##### 2.5.2.11.3.0.0.0 Internal Service Call
+
+###### 2.5.2.11.3.1.0.0 Source Id
+
+REPO-BE-HOST
+
+###### 2.5.2.11.3.2.0.0 Target Id
+
+REPO-BE-HOST
+
+###### 2.5.2.11.3.3.0.0 Message
+
+6. Generates a new short-lived JWT access token and a new long-lived refresh token.
+
+###### 2.5.2.11.3.4.0.0 Sequence Number
+
+6
+
+###### 2.5.2.11.3.5.0.0 Type
+
+🔹 Internal Service Call
+
+###### 2.5.2.11.3.6.0.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.2.11.3.7.0.0 Has Return
+
+❌ No
+
+###### 2.5.2.11.3.8.0.0 Technical Details
+
+####### 2.5.2.11.3.8.1.0 Protocol
+
+Internal Method Call
+
+####### 2.5.2.11.3.8.2.0 Method
+
+TokenService.GenerateNewTokenPair(userId)
+
+####### 2.5.2.11.3.8.3.0 Parameters
+
+| Property | Value |
+|----------|-------|
+| Access Token Claims | sub, role, name, jti |
+| Access Token Expiry | 15 minutes |
+| Refresh Token Format | Cryptographically secure random GUID |
+
+####### 2.5.2.11.3.8.4.0 Authentication
+
+N/A
+
+####### 2.5.2.11.3.8.5.0 Error Handling
+
+N/A
+
+####### 2.5.2.11.3.8.6.0 Performance
+
+*No data available*
+
+##### 2.5.2.11.4.0.0.0 Database Insert
+
+###### 2.5.2.11.4.1.0.0 Source Id
+
+REPO-BE-HOST
+
+###### 2.5.2.11.4.2.0.0 Target Id
+
+REPO-BE-HOST
+
+###### 2.5.2.11.4.3.0.0 Message
+
+7. Persists the new refresh token to the database.
+
+###### 2.5.2.11.4.4.0.0 Sequence Number
+
+7
+
+###### 2.5.2.11.4.5.0.0 Type
+
+🔹 Database Insert
+
+###### 2.5.2.11.4.6.0.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.2.11.4.7.0.0 Has Return
+
+❌ No
+
+###### 2.5.2.11.4.8.0.0 Technical Details
+
+####### 2.5.2.11.4.8.1.0 Protocol
+
+Internal Method Call
+
+####### 2.5.2.11.4.8.2.0 Method
+
+DbContext.SaveChangesAsync()
+
+####### 2.5.2.11.4.8.3.0 Parameters
+
+| Property | Value |
+|----------|-------|
+| Sql Query | INSERT INTO "RefreshTokens" ("Token", "UserId", "E... |
+
+####### 2.5.2.11.4.8.4.0 Authentication
+
+N/A
+
+####### 2.5.2.11.4.8.5.0 Error Handling
+
+Part of the same database transaction as the revocation step.
+
+####### 2.5.2.11.4.8.6.0 Performance
+
+*No data available*
+
+### 2.5.3.0.0.0.0.0 Synchronous HTTP Request
+
+#### 2.5.3.1.0.0.0.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.3.2.0.0.0.0 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.3.3.0.0.0.0 Message
+
+9. Interceptor securely stores new tokens and automatically retries the original API request.
+
+#### 2.5.3.4.0.0.0.0 Sequence Number
+
+9
+
+#### 2.5.3.5.0.0.0.0 Type
+
+🔹 Synchronous HTTP Request
+
+#### 2.5.3.6.0.0.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7.0.0.0.0 Return Message
+
+10. Successfully authenticates and returns the requested resource.
+
+#### 2.5.3.8.0.0.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.3.9.0.0.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.3.10.0.0.0.0 Technical Details
+
+##### 2.5.3.10.1.0.0.0 Protocol
+
+HTTPS/1.1
+
+##### 2.5.3.10.2.0.0.0 Method
+
+GET /api/v1/library
+
+##### 2.5.3.10.3.0.0.0 Parameters
+
+| Property | Value |
+|----------|-------|
+| Headers | [{'name': 'Authorization', 'value': 'Bearer eyJhbGciOiJ...<new_access_token>'}] |
+
+##### 2.5.3.10.4.0.0.0 Authentication
+
+JWT Bearer Token (Valid)
+
+##### 2.5.3.10.5.0.0.0 Error Handling
+
+If this retry fails for a reason other than 401, the interceptor will propagate the error to the application layer.
+
+##### 2.5.3.10.6.0.0.0 Performance
+
+###### 2.5.3.10.6.1.0.0 Latency
+
+< 200ms
+
+## 2.6.0.0.0.0.0.0 Notes
+
+### 2.6.1.0.0.0.0.0 Content
+
+#### 2.6.1.1.0.0.0.0 Content
+
+Client-Side Logic: The entire refresh flow (steps 3-9) is encapsulated within a Dio HTTP client interceptor. This makes the process transparent to the application's business logic layers. The interceptor must also handle queuing subsequent API calls while a token refresh is in progress to avoid multiple refresh attempts.
+
+#### 2.6.1.2.0.0.0.0 Position
+
+top
+
+#### 2.6.1.3.0.0.0.0 Participant Id
+
+REPO-FE-MOBILE
+
+#### 2.6.1.4.0.0.0.0 Sequence Number
+
+3
+
+### 2.6.2.0.0.0.0.0 Content
+
+#### 2.6.2.1.0.0.0.0 Content
+
+Secure Storage: The client must use platform-specific secure storage (e.g., Keychain on iOS, Keystore on Android) via a library like `flutter_secure_storage` to persist the refresh token.
+
+#### 2.6.2.2.0.0.0.0 Position
+
+bottom
+
+#### 2.6.2.3.0.0.0.0 Participant Id
+
+REPO-FE-MOBILE
+
+#### 2.6.2.4.0.0.0.0 Sequence Number
+
+9
+
+### 2.6.3.0.0.0.0.0 Content
+
+#### 2.6.3.1.0.0.0.0 Content
+
+Audit Logging: All attempts to use the refresh endpoint (both successful and failed) must be logged to a security audit trail with the source IP, user agent, and user ID (if identifiable). This is critical for detecting potential token theft or replay attacks.
+
+#### 2.6.3.2.0.0.0.0 Position
+
+top
+
+#### 2.6.3.3.0.0.0.0 Participant Id
+
+REPO-BE-HOST
+
+#### 2.6.3.4.0.0.0.0 Sequence Number
+
+4
+
+## 2.7.0.0.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | Refresh tokens must be stored in a dedicated, inde... |
+| Performance Targets | The end-to-end token refresh and request retry pro... |
+| Error Handling Strategy | If the backend receives an invalid, expired, or al... |
+| Testing Considerations | 1. Happy Path: Verify successful token rotation an... |
+| Monitoring Requirements | Monitor the latency of the `/api/v1/auth/refresh` ... |
+| Deployment Considerations | The refresh token `ExpiryDate` should be configura... |
+

@@ -1,0 +1,39 @@
+sequenceDiagram
+    participant "Hangfire Scheduler" as HangfireScheduler
+    actor "DormantUserPurgeJob" as DormantUserPurgeJob
+    actor "UserRepository" as UserRepository
+    participant "PostgreSQL Database" as PostgreSQLDatabase
+    participant "AccountDeletionService" as AccountDeletionService
+    participant "AuditLogService" as AuditLogService
+    participant "OperationalLogService" as OperationalLogService
+
+    activate DormantUserPurgeJob
+    HangfireScheduler->>DormantUserPurgeJob: 1. Execute Monthly Purge Job
+    DormantUserPurgeJob->>OperationalLogService: 2. Log job start
+    activate UserRepository
+    DormantUserPurgeJob->>UserRepository: 3. FindDormantUserIds(dormancyThreshold)
+    UserRepository-->>DormantUserPurgeJob: List<Guid> userIds
+    activate PostgreSQLDatabase
+    UserRepository->>PostgreSQLDatabase: 4. SELECT UserId FROM Users WHERE LastLoginDate < @threshold
+    PostgreSQLDatabase-->>UserRepository: Row set of UserIds
+    DormantUserPurgeJob->>DormantUserPurgeJob: 5. Loop: For each userId in userIds
+    DormantUserPurgeJob->>AccountDeletionService: 5.1. Enqueue account deletion job
+    AccountDeletionService-->>DormantUserPurgeJob: string jobId
+    DormantUserPurgeJob->>OperationalLogService: 6. Log job completion
+    activate AccountDeletionService
+    HangfireScheduler->>AccountDeletionService: 7. Process Deletion Job
+    activate AuditLogService
+    AccountDeletionService->>AuditLogService: 8. Create audit record for deletion request
+    AccountDeletionService->>UserRepository: 9. HardDeleteUser(userId)
+    UserRepository->>PostgreSQLDatabase: 10. BEGIN; DELETE FROM ... WHERE UserId=@userId; COMMIT;
+    PostgreSQLDatabase-->>UserRepository: Transaction status
+    AccountDeletionService->>OperationalLogService: 11. Log successful deletion
+
+    note over AccountDeletionService: This flow reuses the exact same permanent account deletion logic as the user-initiated flow, ensu...
+    note over AuditLogService: The audit log must be written to an immutable, WORM-compliant storage (e.g., S3 with Object Lock ...
+
+    deactivate AuditLogService
+    deactivate AccountDeletionService
+    deactivate PostgreSQLDatabase
+    deactivate UserRepository
+    deactivate DormantUserPurgeJob

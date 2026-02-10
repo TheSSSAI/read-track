@@ -1,0 +1,24 @@
+sequenceDiagram
+    actor "Flutter Mobile Client" as FlutterMobileClient
+    participant "Backend API Host" as BackendAPIHost
+
+    activate FlutterMobileClient
+    FlutterMobileClient->>FlutterMobileClient: 1. 1. Handle successful authentication. Post-login service fetches user profile, confirms hasCompletedOnboarding is false. Navigation logic routes to OnboardingScreen.
+    FlutterMobileClient->>FlutterMobileClient: 2. 2. OnboardingBloc initializes state for the first step (Set Goal). OnboardingScreen renders the UI based on the initial state.
+    FlutterMobileClient->>FlutterMobileClient: 3. 3. User inputs a yearly goal and submits. OnboardingBloc validates input (e.g., isPositiveInteger) and persists the value to its state. UI transitions to the 'Add Book' step.
+    activate BackendAPIHost
+    FlutterMobileClient->>BackendAPIHost: 4. 4. User searches for a book. Client sends search query to the backend.
+    BackendAPIHost-->>FlutterMobileClient: 5. Returns 200 OK with a list of BookSearchResultDto objects.
+    FlutterMobileClient->>FlutterMobileClient: 6. 6. User selects a book and taps 'Finish'. OnboardingBloc gathers the goal and selected book ID into a final onboarding payload.
+    FlutterMobileClient->>BackendAPIHost: 7. 7. Send onboarding completion data to the backend.
+    BackendAPIHost-->>FlutterMobileClient: 10. Returns 204 No Content on successful processing.
+    BackendAPIHost->>BackendAPIHost: 8. 8. UsersController receives request. Dispatches CompleteUserOnboardingCommand via MediatR.
+    BackendAPIHost-->>BackendAPIHost: Returns result of command execution.
+    BackendAPIHost->>BackendAPIHost: 9. 9. CompleteUserOnboardingCommandHandler executes business logic within a single database transaction: creates initial Goal, adds initial LibraryItem, and updates the User's hasCompletedOnboarding flag to true.
+    FlutterMobileClient->>FlutterMobileClient: 11. 11. On successful API response, OnboardingBloc emits a final OnboardingSuccess state. Navigation logic observes this state and permanently navigates the user to the main Dashboard screen.
+
+    note over FlutterMobileClient: Client-Side State Persistence: If the user closes the app mid-onboarding, the OnboardingBloc's cu...
+    note over BackendAPIHost: Transactional Integrity: The backend operation to create the initial goal, add the book, and upda...
+
+    deactivate BackendAPIHost
+    deactivate FlutterMobileClient

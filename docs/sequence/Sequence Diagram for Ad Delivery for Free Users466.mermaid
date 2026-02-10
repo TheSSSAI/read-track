@@ -1,0 +1,27 @@
+sequenceDiagram
+    actor "Flutter Mobile Client" as FlutterMobileClient
+    participant "Google AdMob SDK" as GoogleAdMobSDK
+
+    activate FlutterMobileClient
+    FlutterMobileClient->>FlutterMobileClient: 1. User (Free Tier) navigates to a screen with a banner ad placement (e.g., Statistics Page).
+    FlutterMobileClient->>FlutterMobileClient: 2. Widget build checks user's subscription tier via Riverpod state provider.
+    FlutterMobileClient-->>FlutterMobileClient: Returns User object with tier='Free User'
+    FlutterMobileClient->>FlutterMobileClient: 3. [Opt: userTier == 'Free'] Initialize AdBannerWidget and request ad.
+    activate GoogleAdMobSDK
+    FlutterMobileClient->>GoogleAdMobSDK: 4. Load banner ad creative for the specified ad unit.
+    GoogleAdMobSDK-->>FlutterMobileClient: Ad creative or a 'no-fill' error via a listener callback.
+    GoogleAdMobSDK->>FlutterMobileClient: 5. [Success] Callback: onAdLoaded(ad)
+    FlutterMobileClient->>FlutterMobileClient: 5.1. Update widget state to display the loaded ad.
+    GoogleAdMobSDK->>FlutterMobileClient: 6. [Failure] Callback: onAdFailedToLoad(error)
+    FlutterMobileClient->>FlutterMobileClient: 6.1. Log failure event to analytics and update state to handle empty space.
+    FlutterMobileClient->>FlutterMobileClient: 7. User completes an action triggering an interstitial ad (e.g., logs 3rd reading session).
+    FlutterMobileClient->>FlutterMobileClient: 8. [Opt: userTier == 'Free' && shouldShowInterstitial()] Request interstitial ad.
+    FlutterMobileClient->>GoogleAdMobSDK: 9. Load interstitial ad creative.
+    GoogleAdMobSDK-->>FlutterMobileClient: Ad creative or error via callback.
+    GoogleAdMobSDK->>FlutterMobileClient: 10. [Success] Callback: onAdLoaded(interstitialAd)
+    FlutterMobileClient->>GoogleAdMobSDK: 10.1. Immediately display the loaded full-screen ad.
+
+    note over FlutterMobileClient: Business Rule Check: The check user.subscriptionTier == 'Free User' is the critical security and ...
+
+    deactivate GoogleAdMobSDK
+    deactivate FlutterMobileClient

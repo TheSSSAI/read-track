@@ -1,0 +1,21 @@
+sequenceDiagram
+    actor "Flutter Mobile Client" as FlutterMobileClient
+    participant "Backend API Host" as BackendAPIHost
+
+    activate BackendAPIHost
+    FlutterMobileClient->>BackendAPIHost: 1. 1. Makes API call to a protected resource with an expired access token.
+    BackendAPIHost-->>FlutterMobileClient: 2. Responds with 401 Unauthorized, indicating token expiration.
+    FlutterMobileClient->>BackendAPIHost: 3. 3. HTTP interceptor catches 401, reads stored refresh token, and calls the token refresh endpoint.
+    BackendAPIHost-->>FlutterMobileClient: 8. Responds with a new access token and a new refresh token.
+    BackendAPIHost->>BackendAPIHost: 4. 4. Validates the provided refresh token against the RefreshTokens table in PostgreSQL.
+    BackendAPIHost->>BackendAPIHost: 5. 5. Revokes the used refresh token in the database.
+    BackendAPIHost->>BackendAPIHost: 6. 6. Generates a new short-lived JWT access token and a new long-lived refresh token.
+    BackendAPIHost->>BackendAPIHost: 7. 7. Persists the new refresh token to the database.
+    FlutterMobileClient->>BackendAPIHost: 9. 9. Interceptor securely stores new tokens and automatically retries the original API request.
+    BackendAPIHost-->>FlutterMobileClient: 10. Successfully authenticates and returns the requested resource.
+
+    note over FlutterMobileClient: Client-Side Logic: The entire refresh flow (steps 3-9) is encapsulated within a Dio HTTP client i...
+    note over FlutterMobileClient: Secure Storage: The client must use platform-specific secure storage (e.g., Keychain on iOS, Keys...
+    note over BackendAPIHost: Audit Logging: All attempts to use the refresh endpoint (both successful and failed) must be logg...
+
+    deactivate BackendAPIHost

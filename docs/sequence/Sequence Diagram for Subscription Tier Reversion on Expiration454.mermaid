@@ -1,0 +1,40 @@
+sequenceDiagram
+    participant "External Payment Provider" as ExternalPaymentProvider
+    participant "Scheduled Job Runner" as ScheduledJobRunner
+    participant "API Host (Presentation)" as APIHostPresentation
+    participant "Monetization Module" as MonetizationModule
+    participant "In-Process Event Bus" as InProcessEventBus
+    actor "Users Module" as UsersModule
+    participant "Primary Database" as PrimaryDatabase
+    participant "Audit Log Service" as AuditLogService
+
+    ExternalPaymentProvider->>APIHostPresentation: 1. alt: Trigger via Webhook
+    activate APIHostPresentation
+    ExternalPaymentProvider->>APIHostPresentation: 1.1. POST /api/v1/webhooks/billing (event: SUBSCRIPTION_EXPIRED)
+    APIHostPresentation-->>ExternalPaymentProvider: 200 OK or 4xx/5xx Error
+    activate MonetizationModule
+    APIHostPresentation->>MonetizationModule: 1.2. ProcessWebhook(payload)
+    MonetizationModule-->>APIHostPresentation: void
+    MonetizationModule->>MonetizationModule: 1.3. Business Rule: Verify subscription state and locate user.
+    ScheduledJobRunner->>MonetizationModule: 2. alt: Trigger via Scheduled Job
+    ScheduledJobRunner->>MonetizationModule: 2.1. Execute daily job: CheckForExpiredSubscriptionsJob
+    MonetizationModule-->>ScheduledJobRunner: Job completion status.
+    MonetizationModule->>PrimaryDatabase: 2.2. SELECT * FROM Subscriptions WHERE EndDate <= NOW() AND Status = 'Active'
+    PrimaryDatabase-->>MonetizationModule: List<Subscription>
+    MonetizationModule->>MonetizationModule: 3. loop: For each expired subscription
+    MonetizationModule->>InProcessEventBus: 3.1. Publish(new SubscriptionTerminatedEvent(...))
+    MonetizationModule->>AuditLogService: 3.2. LogAuditEvent('SUBSCRIPTION_CHANGE', ...)
+    activate UsersModule
+    InProcessEventBus->>UsersModule: 3.3. Dispatch SubscriptionTerminatedEvent
+    UsersModule->>PrimaryDatabase: 3.4. UPDATE Users SET Role = 'FreeUser' WHERE UserId = @p0
+    PrimaryDatabase-->>UsersModule: Rows affected
+    UsersModule->>InProcessEventBus: 4. end loop
+    APIHostPresentation->>ExternalPaymentProvider: 5. 200 OK
+    ScheduledJobRunner->>MonetizationModule: 6. end alt
+
+    note over APIHostPresentation: Webhook Idempotency: The webhook handler must be idempotent. It should check the current subscrip...
+    note over UsersModule: The user's JWT is not immediately invalidated. The new 'FreeUser' role will be reflected in the J...
+
+    deactivate UsersModule
+    deactivate MonetizationModule
+    deactivate APIHostPresentation

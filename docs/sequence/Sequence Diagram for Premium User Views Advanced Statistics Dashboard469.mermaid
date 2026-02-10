@@ -1,0 +1,24 @@
+sequenceDiagram
+    actor "Flutter Mobile Client" as FlutterMobileClient
+    participant "Backend API Host" as BackendAPIHost
+
+    activate FlutterMobileClient
+    FlutterMobileClient->>FlutterMobileClient: 1. User taps 'Insights' tab. InsightsBloc receives FetchAdvancedStatsEvent and transitions state to AdvancedStatsLoading. UI displays a loading indicator.
+    activate BackendAPIHost
+    FlutterMobileClient->>BackendAPIHost: 2. Sends request to fetch advanced statistics data for the authenticated user.
+    BackendAPIHost-->>FlutterMobileClient: Returns 200 OK with AdvancedStatisticsDto on success, or an error status code (401, 403, 5xx) on failure.
+    BackendAPIHost->>BackendAPIHost: 2.1. ASP.NET Core Authorization Middleware intercepts the request, validates the JWT, and verifies the 'role' claim equals 'premium_user'. Rejects with 403 Forbidden if check fails.
+    BackendAPIHost-->>BackendAPIHost: Proceeds to controller if authorized, otherwise terminates with 403.
+    BackendAPIHost->>BackendAPIHost: 2.2. Controller sends GetAdvancedStatisticsQuery via MediatR to the Application layer within the MOD-ENGAGEMENT module.
+    BackendAPIHost-->>BackendAPIHost: Returns the query result DTO.
+    BackendAPIHost->>BackendAPIHost: 2.3. Query Handler executes logic, fetching data from pre-aggregated tables (e.g., UserReadingStats) in the PostgreSQL database via EF Core.
+    BackendAPIHost-->>BackendAPIHost: Aggregated statistics data.
+    FlutterMobileClient->>FlutterMobileClient: 3. On successful API response, Bloc receives AdvancedStatsLoadedEvent with the DTO. State transitions to AdvancedStatsSuccess. UI layer is notified to re-render.
+    FlutterMobileClient->>FlutterMobileClient: 4. UI components consume the AdvancedStatsSuccess state and render the data using charts and lists, ensuring color-blind accessible palettes are used.
+
+    note over FlutterMobileClient: State Management: The client application manages UI state via a Riverpod provider or BLoC, transi...
+    note over BackendAPIHost: Performance Optimization: The backend query handler is designed to read from pre-calculated, aggr...
+    note over FlutterMobileClient: Accessibility Compliance: The UI chart components are responsible for using a predefined, color-b...
+
+    deactivate BackendAPIHost
+    deactivate FlutterMobileClient

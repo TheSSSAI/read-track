@@ -1,0 +1,40 @@
+sequenceDiagram
+    actor "User" as User
+    actor "Flutter Mobile Client" as FlutterMobileClient
+    participant "Isar Local DB" as IsarLocalDB
+    participant "Backend API Host" as BackendAPIHost
+    participant "PostgreSQL DB" as PostgreSQLDB
+
+    activate FlutterMobileClient
+    User->>FlutterMobileClient: 1. 1. logReadingSession(bookId, pagesRead, duration)
+    FlutterMobileClient->>FlutterMobileClient: 2. 2. alt [ isOffline == true ]
+    activate IsarLocalDB
+    FlutterMobileClient->>IsarLocalDB: 3. 3. writeTxn(new ReadingSession{ syncStatus: 'unsynced', clientTimestamp: NOW_UTC, ... })
+    IsarLocalDB-->>FlutterMobileClient: 4. returns new local objectId
+    FlutterMobileClient->>FlutterMobileClient: 5. 5. Connectivity listener detects online state and triggers SynchronizationService
+    FlutterMobileClient->>IsarLocalDB: 6. 6. queryAll('FROM ReadingSession WHERE syncStatus = "unsynced"')
+    IsarLocalDB-->>FlutterMobileClient: 7. returns [unsyncedSession1, unsyncedSession2, ...]
+    activate BackendAPIHost
+    FlutterMobileClient->>BackendAPIHost: 8. 8. loop [for each unsynced item in batch] POST /api/v1/sessions/sync
+    BackendAPIHost-->>FlutterMobileClient: 13. 200 OK (with updated server model)
+    activate PostgreSQLDB
+    BackendAPIHost->>PostgreSQLDB: 9. 9. FindAsync(id) or FirstOrDefaultAsync(u => u.Id == ...)
+    PostgreSQLDB-->>BackendAPIHost: 10. returns existing record (or null)
+    BackendAPIHost->>BackendAPIHost: 11. 11. alt [ dto.clientTimestamp > serverRecord.updatedAt ]
+    BackendAPIHost->>PostgreSQLDB: 12. 12. UPDATE "ReadingSessions" SET ...; SaveChangesAsync()
+    PostgreSQLDB-->>BackendAPIHost: returns success
+    FlutterMobileClient->>IsarLocalDB: 14. 14. writeTxn(update session.id, { syncStatus: 'synced' })
+    IsarLocalDB-->>FlutterMobileClient: 15. returns success
+    FlutterMobileClient->>BackendAPIHost: 16. 16. GET /api/v1/data/pull?since=lastSyncTimestamp
+    BackendAPIHost-->>FlutterMobileClient: 17. 200 OK (with delta of new/updated server data)
+    FlutterMobileClient->>IsarLocalDB: 18. 18. writeTxn(upsert received server data)
+    IsarLocalDB-->>FlutterMobileClient: 19. returns success
+
+    note over FlutterMobileClient: Phase 1: Offline Data Creation. All user-generated data is written to the local Isar DB with a st...
+    note over FlutterMobileClient: Phase 2: Online Synchronization. Triggered by network restoration. This is a two-step process: 1....
+    note over BackendAPIHost: Conflict Resolution: 'Last Write Wins'. The server compares the clientTimestamp from the incoming...
+
+    deactivate PostgreSQLDB
+    deactivate BackendAPIHost
+    deactivate IsarLocalDB
+    deactivate FlutterMobileClient

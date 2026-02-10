@@ -1,0 +1,38 @@
+sequenceDiagram
+    actor "User" as User
+    actor "Flutter Mobile Client" as FlutterMobileClient
+    participant "Google/Apple Identity Provider" as GoogleAppleIdentityProvider
+    participant "Backend API Host" as BackendAPIHost
+    participant "Auth0" as Auth0
+
+    activate FlutterMobileClient
+    User->>FlutterMobileClient: 1. 1. Taps 'Sign in with Google' or 'Sign in with Apple' button.
+    activate GoogleAppleIdentityProvider
+    FlutterMobileClient->>GoogleAppleIdentityProvider: 2. 2. Initiates native OAuth 2.0/OIDC flow using platform SDK.
+    GoogleAppleIdentityProvider-->>FlutterMobileClient: 4. Returns OIDC ID Token upon successful user authentication.
+    GoogleAppleIdentityProvider->>User: 3. 3. Presents native authentication prompt (e.g., login form, biometrics).
+    User-->>GoogleAppleIdentityProvider: User authenticates.
+    activate BackendAPIHost
+    FlutterMobileClient->>BackendAPIHost: 5. 5. POST /api/v1/auth/social - Sends provider's ID Token for validation.
+    BackendAPIHost-->>FlutterMobileClient: 12. Returns { accessToken, refreshToken, expiresIn }.
+    activate Auth0
+    BackendAPIHost->>Auth0: 6. 6. Validates received ID Token via Auth0 API.
+    Auth0-->>BackendAPIHost: 7. Returns success with decoded claims or failure.
+    BackendAPIHost->>BackendAPIHost: 8. 8. [DB] Find user by provider ID and email claim.
+    BackendAPIHost-->>BackendAPIHost: Returns user record or null.
+    BackendAPIHost->>BackendAPIHost: 9. 9. [Conditional] If user is null, create new user record with 'Free User' role.
+    BackendAPIHost-->>BackendAPIHost: Returns new user record.
+    BackendAPIHost->>BackendAPIHost: 10. 10. Generates custom short-lived JWT access token.
+    BackendAPIHost-->>BackendAPIHost: Returns signed access token string.
+    BackendAPIHost->>BackendAPIHost: 11. 11. Generates secure, long-lived refresh token and stores it.
+    BackendAPIHost-->>BackendAPIHost: Returns refresh token string.
+    FlutterMobileClient->>FlutterMobileClient: 13. 13. Securely stores access and refresh tokens.
+
+    note over BackendAPIHost: Security Checkpoint: The backend MUST treat the ID Token from the client as untrusted until it ha...
+    note over BackendAPIHost: Audit Requirement: All successful and failed login attempts must be logged to a separate, immutab...
+    note over BackendAPIHost: Data Flow: The custom JWT access token MUST contain the following claims: 'sub' (internal user ID...
+
+    deactivate Auth0
+    deactivate BackendAPIHost
+    deactivate GoogleAppleIdentityProvider
+    deactivate FlutterMobileClient

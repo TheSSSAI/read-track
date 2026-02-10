@@ -1,0 +1,44 @@
+sequenceDiagram
+    actor "User" as User
+    actor "Mobile Client (Flutter)" as MobileClientFlutter
+    participant "API Host (ASP.NET Core)" as APIHostASPNETCore
+    actor "Users Module" as UsersModule
+    participant "Deletion Job Queue" as DeletionJobQueue
+    participant "Deletion Worker" as DeletionWorker
+    participant "Primary Database" as PrimaryDatabase
+    participant "Log Anonymization Service" as LogAnonymizationService
+    participant "Application Logs" as ApplicationLogs
+    participant "Immutable Audit Trail" as ImmutableAuditTrail
+
+    activate MobileClientFlutter
+    User->>MobileClientFlutter: 1. 1. Confirms irreversible account deletion via UI dialog
+    activate APIHostASPNETCore
+    MobileClientFlutter->>APIHostASPNETCore: 2. 2. DELETE /api/v1/users/me
+    APIHostASPNETCore-->>MobileClientFlutter: HTTP 202 Accepted
+    activate UsersModule
+    APIHostASPNETCore->>UsersModule: 3. 3. InitiateAccountDeletion(userId)
+    UsersModule-->>APIHostASPNETCore: JobQueuedSuccessfully
+    UsersModule->>ImmutableAuditTrail: 4. 4. CreateAuditLog(event: ACCOUNT_DELETION_REQUEST)
+    UsersModule->>DeletionJobQueue: 5. 5. SendMessage(payload)
+    UsersModule->>UsersModule: 6. 6. InvalidateUserSession()
+    MobileClientFlutter->>MobileClientFlutter: 7. 7. Clear local session & navigate to login
+    activate DeletionWorker
+    DeletionJobQueue->>DeletionWorker: 8. 8. [Async] Polls and receives deletion message
+    DeletionWorker->>PrimaryDatabase: 9. 9. DELETE FROM Users WHERE UserId = @userId; (Cascading Deletes)
+    PrimaryDatabase-->>DeletionWorker: Rows Affected
+    activate LogAnonymizationService
+    DeletionWorker->>LogAnonymizationService: 10. 10. TriggerAnonymization(userId, ipAddress)
+    LogAnonymizationService->>ApplicationLogs: 11. 11. Search and update log entries containing PII
+    ApplicationLogs-->>LogAnonymizationService: Anonymization Complete
+    DeletionWorker->>ImmutableAuditTrail: 12. 12. CreateAuditLog(event: ACCOUNT_DELETION_COMPLETE)
+    DeletionWorker->>DeletionJobQueue: 13. 13. DeleteMessage()
+
+    note over ImmutableAuditTrail: The Audit Trail (LOG-AUDIT-TRAIL) must be configured with immutability features like Amazon S3 Ob...
+    note over DeletionWorker: The Deletion Worker must be idempotent to handle potential retries from SQS without causing error...
+    note over DeletionJobQueue: A CloudWatch Alarm must be configured on the SQS Dead-Letter Queue (DLQ) to immediately notify th...
+
+    deactivate LogAnonymizationService
+    deactivate DeletionWorker
+    deactivate UsersModule
+    deactivate APIHostASPNETCore
+    deactivate MobileClientFlutter

@@ -1,0 +1,35 @@
+sequenceDiagram
+    actor "Flutter Mobile Client" as FlutterMobileClient
+    participant "API Controller" as APIController
+    participant "Recommendation Service" as RecommendationService
+    participant "Amazon OpenSearch" as AmazonOpenSearch
+    participant "OpenAI GPT-4 API" as OpenAIGPT4API
+    participant "Primary Database" as PrimaryDatabase
+
+    activate APIController
+    FlutterMobileClient->>APIController: 1. 1. POST /api/v1/recommendations/jobs
+    APIController-->>FlutterMobileClient: 2. 202 Accepted
+    APIController->>PrimaryDatabase: 2. 3. INSERT INTO RecommendationJobs (JobId, UserId, Status='PENDING')
+    PrimaryDatabase-->>APIController: 4. Job record created
+    APIController->>RecommendationService: 3. 5. EnqueueJob(GenerateRecommendations, jobId)
+    RecommendationService-->>APIController: 6. Job enqueued successfully
+    APIController->>FlutterMobileClient: 4. 7. Returns { jobId: 'generated-guid' }
+    activate PrimaryDatabase
+    RecommendationService->>PrimaryDatabase: 5. 8. [Async] UPDATE RecommendationJobs SET Status='IN_PROGRESS' WHERE JobId=?
+    RecommendationService->>AmazonOpenSearch: 6. 9. POST /user_context/_search (k-NN query)
+    AmazonOpenSearch-->>RecommendationService: 10. Top K context documents
+    RecommendationService->>OpenAIGPT4API: 7. 11. POST /v1/chat/completions
+    OpenAIGPT4API-->>RecommendationService: 12. 200 OK with LLM response
+    RecommendationService->>PrimaryDatabase: 8. 13. Parse LLM response and INSERT INTO Recommendations (...)
+    PrimaryDatabase-->>RecommendationService: 14. Recommendations persisted
+    RecommendationService->>PrimaryDatabase: 9. 15. UPDATE RecommendationJobs SET Status='COMPLETED' WHERE JobId=?
+    FlutterMobileClient->>APIController: 10. 16. [Loop] GET /api/v1/recommendations/jobs/{jobId}
+    APIController-->>FlutterMobileClient: 17. 200 OK { status: 'IN_PROGRESS' }
+    FlutterMobileClient->>APIController: 11. 18. [Final Poll] GET /api/v1/recommendations/jobs/{jobId}
+    APIController-->>FlutterMobileClient: 19. 200 OK { status: 'COMPLETED', data: [...] }
+
+    note over FlutterMobileClient: Client-Side Polling: The mobile client uses the returned jobId to poll for the result. Polling sh...
+    note over OpenAIGPT4API: Resilience: All calls to the OpenAI API are wrapped in a Polly resilience pipeline (Retry + Circu...
+
+    deactivate PrimaryDatabase
+    deactivate APIController

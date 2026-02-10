@@ -1,0 +1,37 @@
+sequenceDiagram
+    actor "Flutter Mobile Client" as FlutterMobileClient
+    participant "Backend API Host" as BackendAPIHost
+    participant "Infrastructure & Data Layer" as InfrastructureDataLayer
+    participant "Amazon SQS" as AmazonSQS
+    participant "Hangfire Background Worker" as HangfireBackgroundWorker
+    participant "Amazon S3" as AmazonS3
+    participant "Amazon SES" as AmazonSES
+
+    activate BackendAPIHost
+    FlutterMobileClient->>BackendAPIHost: 1. 1. User initiates data export
+    BackendAPIHost-->>FlutterMobileClient: 4. Acknowledge request processing
+    BackendAPIHost->>InfrastructureDataLayer: 2. 2. Create and persist DataExportJob record
+    InfrastructureDataLayer-->>BackendAPIHost: Job record created with 'Pending' status
+    BackendAPIHost->>InfrastructureDataLayer: 2.1. 2a. Log audit event for compliance
+    BackendAPIHost->>AmazonSQS: 3. 3. Enqueue job for asynchronous processing
+    AmazonSQS-->>BackendAPIHost: Message enqueued successfully
+    activate AmazonSQS
+    HangfireBackgroundWorker->>AmazonSQS: 5. 5. Consume job message from queue
+    AmazonSQS-->>HangfireBackgroundWorker: Message received with JobId and UserId
+    HangfireBackgroundWorker->>InfrastructureDataLayer: 6. 6. Fetch all user data from database
+    InfrastructureDataLayer-->>HangfireBackgroundWorker: User's library and reading sessions
+    HangfireBackgroundWorker->>AmazonS3: 7. 7. Upload generated JSON file to secure bucket
+    AmazonS3-->>HangfireBackgroundWorker: File uploaded successfully
+    HangfireBackgroundWorker->>AmazonS3: 8. 8. Generate time-limited pre-signed URL
+    AmazonS3-->>HangfireBackgroundWorker: Secure pre-signed URL
+    HangfireBackgroundWorker->>AmazonSES: 9. 9. Email download link to user
+    AmazonSES-->>HangfireBackgroundWorker: Email sent successfully
+    HangfireBackgroundWorker->>InfrastructureDataLayer: 10. 10. Update job status to 'Completed'
+    InfrastructureDataLayer-->>HangfireBackgroundWorker: Job record updated
+
+    note over AmazonS3: Compliance Requirement: S3 bucket must be private, enforce encryption at rest (SSE-S3), and have ...
+    note over AmazonSQS: Resilience: The SQS queue must be configured with a Dead-Letter Queue (DLQ) to capture messages t...
+    note over HangfireBackgroundWorker: Security: The IAM Role for the Hangfire Worker must follow the principle of least privilege, gran...
+
+    deactivate AmazonSQS
+    deactivate BackendAPIHost

@@ -1,0 +1,37 @@
+sequenceDiagram
+    participant "GitHub Actions (CI/CD)" as GitHubActionsCICD
+    participant "AWS Cloud Development Kit (CDK)" as AWSCloudDevelopmentKitCDK
+    participant "Backend Host (Production Env)" as BackendHostProductionEnv
+    participant "Monitoring Platform" as MonitoringPlatform
+    participant "Mobile App Build Artifacts" as MobileAppBuildArtifacts
+    participant "Apple App Store / Google Play Store" as AppleAppStoreGooglePlayStore
+
+    activate GitHubActionsCICD
+    GitHubActionsCICD->>GitHubActionsCICD: 1. [on: push, branches: [main]] Trigger 'Production Deploy' Workflow
+    GitHubActionsCICD->>GitHubActionsCICD: 2. Build backend container image and mobile app artifacts (.ipa, .aab)
+    GitHubActionsCICD-->>GitHubActionsCICD: Build artifacts stored
+    activate AWSCloudDevelopmentKitCDK
+    GitHubActionsCICD->>AWSCloudDevelopmentKitCDK: 3. Execute 'cdk deploy' for production environment
+    AWSCloudDevelopmentKitCDK-->>GitHubActionsCICD: CloudFormation Stack Update Status (SUCCESS/FAIL)
+    activate BackendHostProductionEnv
+    AWSCloudDevelopmentKitCDK->>BackendHostProductionEnv: 4. Provision/Update AWS infrastructure and deploy new backend container version
+    GitHubActionsCICD->>BackendHostProductionEnv: 5. Execute E2E Test Suite against deployed production backend
+    BackendHostProductionEnv-->>GitHubActionsCICD: Test Execution Report (Pass/Fail)
+    activate AppleAppStoreGooglePlayStore
+    GitHubActionsCICD->>AppleAppStoreGooglePlayStore: 6. If E2E tests pass, upload and submit mobile builds (from Step 2) for review
+    AppleAppStoreGooglePlayStore-->>GitHubActionsCICD: Submission Acknowledged
+    AppleAppStoreGooglePlayStore->>GitHubActionsCICD: 7. Notify build review status (Approved/Rejected) via webhook
+    GitHubActionsCICD->>AppleAppStoreGooglePlayStore: 8. On 'Approved' status, trigger phased release to production
+    AppleAppStoreGooglePlayStore-->>GitHubActionsCICD: Release Initiated
+    activate MonitoringPlatform
+    BackendHostProductionEnv->>MonitoringPlatform: 9. Begin intensive monitoring: Continuously emit metrics, logs, and traces
+    MonitoringPlatform->>GitHubActionsCICD: 10. Evaluate go-live success criteria against defined CloudWatch Alarms
+    GitHubActionsCICD-->>MonitoringPlatform: Health Status (OK/ALARM)
+    GitHubActionsCICD->>GitHubActionsCICD: 11. After 72h, finalize deployment report (Success/Rolled Back) and notify team
+
+
+    deactivate MonitoringPlatform
+    deactivate AppleAppStoreGooglePlayStore
+    deactivate BackendHostProductionEnv
+    deactivate AWSCloudDevelopmentKitCDK
+    deactivate GitHubActionsCICD

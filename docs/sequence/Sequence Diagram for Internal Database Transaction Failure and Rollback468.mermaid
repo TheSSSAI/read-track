@@ -1,0 +1,42 @@
+sequenceDiagram
+    actor "Client" as Client
+    participant "Presentation Layer" as PresentationLayer
+    participant "Application Layer" as ApplicationLayer
+    participant "Infrastructure Layer" as InfrastructureLayer
+    participant "Database" as Database
+    participant "Logging & Monitoring" as LoggingMonitoring
+
+    activate PresentationLayer
+    Client->>PresentationLayer: 1. POST /api/v1/library/items/{itemId}/complete
+    PresentationLayer-->>Client: HTTP 500 Internal Server Error with JSON body: {"error":"An unexpected error occurred.","correlationId":"..."}
+    activate ApplicationLayer
+    PresentationLayer->>ApplicationLayer: 2. Dispatch(new CompleteBookCommand(itemId, userId))
+    ApplicationLayer-->>PresentationLayer: Throws DbUpdateException
+    activate InfrastructureLayer
+    ApplicationLayer->>InfrastructureLayer: 3. Begin Database Transaction
+    InfrastructureLayer-->>ApplicationLayer: Transaction context established
+    ApplicationLayer->>InfrastructureLayer: 4. Update LibraryItem status to 'Read' in DbContext
+    activate Database
+    InfrastructureLayer->>Database: 5. EXEC SQL: UPDATE "LibraryItems" SET ...
+    Database-->>InfrastructureLayer: Success (Rows affected: 1)
+    ApplicationLayer->>InfrastructureLayer: 6. Update Goal progress in DbContext (causes violation)
+    InfrastructureLayer->>InfrastructureLayer: 7. Execute DbContext.SaveChangesAsync()
+    InfrastructureLayer-->>InfrastructureLayer: Throws DbUpdateException
+    InfrastructureLayer->>Database: 7.1. EXEC SQL: UPDATE "Goals" SET ...
+    Database-->>InfrastructureLayer: [ERROR: 23505 unique_violation]
+    Database->>InfrastructureLayer: 7.2. Return database error
+    ApplicationLayer->>PresentationLayer: 8. Exception propagates to Global Exception Handling Middleware
+    PresentationLayer->>InfrastructureLayer: 9. Trigger Transaction Rollback (via DbContext.Dispose())
+    InfrastructureLayer->>Database: 10. EXEC SQL: ROLLBACK TRANSACTION
+    Database-->>InfrastructureLayer: Success
+    activate LoggingMonitoring
+    PresentationLayer->>LoggingMonitoring: 11. Log Critical Error
+
+    note over InfrastructureLayer: CRITICAL: The rollback is an automatic side effect of the DbContext being disposed while its tran...
+    note over PresentationLayer: The global exception middleware is configured in Program.cs and acts as a centralized, top-level ...
+
+    deactivate LoggingMonitoring
+    deactivate Database
+    deactivate InfrastructureLayer
+    deactivate ApplicationLayer
+    deactivate PresentationLayer

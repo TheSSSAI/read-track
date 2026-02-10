@@ -1,0 +1,24 @@
+sequenceDiagram
+    actor "Flutter Mobile Client" as FlutterMobileClient
+    participant "Backend API Host" as BackendAPIHost
+    participant "Reading Module" as ReadingModule
+    participant "PostgreSQL Database" as PostgreSQLDatabase
+
+    activate BackendAPIHost
+    FlutterMobileClient->>BackendAPIHost: 1. 1. POST /api/v1/library
+    BackendAPIHost-->>FlutterMobileClient: 10. HTTP 402 Payment Required
+    BackendAPIHost->>BackendAPIHost: 2. 2. Auth Middleware: Validate JWT & Claims
+    BackendAPIHost-->>BackendAPIHost: User is authenticated 'Free User'
+    activate ReadingModule
+    BackendAPIHost->>ReadingModule: 3. 3. MediatR.Send(new AddLibraryItemCommand(...))
+    ReadingModule-->>BackendAPIHost: 9. Throws LimitExceededException
+    BackendAPIHost->>BackendAPIHost: 9. 9a. Global Exception Middleware: Map LimitExceededException to HTTP 402
+    BackendAPIHost-->>BackendAPIHost: Generates structured error response
+    FlutterMobileClient->>FlutterMobileClient: 11. 11. Dio Interceptor: Detect 402 status code
+    FlutterMobileClient->>FlutterMobileClient: 12. 12. Trigger Navigation to Upgrade Prompt UI
+
+    note over BackendAPIHost: Using HTTP 402 'Payment Required' is a semantically correct and specific way to signal that the a...
+    note over ReadingModule: The limit value (e.g., 20) MUST be sourced from a configuration service (e.g., appsettings.json o...
+
+    deactivate ReadingModule
+    deactivate BackendAPIHost

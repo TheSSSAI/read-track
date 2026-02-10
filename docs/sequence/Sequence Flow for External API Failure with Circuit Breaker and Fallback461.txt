@@ -1,0 +1,702 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-EH-001
+
+## 1.2 Name
+
+External API Failure with Circuit Breaker and Fallback
+
+## 1.3 Description
+
+If the Google Books API is persistently unavailable, the Polly Circuit Breaker policy opens, preventing further calls. The system then executes a defined fallback action, such as allowing the user to enter book details manually, and transitions the circuit to Half-Open after a cooldown to test for recovery.
+
+## 1.4 Type
+
+🔹 ErrorHandling
+
+## 1.5 Purpose
+
+To protect the system from cascading failures and provide a degraded but functional user experience, as specified in REQ-REL-001.
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🔴 High
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-FE-MOBILE
+- REPO-BE-HOST
+- Google Books API
+
+## 1.10 Key Interactions
+
+- The Google Books API fails requests consistently.
+- The Polly Circuit Breaker reaches its failure threshold and opens.
+- A new request to search for a book is made.
+- The Circuit Breaker immediately throws a `BrokenCircuitException`.
+- The application code catches this exception and returns a specific error response to the client indicating manual entry is available.
+- The client UI adapts, showing fields for manual Title and Author entry.
+- After the break duration, the circuit becomes 'Half-Open', allowing one test request through to check for service recovery.
+
+## 1.11 Triggers
+
+- An external dependency becomes unresponsive for a sustained period.
+
+## 1.12 Outcomes
+
+- The application remains stable and avoids being blocked by a failing service.
+- The user is gracefully informed of the issue and provided an alternative workflow.
+
+## 1.13 Business Rules
+
+- Each critical external dependency must have a defined fallback behavior.
+- The system must monitor and alert when a circuit breaker opens.
+
+## 1.14 Error Scenarios
+
+*No items available*
+
+## 1.15 Integration Points
+
+- Google Books API (SI-005)
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-EH-001
+
+## 2.2 Name
+
+External API Failure with Polly Circuit Breaker and Fallback
+
+## 2.3 Description
+
+Demonstrates the system's resilience when a critical external dependency (Google Books API) fails. The sequence shows how repeated failures lead to a Polly Circuit Breaker policy opening. Subsequent requests are immediately rejected, triggering a fallback mechanism that allows the user to perform a degraded but functional action (manual book entry). The diagram also covers the transition to the half-open state for service recovery probing, as required by REQ-REL-001.
+
+## 2.4 Participants
+
+### 2.4.1 Client Application
+
+#### 2.4.1.1 Repository Id
+
+REPO-FE-MOBILE
+
+#### 2.4.1.2 Display Name
+
+Flutter Mobile Client
+
+#### 2.4.1.3 Type
+
+🔹 Client Application
+
+#### 2.4.1.4 Technology
+
+Flutter 3.22+, Dart 3.4+
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #4A90E2 |
+| Stereotype | UI |
+
+### 2.4.2.0 Application Host
+
+#### 2.4.2.1 Repository Id
+
+REPO-BE-HOST
+
+#### 2.4.2.2 Display Name
+
+ASP.NET Core Backend
+
+#### 2.4.2.3 Type
+
+🔹 Application Host
+
+#### 2.4.2.4 Technology
+
+.NET 8, ASP.NET Core 8
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | participant |
+| Color | #50E3C2 |
+| Stereotype | API Host |
+
+### 2.4.3.0 Resilience Component
+
+#### 2.4.3.1 Repository Id
+
+PollyResiliencePolicy
+
+#### 2.4.3.2 Display Name
+
+Polly Resilience Policy
+
+#### 2.4.3.3 Type
+
+🔹 Resilience Component
+
+#### 2.4.3.4 Technology
+
+Polly 8.4+
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | participant |
+| Color | #F5A623 |
+| Stereotype | Circuit Breaker |
+
+### 2.4.4.0 External Service
+
+#### 2.4.4.1 Repository Id
+
+GoogleBooksAPI
+
+#### 2.4.4.2 Display Name
+
+Google Books API
+
+#### 2.4.4.3 Type
+
+🔹 External Service
+
+#### 2.4.4.4 Technology
+
+REST API
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | boundary |
+| Color | #D0021B |
+| Stereotype | External |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 Loop (Consecutive Failures)
+
+#### 2.5.1.1 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.1.2 Target Id
+
+GoogleBooksAPI
+
+#### 2.5.1.3 Message
+
+Initial requests fail, tripping the circuit breaker
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 Loop (Consecutive Failures)
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+
+
+#### 2.5.1.8 Has Return
+
+❌ No
+
+#### 2.5.1.9 Is Activation
+
+❌ No
+
+#### 2.5.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal Logic |
+| Method |  |
+| Parameters | Failure threshold is reached (e.g., 5 consecutive ... |
+| Authentication |  |
+| Error Handling | Each failure is handled by the Polly retry policy,... |
+| Performance |  |
+
+#### 2.5.1.11 Nested Interactions
+
+##### 2.5.1.11.1 Method Call
+
+###### 2.5.1.11.1.1 Source Id
+
+REPO-BE-HOST
+
+###### 2.5.1.11.1.2 Target Id
+
+PollyResiliencePolicy
+
+###### 2.5.1.11.1.3 Message
+
+ExecuteAsync(apiCall)
+
+###### 2.5.1.11.1.4 Sequence Number
+
+1.1
+
+###### 2.5.1.11.1.5 Type
+
+🔹 Method Call
+
+###### 2.5.1.11.1.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.1.11.1.7 Return Message
+
+Failure Response
+
+###### 2.5.1.11.1.8 Has Return
+
+✅ Yes
+
+###### 2.5.1.11.1.9 Is Activation
+
+✅ Yes
+
+###### 2.5.1.11.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | ExecuteAsync<HttpResponseMessage> |
+| Parameters | Func<Task<HttpResponseMessage>> containing the API... |
+| Authentication | N/A |
+| Error Handling | Catches HttpRequestException to count as a failure... |
+| Performance |  |
+
+##### 2.5.1.11.2.0 API Call
+
+###### 2.5.1.11.2.1 Source Id
+
+PollyResiliencePolicy
+
+###### 2.5.1.11.2.2 Target Id
+
+GoogleBooksAPI
+
+###### 2.5.1.11.2.3 Message
+
+GET /books/v1/volumes?q=isbn:...
+
+###### 2.5.1.11.2.4 Sequence Number
+
+1.2
+
+###### 2.5.1.11.2.5 Type
+
+🔹 API Call
+
+###### 2.5.1.11.2.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.1.11.2.7 Return Message
+
+503 Service Unavailable
+
+###### 2.5.1.11.2.8 Has Return
+
+✅ Yes
+
+###### 2.5.1.11.2.9 Is Activation
+
+✅ Yes
+
+###### 2.5.1.11.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | GET |
+| Parameters | API Key, ISBN query parameter |
+| Authentication | API Key |
+| Error Handling | Returns non-2xx status code. |
+| Performance | Timeout configured at 5 seconds. |
+
+### 2.5.2.0.0.0 State Change
+
+#### 2.5.2.1.0.0 Source Id
+
+PollyResiliencePolicy
+
+#### 2.5.2.2.0.0 Target Id
+
+PollyResiliencePolicy
+
+#### 2.5.2.3.0.0 Message
+
+Circuit state transitions to 'Open'
+
+#### 2.5.2.4.0.0 Sequence Number
+
+2
+
+#### 2.5.2.5.0.0 Type
+
+🔹 State Change
+
+#### 2.5.2.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7.0.0 Return Message
+
+
+
+#### 2.5.2.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.2.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.2.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal State |
+| Method | onBreak() |
+| Parameters | Break duration (e.g., 30 seconds). |
+| Authentication | N/A |
+| Error Handling | Logs a critical warning: 'Circuit breaker for Goog... |
+| Performance |  |
+
+### 2.5.3.0.0.0 API Request
+
+#### 2.5.3.1.0.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.3.2.0.0 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.3.3.0.0 Message
+
+GET /api/v1/books/search?isbn=978-0321765723
+
+#### 2.5.3.4.0.0 Sequence Number
+
+3
+
+#### 2.5.3.5.0.0 Type
+
+🔹 API Request
+
+#### 2.5.3.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7.0.0 Return Message
+
+424 Failed Dependency with fallback payload
+
+#### 2.5.3.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.3.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.3.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | GET |
+| Parameters | ISBN as query parameter. |
+| Authentication | JWT Bearer Token in Authorization header. |
+| Error Handling | Client expects either a 200 OK with book data or a... |
+| Performance | Client-side timeout of 15 seconds. |
+
+### 2.5.4.0.0.0 Method Call
+
+#### 2.5.4.1.0.0 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.4.2.0.0 Target Id
+
+PollyResiliencePolicy
+
+#### 2.5.4.3.0.0 Message
+
+ExecuteAsync(apiCall)
+
+#### 2.5.4.4.0.0 Sequence Number
+
+4
+
+#### 2.5.4.5.0.0 Type
+
+🔹 Method Call
+
+#### 2.5.4.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7.0.0 Return Message
+
+Throws BrokenCircuitException
+
+#### 2.5.4.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.4.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.4.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | ExecuteAsync<HttpResponseMessage> |
+| Parameters | Func<Task<HttpResponseMessage>> for the API call. |
+| Authentication | N/A |
+| Error Handling | Immediately throws Polly.CircuitBreaker.BrokenCirc... |
+| Performance | Sub-millisecond response time (fail-fast). |
+
+### 2.5.5.0.0.0 Exception Handling
+
+#### 2.5.5.1.0.0 Source Id
+
+REPO-BE-HOST
+
+#### 2.5.5.2.0.0 Target Id
+
+REPO-BE-HOST
+
+#### 2.5.5.3.0.0 Message
+
+Catch BrokenCircuitException and execute fallback logic
+
+#### 2.5.5.4.0.0 Sequence Number
+
+5
+
+#### 2.5.5.5.0.0 Type
+
+🔹 Exception Handling
+
+#### 2.5.5.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7.0.0 Return Message
+
+
+
+#### 2.5.5.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.5.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.5.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal Logic |
+| Method | catch (BrokenCircuitException ex) |
+| Parameters |  |
+| Authentication | N/A |
+| Error Handling | Logs a warning with exception details. Constructs ... |
+| Performance | Fallback logic must be lightweight and non-blockin... |
+
+### 2.5.6.0.0.0 UI Update
+
+#### 2.5.6.1.0.0 Source Id
+
+REPO-FE-MOBILE
+
+#### 2.5.6.2.0.0 Target Id
+
+REPO-FE-MOBILE
+
+#### 2.5.6.3.0.0 Message
+
+Render manual entry form
+
+#### 2.5.6.4.0.0 Sequence Number
+
+6
+
+#### 2.5.6.5.0.0 Type
+
+🔹 UI Update
+
+#### 2.5.6.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7.0.0 Return Message
+
+
+
+#### 2.5.6.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.6.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.6.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal State Management |
+| Method | BLoC emits a state like 'BookSearchApiUnavailable' |
+| Parameters | Error details from the API response. |
+| Authentication | N/A |
+| Error Handling | The UI layer listens for this state and conditiona... |
+| Performance |  |
+
+### 2.5.7.0.0.0 State Change
+
+#### 2.5.7.1.0.0 Source Id
+
+PollyResiliencePolicy
+
+#### 2.5.7.2.0.0 Target Id
+
+PollyResiliencePolicy
+
+#### 2.5.7.3.0.0 Message
+
+After break duration, circuit transitions to 'Half-Open'
+
+#### 2.5.7.4.0.0 Sequence Number
+
+7
+
+#### 2.5.7.5.0.0 Type
+
+🔹 State Change
+
+#### 2.5.7.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.7.7.0.0 Return Message
+
+
+
+#### 2.5.7.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.7.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.7.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal State |
+| Method | onHalfOpen() |
+| Parameters | Allows the next single request to pass through for... |
+| Authentication | N/A |
+| Error Handling | Logs an informational message: 'Circuit breaker fo... |
+| Performance |  |
+
+## 2.6.0.0.0.0 Notes
+
+### 2.6.1.0.0.0 Content
+
+#### 2.6.1.1.0.0 Content
+
+This entire sequence demonstrates the graceful degradation strategy defined in REQ-REL-001. The primary function (searching books) is degraded, but the core user goal (adding a book) is still achievable.
+
+#### 2.6.1.2.0.0 Position
+
+bottom
+
+#### 2.6.1.3.0.0 Participant Id
+
+*Not specified*
+
+#### 2.6.1.4.0.0 Sequence Number
+
+*Not specified*
+
+### 2.6.2.0.0.0 Content
+
+#### 2.6.2.1.0.0 Content
+
+The transition to 'Half-Open' state and the subsequent trial request are critical for automatic recovery. If the trial request succeeds, the circuit closes. If it fails, the circuit re-opens immediately.
+
+#### 2.6.2.2.0.0 Position
+
+right
+
+#### 2.6.2.3.0.0 Participant Id
+
+PollyResiliencePolicy
+
+#### 2.6.2.4.0.0 Sequence Number
+
+7
+
+## 2.7.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | The fallback error response must not leak any inte... |
+| Performance Targets | The RTO (Recovery Time Objective) for this scenari... |
+| Error Handling Strategy | The `GoogleBooksApiClient` in the Infrastructure l... |
+| Testing Considerations | Chaos engineering is required to validate this beh... |
+| Monitoring Requirements | A CloudWatch Alarm must be configured to trigger w... |
+| Deployment Considerations | Resilience policies (retry counts, break durations... |
+

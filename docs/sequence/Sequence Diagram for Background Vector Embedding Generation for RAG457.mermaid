@@ -1,0 +1,25 @@
+sequenceDiagram
+    participant "Hangfire Scheduler" as HangfireScheduler
+    participant "Backend Service Host" as BackendServiceHost
+    participant "Primary Database" as PrimaryDatabase
+    actor "OpenAI Embedding API" as OpenAIEmbeddingAPI
+    participant "Amazon OpenSearch Serverless" as AmazonOpenSearchServerless
+
+    activate BackendServiceHost
+    HangfireScheduler->>BackendServiceHost: 1. 1. Trigger recurring job: IUserEmbeddingJob.ProcessBatch()
+    BackendServiceHost->>BackendServiceHost: 2. 1.1. Identify batch of users requiring embedding updates
+    BackendServiceHost-->>BackendServiceHost: List<Guid> userIds
+    BackendServiceHost->>PrimaryDatabase: 3. 2. FOR EACH userId: FetchUserContextDataAsync(userId)
+    PrimaryDatabase-->>BackendServiceHost: UserContextData (ReadingHistory, Goals, Vocabulary)
+    BackendServiceHost->>BackendServiceHost: 4. 3. Transform and concatenate fetched data into text chunks
+    BackendServiceHost-->>BackendServiceHost: List<string> textChunks
+    BackendServiceHost->>OpenAIEmbeddingAPI: 5. 4. FOR EACH chunk: POST /v1/embeddings
+    OpenAIEmbeddingAPI-->>BackendServiceHost: 200 OK with JSON body containing embedding vector
+    BackendServiceHost->>AmazonOpenSearchServerless: 6. 5. client.IndexDocumentAsync(embeddingDocument)
+    AmazonOpenSearchServerless-->>BackendServiceHost: IndexResponse (Success/Failure)
+    BackendServiceHost->>BackendServiceHost: 7. 6. Log job completion status and metrics
+
+    note over BackendServiceHost: Rate Limiting: A client-side rate limiter (e.g., using a token bucket algorithm) must be implemen...
+    note over AmazonOpenSearchServerless: Idempotency: The embedding documents in OpenSearch should have a unique ID derived from the user ...
+
+    deactivate BackendServiceHost

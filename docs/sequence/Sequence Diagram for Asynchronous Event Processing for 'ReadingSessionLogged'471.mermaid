@@ -1,0 +1,32 @@
+sequenceDiagram
+    participant "Reading Module" as ReadingModule
+    participant "Primary Database" as PrimaryDatabase
+    participant "Infrastructure (MediatR)" as InfrastructureMediatR
+    participant "Engagement Module" as EngagementModule
+    participant "Recommendations Module" as RecommendationsModule
+
+    activate ReadingModule
+    ReadingModule->>ReadingModule: 1. Handles LogReadingSessionCommand
+    ReadingModule->>PrimaryDatabase: 2. Begin Database Transaction
+    PrimaryDatabase-->>ReadingModule: Transaction object
+    ReadingModule->>PrimaryDatabase: 3. INSERT INTO ReadingSession
+    PrimaryDatabase-->>ReadingModule: New Session ID
+    ReadingModule->>ReadingModule: 4. Raise ReadingSessionLogged event
+    ReadingModule->>PrimaryDatabase: 5. Commit Transaction
+    PrimaryDatabase-->>ReadingModule: Success confirmation
+    ReadingModule->>InfrastructureMediatR: 6. Publish ReadingSessionLogged event
+    ReadingModule->>ReadingModule: 7. Return 200 OK API Response
+    ReadingModule-->>ReadingModule: JSON payload with new Session ID
+    activate EngagementModule
+    InfrastructureMediatR->>EngagementModule: 8. Dispatch event to UpdateGoalProgressHandler
+    EngagementModule->>PrimaryDatabase: 8.1. UPDATE Goals SET Progress = Progress + X
+    PrimaryDatabase-->>EngagementModule: Success
+    InfrastructureMediatR->>EngagementModule: 9. Dispatch event to UpdateReadingStreakHandler
+    activate RecommendationsModule
+    InfrastructureMediatR->>RecommendationsModule: 10. Dispatch event to InvalidateUserProfileHandler
+
+    note over EngagementModule: Idempotency: All handlers must be designed to be idempotent. It's possible for an event to be pro...
+
+    deactivate RecommendationsModule
+    deactivate EngagementModule
+    deactivate ReadingModule

@@ -1,0 +1,32 @@
+sequenceDiagram
+    participant "Presentation: ReadingController" as PresentationReadingController
+    participant "Application: GetBookByIsbnQueryHandler" as ApplicationGetBookByIsbnQueryHandler
+    actor "Infrastructure: GoogleBooksApiClient" as InfrastructureGoogleBooksApiClient
+    participant "Infrastructure: Polly Resilience Policy" as InfrastructurePollyResiliencePolicy
+    participant "External: Google Books API" as ExternalGoogleBooksAPI
+
+    activate ApplicationGetBookByIsbnQueryHandler
+    PresentationReadingController->>ApplicationGetBookByIsbnQueryHandler: 1. Sends GetBookByIsbnQuery via MediatR
+    ApplicationGetBookByIsbnQueryHandler-->>PresentationReadingController: Returns BookDetailsDto or throws exception
+    activate InfrastructureGoogleBooksApiClient
+    ApplicationGetBookByIsbnQueryHandler->>InfrastructureGoogleBooksApiClient: 2. Invokes GetBookByIsbnAsync(isbn)
+    InfrastructureGoogleBooksApiClient-->>ApplicationGetBookByIsbnQueryHandler: Returns deserialized BookDetailsDto
+    activate InfrastructurePollyResiliencePolicy
+    InfrastructureGoogleBooksApiClient->>InfrastructurePollyResiliencePolicy: 3. Executes request via Polly PolicyWrap
+    InfrastructurePollyResiliencePolicy-->>InfrastructureGoogleBooksApiClient: Returns successful HttpResponseMessage or throws exception after exhausting retries.
+    InfrastructurePollyResiliencePolicy->>ExternalGoogleBooksAPI: 4. GET /books/v1/volumes?q=isbn:{isbn}&key={apiKey} (Attempt 1)
+    ExternalGoogleBooksAPI-->>InfrastructurePollyResiliencePolicy: HTTP 503 Service Unavailable
+    InfrastructurePollyResiliencePolicy->>InfrastructurePollyResiliencePolicy: 5. Catches HttpRequestException, initiates retry delay (Exponential Backoff + Jitter)
+    InfrastructurePollyResiliencePolicy->>ExternalGoogleBooksAPI: 6. GET /books/v1/volumes?q=isbn:{isbn}&key={apiKey} (Attempt 2)
+    ExternalGoogleBooksAPI-->>InfrastructurePollyResiliencePolicy: HTTP 200 OK with JSON payload
+    InfrastructurePollyResiliencePolicy->>InfrastructureGoogleBooksApiClient: 7. Returns successful HttpResponseMessage
+    InfrastructureGoogleBooksApiClient->>ApplicationGetBookByIsbnQueryHandler: 8. Deserializes JSON and returns BookDetailsDto
+    ApplicationGetBookByIsbnQueryHandler->>PresentationReadingController: 9. Returns successful result
+
+    note over InfrastructurePollyResiliencePolicy: The PollyResiliencePolicy is configured at application startup using IHttpClientFactory and AddPo...
+    note over InfrastructurePollyResiliencePolicy: Retry Policy Config: 3 retry attempts. Exponential backoff starting at 2 seconds. Jitter of +/- 5...
+    note over InfrastructurePollyResiliencePolicy: Circuit Breaker Config: Breaks for 30 seconds after 5 consecutive failures. This policy wraps the...
+
+    deactivate InfrastructurePollyResiliencePolicy
+    deactivate InfrastructureGoogleBooksApiClient
+    deactivate ApplicationGetBookByIsbnQueryHandler
